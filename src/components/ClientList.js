@@ -20,18 +20,19 @@ const ClientList = () => {
 
   return (
     <div className="container mt-5">
+      <h1 className="text-center mb-5">Clients</h1>
       <div className="row">
         {clients.map(client => (
-          <div key={client.id} className="col-sm-12 col-md-6 col-lg-4 mb-4">
-            <div className="card">
+          <div key={client.id} className="col-sm-12 col-md-6 col-lg-3 mb-4">
+            <div className="card h-100">
               <div className="card-body">
-                <h3 className="card-title">{client.name}</h3>
-                <h4 className="card-subtitle mb-2 text-muted">Age: {client.age}</h4>
-                <p className="card-text">Health Conditions: {client.health_conditions}</p>
-                <p className="card-text">Medications: {client.medication}</p>
-                <p className="card-text">Allergies: {client.allergies}</p>
-                <p className="card-text">Phone: {client.phone}</p>
-                <p className="card-text">Emergency Contact: {client.emergency_contact_name} ({client.emergency_contact_phone})</p>
+                <h5 className="card-title">{client.name}</h5>
+                <h6 className="card-subtitle mb-2 text-muted">Age: {client.age}</h6>
+                <p className="card-text"><strong>Health Conditions:</strong> {client.health_conditions}</p>
+                <p className="card-text"><strong>Medications:</strong> {client.medication}</p>
+                <p className="card-text"><strong>Allergies:</strong> {client.allergies}</p>
+                <p className="card-text"><strong>Phone:</strong> {client.phone}</p>
+                <p className="card-text"><strong>Emergency Contact:</strong> {client.emergency_contact_name} ({client.emergency_contact_phone})</p>
               </div>
             </div>
           </div>
