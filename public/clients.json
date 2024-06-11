@@ -1,0 +1,35 @@
+[
+  {
+    "id": 1,
+    "name": "Client One",
+    "age": 30,
+    "health_conditions": "None",
+    "medication": "None",
+    "allergies": "None",
+    "phone": "123-456-7890",
+    "emergency_contact_name": "John Doe",
+    "emergency_contact_phone": "098-765-4321"
+  },
+  {
+    "id": 2,
+    "name": "Client Two",
+    "age": 25,
+    "health_conditions": "Asthma",
+    "medication": "Inhaler",
+    "allergies": "Peanuts",
+    "phone": "234-567-8901",
+    "emergency_contact_name": "Jane Doe",
+    "emergency_contact_phone": "987-654-3210"
+  },
+  {
+    "id": 3,
+    "name": "Client Three",
+    "age": 40,
+    "health_conditions": "Diabetes",
+    "medication": "Insulin",
+    "allergies": "None",
+    "phone": "345-678-9012",
+    "emergency_contact_name": "Jim Beam",
+    "emergency_contact_phone": "876-543-2109"
+  }
+]

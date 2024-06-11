@@ -1,12 +1,16 @@
-import './App.css';
+import React from 'react';
+import { CssBaseline } from '@mui/material';
+import SupportWorkerList from './components/SupportWorkerList';
 import ClientList from './components/ClientList.js';
 
-function App() {
+const App = () => {
   return (
-    <div className="App">
+    <>
+      <CssBaseline />
+      <SupportWorkerList />
       <ClientList />
-    </div>
+    </>
   );
-}
+};
 
 export default App;
