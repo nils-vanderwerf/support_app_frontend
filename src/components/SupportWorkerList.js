@@ -11,7 +11,8 @@ import {
   Typography,
   Container,
   Box,
-  Avatar
+  Avatar,
+  Button
 } from '@mui/material';
 
 const SupportWorkerTable = () => {
@@ -30,6 +31,11 @@ const SupportWorkerTable = () => {
     fetchData();
   }, []);
 
+  const handleBook = (workerId) => {
+    // Implement your booking logic here
+    console.log(`Booked support worker with ID ${workerId}`);
+  };
+
   return (
     <Container>
       <Box mt={5}>
@@ -40,13 +46,14 @@ const SupportWorkerTable = () => {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell></TableCell>
+                <TableCell>Avatar</TableCell>
                 <TableCell>ID</TableCell>
                 <TableCell>Name</TableCell>
                 <TableCell>Location</TableCell>
                 <TableCell>Available Days</TableCell>
                 <TableCell>Phone</TableCell>
                 <TableCell>Email</TableCell>
+                <TableCell></TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -61,6 +68,14 @@ const SupportWorkerTable = () => {
                   <TableCell>{worker.available_days.join(', ')}</TableCell>
                   <TableCell>{worker.phone}</TableCell>
                   <TableCell>{worker.email}</TableCell>
+                  <TableCell>
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={() => handleBook(worker.id)}
+                        style={{ borderRadius: 20 }}
+                    >Book</Button>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
