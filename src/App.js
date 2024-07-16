@@ -5,6 +5,8 @@ import Home from './components/Home';
 import SupportWorkerList from './components/SupportWorkerList';
 import ClientList from './components/ClientList.js';
 import Sidebar from './components/Sidebar';
+import SignUp from './components/SignUp.js';
+import Login from './components/Login';
 
 const drawerWidth = 240;
 
@@ -26,6 +28,8 @@ const App = () => {
             <Route path="/" element={<Home />} />
             <Route path="/clients" element={<ClientList />} />
             <Route path="/support-workers" element={<SupportWorkerList />} />
+            <Route path="/signup" element={<SignUp />} />
+            <Route path="/login" element={<Login />} />
           </Routes>
         </Box>
       </Box>
