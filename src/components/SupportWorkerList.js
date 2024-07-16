@@ -14,9 +14,12 @@ import {
   Avatar,
   Button
 } from '@mui/material';
+import SupportWorkers from './SupportWorkers';
 
 const SupportWorkerTable = () => {
   const [workers, setWorkers] = useState([]);
+  const [selectedWorker, setSelectedWorker] = useState(null);
+  const [bookedWorkers, setBookedWorkers] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -32,8 +35,17 @@ const SupportWorkerTable = () => {
   }, []);
 
   const handleBook = (workerId) => {
-    // Implement your booking logic here
+    // Add the worker to the bookedWorkers state
+    setBookedWorkers((prevBookedWorkers) => [...prevBookedWorkers, workerId]);
     console.log(`Booked support worker with ID ${workerId}`);
+  };
+
+  const handleOpenModal = (worker) => {
+    setSelectedWorker(worker);
+  };
+
+  const handleCloseModal = () => {
+    setSelectedWorker(null);
   };
 
   return (
@@ -70,11 +82,13 @@ const SupportWorkerTable = () => {
                   <TableCell>{worker.email}</TableCell>
                   <TableCell>
                     <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={() => handleBook(worker.id)}
-                        style={{ borderRadius: 20 }}
-                    >Book</Button>
+                      variant="contained"
+                      color="primary"
+                      onClick={() => handleOpenModal(worker)}
+                      style={{ borderRadius: 20 }}
+                    >
+                      Book
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}
@@ -82,6 +96,14 @@ const SupportWorkerTable = () => {
           </Table>
         </TableContainer>
       </Box>
+      {selectedWorker && (
+        <SupportWorkers
+          worker={selectedWorker}
+          handleBook={handleBook}
+          handleClose={handleCloseModal}
+          isBooked={bookedWorkers.includes(selectedWorker.id)}
+        />
+      )}
     </Container>
   );
 };
