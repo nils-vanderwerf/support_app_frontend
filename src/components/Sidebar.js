@@ -4,12 +4,14 @@ import { Drawer, List, ListItem, ListItemIcon, ListItemText, Box } from '@mui/ma
 import HomeIcon from '@mui/icons-material/Home';
 import PeopleIcon from '@mui/icons-material/People';
 import WorkIcon from '@mui/icons-material/Work';
-// import { useAuth0 } from '@auth0/auth0-react';
+import { AccountCircle } from '@mui/icons-material'; 
+import { Login } from '@mui/icons-material';
+import { useAuth0 } from '@auth0/auth0-react';
 
 const drawerWidth = 240;
 
 const Sidebar = () => {
-      // const {loginWithRedirect, logout, user, isLoading} = useAuth0()
+      const {loginWithRedirect, logout, user, isLoading} = useAuth0()
   return (
     <Drawer
       variant="permanent"
@@ -39,6 +41,14 @@ const Sidebar = () => {
                 <ListItem button component={Link} to="/support-workers">
                 <ListItemIcon><WorkIcon /></ListItemIcon>
                 <ListItemText primary="Support Workers" />
+                </ListItem>
+                <ListItem button component={Link} to="/signup">
+                  <ListItemIcon><AccountCircle /></ListItemIcon>
+                  <ListItemText primary="Sign Up" />
+                </ListItem>
+                <ListItem button component={Link} to="/login">
+                  <ListItemIcon><Login /></ListItemIcon>
+                  <ListItemText primary="Login" />
                 </ListItem>
             </List>
             {/* {!isLoading && !user && (
