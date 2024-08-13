@@ -4,10 +4,12 @@ import { Drawer, List, ListItem, ListItemIcon, ListItemText, Box } from '@mui/ma
 import HomeIcon from '@mui/icons-material/Home';
 import PeopleIcon from '@mui/icons-material/People';
 import WorkIcon from '@mui/icons-material/Work';
+// import { useAuth0 } from '@auth0/auth0-react';
 
 const drawerWidth = 240;
 
 const Sidebar = () => {
+      // const {loginWithRedirect, logout, user, isLoading} = useAuth0()
   return (
     <Drawer
       variant="permanent"
@@ -39,6 +41,22 @@ const Sidebar = () => {
                 <ListItemText primary="Support Workers" />
                 </ListItem>
             </List>
+            {/* {!isLoading && !user && (
+              <button 
+                className="btn btn-primary btn-block"
+                onClick={() => loginWithRedirect()}
+              >
+                Log In
+              </button>
+            )}
+            {!isLoading && user && (
+              <button 
+                className="btn btn-primary btn-block"
+                onClick={() => logout()}
+              >
+                Log Out
+              </button>
+            )} */}
         </Box>
     </Drawer>
   );

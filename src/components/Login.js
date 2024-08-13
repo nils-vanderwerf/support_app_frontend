@@ -1,34 +1,38 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { Drawer } from '@mui/material';
+import { useAuth0 } from '@auth0/auth0-react';
 
-const Login = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+const drawerWidth = 240;
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    // Handle login logic here
-  };
-
+const Sidebar = () => {
+      const {loginWithRedirect, logout, user, isLoading} = useAuth0()
   return (
-    <div>
-      <h2>Login</h2>
-      <form onSubmit={handleSubmit}>
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-        <button type="submit">Login</button>
-      </form>
-    </div>
+    <Drawer
+      variant="permanent"
+      sx={{
+        width: drawerWidth,
+        flexShrink: 0,
+        [`& .MuiDrawer-paper`]: { width: drawerWidth, boxSizing: 'border-box' },
+      }}
+    >
+            {!isLoading && !user && (
+              <button 
+                className="btn btn-primary btn-block"
+                onClick={() => loginWithRedirect()}
+              >
+                Log In
+              </button>
+            )}
+            {!isLoading && user && (
+              <button 
+                className="btn btn-primary btn-block"
+                onClick={() => logout()}
+              >
+                Log Out
+              </button>
+            )}
+    </Drawer>
   );
 };
 
-export default Login;
+export default Sidebar;

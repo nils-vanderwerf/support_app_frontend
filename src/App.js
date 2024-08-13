@@ -7,12 +7,15 @@ import ClientList from './components/ClientList.js';
 import Sidebar from './components/Sidebar';
 import SignUp from './components/SignUp.js';
 import Login from './components/Login';
+import Auth0ProviderWithHistory from './components/auth0Provider'
 
 const drawerWidth = 240;
 
 const App = () => {
   return (
+
     <Router>
+      <Auth0ProviderWithHistory>
       <CssBaseline />
       <Box sx={{ display: 'flex' }}>
         <Sidebar />
@@ -33,6 +36,7 @@ const App = () => {
           </Routes>
         </Box>
       </Box>
+      </Auth0ProviderWithHistory>
     </Router>
   );
 };

@@ -14,7 +14,7 @@ import {
   Avatar,
   Button
 } from '@mui/material';
-import SupportWorkers from './SupportWorkers';
+import SupportWorker from './SupportWorker';
 
 const SupportWorkerTable = () => {
   const [workers, setWorkers] = useState([]);
@@ -97,7 +97,7 @@ const SupportWorkerTable = () => {
         </TableContainer>
       </Box>
       {selectedWorker && (
-        <SupportWorkers
+        <SupportWorker
           worker={selectedWorker}
           handleBook={handleBook}
           handleClose={handleCloseModal}
