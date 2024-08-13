@@ -46,7 +46,7 @@ const CloseButton = styled(Button)({
   },
 });
 
-const SupportWorkers = ({ worker, handleBook, handleClose, isBooked }) => {
+const SupportWorker = ({ worker, handleBook, handleClose, isBooked }) => {
   return (
     <CustomDialog open onClose={handleClose}>
       <HeaderBox>
@@ -88,4 +88,4 @@ const SupportWorkers = ({ worker, handleBook, handleClose, isBooked }) => {
   );
 };
 
-export default SupportWorkers;
+export default SupportWorker;
