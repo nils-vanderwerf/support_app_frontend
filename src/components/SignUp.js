@@ -8,20 +8,32 @@ const SignUp = () => {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
 
+  const getCsrfToken = () => {
+    return document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('/api/registrations', {
+      const response = await axios.post('http://localhost:9292/api/users', {
         user: {
           name,
           email,
           password
         }
+      }, {
+        headers: {
+          'X-CSRF-Token': getCsrfToken(), // Include CSRF token
+          'Content-Type': 'application/json'
+        },
+        withCredentials: true
       });
       setSuccess(response.data.status);
       setError(null);
     } catch (error) {
-      setError(error.response.data.errors);
+      if (error.response) {
+        setError(error.response.data.errors);
+      }
       setSuccess(null);
     }
   };
