@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
 const SignUp = () => {
@@ -7,14 +7,23 @@ const SignUp = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+  const [csrfToken, setCsrfToken] = useState(''); 
 
-  const getCsrfToken = () => {
-    return document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-  };
+  useEffect(() => {
+    axios.get('/api/csrf_token')
+      .then(response => {
+        console.log('CSRF Token fetched:', response.data.csrf_token);
+        setCsrfToken(response.data.csrf_token);
+      })
+      .catch(error => {
+        console.error('There was a problem fetching the CSRF token:', error);
+      });
+  }, []);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
     try {
+      console.log('CSRF Token used in request:', csrfToken);
       const response = await axios.post('http://localhost:9292/api/users', {
         user: {
           name,
@@ -23,18 +32,18 @@ const SignUp = () => {
         }
       }, {
         headers: {
-          'X-CSRF-Token': getCsrfToken(), // Include CSRF token
+          'X-CSRF-Token': csrfToken,
           'Content-Type': 'application/json'
         },
         withCredentials: true
       });
-      setSuccess(response.data.status);
+      console.log('User created successfully:', response.data);
+      setSuccess(true);
       setError(null);
     } catch (error) {
-      if (error.response) {
-        setError(error.response.data.errors);
-      }
-      setSuccess(null);
+      console.error('There was a problem with the sign-up request:', error);
+      setError(error.response.data.errors || ['An error occurred']);
+      setSuccess(false);
     }
   };
 
@@ -66,6 +75,5 @@ const SignUp = () => {
       {success && <div style={{ color: 'green' }}>Sign up successful!</div>}
     </div>
   );
-};
-
+}
 export default SignUp;
