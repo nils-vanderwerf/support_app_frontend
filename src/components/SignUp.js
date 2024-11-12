@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect, useRef } from 'react';
+import axiosInstance from '../api/axiosConfig';
+
 
 const SignUp = () => {
   const [name, setName] = useState('');
@@ -9,22 +10,30 @@ const SignUp = () => {
   const [success, setSuccess] = useState(null);
   const [csrfToken, setCsrfToken] = useState(''); 
 
-  useEffect(() => {
-    axios.get('/api/csrf_token')
-      .then(response => {
+  const hasFetchcsrf = useRef(false)
+
+  useEffect( () => {
+    if (!hasFetchcsrf)
+{    const fetchcsrf = async () => {
+    try{
+      const response = await axiosInstance.get('/csrf_token')
         console.log('CSRF Token fetched:', response.data.csrf_token);
         setCsrfToken(response.data.csrf_token);
-      })
-      .catch(error => {
+        hasFetchcsrf.current = true
+    } catch(error) {
         console.error('There was a problem fetching the CSRF token:', error);
-      });
-  }, []);
+
+    }
+  }
+  fetchcsrf()}
+}
+  , []);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     try {
       console.log('CSRF Token used in request:', csrfToken);
-      const response = await axios.post('http://localhost:9292/api/users', {
+      const response = await axiosInstance.post('/users', {
         user: {
           name,
           email,
