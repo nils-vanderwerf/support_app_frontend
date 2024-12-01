@@ -17,7 +17,9 @@ const SignUp = () => {
 {    const fetchcsrf = async () => {
     try{
       const response = await axiosInstance.get('/csrf_token')
+              console.log('Data Object:', response);
         console.log('CSRF Token fetched:', response.data.csrf_token);
+
         setCsrfToken(response.data.csrf_token);
         hasFetchcsrf.current = true
     } catch(error) {
