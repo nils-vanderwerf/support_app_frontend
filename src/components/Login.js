@@ -1,12 +1,23 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { axiosInstance} from 'axios';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async(e) => {
     e.preventDefault();
-    // Handle login logic here
+    try {
+    const response = await axiosInstance.post('/login', {email, password})
+    navigate('/clients')
+    } catch(error) {
+      setError(error)
+      console.error('There was a problem logging in:', error);
+    }
+      
   };
 
   return (
