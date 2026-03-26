@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { axiosInstance} from 'axios';
+import axiosInstance from '../api/axiosConfig';
+
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -13,6 +14,7 @@ const Login = () => {
     try {
     const response = await axiosInstance.post('/login', {email, password})
     navigate('/clients')
+    console.log('successful login:', response.data);
     } catch(error) {
       setError(error)
       console.error('There was a problem logging in:', error);
