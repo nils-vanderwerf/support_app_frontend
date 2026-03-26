@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../api/axiosConfig';
 
@@ -7,16 +8,18 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const auth = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = async(e) => {
+  const handleSubmit = async(e: React.FormEvent) => {
     e.preventDefault();
     try {
-    const response = await axiosInstance.post('/login', {email, password})
-    navigate('/clients')
-    console.log('successful login:', response.data);
+      const response = await axiosInstance.post('/login', {email, password})
+      auth?.setUser(response.data.success);
+      navigate('/clients')
+      console.log('successful login:', response.data);
     } catch(error) {
-      setError(error)
+      setError('Invalid email or password')
       console.error('There was a problem logging in:', error);
     }
       

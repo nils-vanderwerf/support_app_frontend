@@ -3,11 +3,11 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { Box, CssBaseline, List, ListItem, ListItemText } from '@mui/material';
 import Home from './components/Home';
 import SupportWorkerList from './components/SupportWorkerList';
-import ClientList from './components/ClientList.js';
+import ClientList from './components/ClientList';
 import Sidebar from './components/Sidebar';
-import SignUp from './components/SignUp.js';
+import SignUp from './components/SignUp';
 import Login from './components/Login';
-import Auth0ProviderWithHistory from './components/auth0Provider'
+import { AuthProvider } from './context/AuthContext';
 
 const drawerWidth = 240;
 
@@ -15,7 +15,7 @@ const App = () => {
   return (
 
     <Router>
-      <Auth0ProviderWithHistory>
+      <AuthProvider>
       <CssBaseline />
       <Box sx={{ display: 'flex' }}>
         <Sidebar />
@@ -36,7 +36,7 @@ const App = () => {
           </Routes>
         </Box>
       </Box>
-      </Auth0ProviderWithHistory>
+      </AuthProvider>
     </Router>
   );
 };

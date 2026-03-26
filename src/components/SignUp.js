@@ -6,6 +6,9 @@ const SignUp = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [middleName, setMiddleName] = useState('');
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [csrfToken, setCsrfToken] = useState(''); 
@@ -37,9 +40,12 @@ const SignUp = () => {
       console.log('CSRF Token used in request:', csrfToken);
       const response = await axiosInstance.post('/users', {
         user: {
-          email,
-          password
-        }
+        email,
+        password,
+        first_name: firstName,
+        last_name: lastName,
+        middle_name: middleName
+      }
       }, {
         headers: {
           'X-CSRF-Token': csrfToken,
@@ -63,9 +69,21 @@ const SignUp = () => {
       <form onSubmit={handleSubmit}>
         <input
           type="text"
-          placeholder="Name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
+          placeholder="First Name"
+          value={firstName}
+          onChange={(e) => setFirstName(e.target.value)}
+        />
+         <input
+          type="text"
+          placeholder="Middle Name"
+          value={firstName}
+          onChange={(e) => setMiddleName(e.target.value)}
+        />
+         <input
+          type="text"
+          placeholder="Last Name"
+          value={lastName}
+          onChange={(e) => setLastName(e.target.value)}
         />
         <input
           type="email"
