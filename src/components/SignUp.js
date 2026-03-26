@@ -13,7 +13,7 @@ const SignUp = () => {
   const hasFetchcsrf = useRef(false)
 
   useEffect( () => {
-    if (!hasFetchcsrf)
+    if (!hasFetchcsrf.current)
 {    const fetchcsrf = async () => {
     try{
       const response = await axiosInstance.get('/csrf_token')
@@ -37,7 +37,6 @@ const SignUp = () => {
       console.log('CSRF Token used in request:', csrfToken);
       const response = await axiosInstance.post('/users', {
         user: {
-          name,
           email,
           password
         }
