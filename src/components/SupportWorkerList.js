@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import {
+
+import { 
   Table,
   TableBody,
   TableCell,
@@ -15,6 +15,7 @@ import {
   Button
 } from '@mui/material';
 import SupportWorker from './SupportWorker';
+import axiosInstance from '../api/axiosConfig';
 
 const SupportWorkerTable = () => {
   const [workers, setWorkers] = useState([]);
@@ -24,7 +25,7 @@ const SupportWorkerTable = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get('/support_workers.json'); // Fetch from static JSON file
+        const response = await axiosInstance.get('/support_workers'); // Fetch from static JSON file
         setWorkers(response.data);
       } catch (error) {
         console.error('Error fetching data: ', error);
@@ -77,7 +78,7 @@ const SupportWorkerTable = () => {
                   <TableCell>{worker.id}</TableCell>
                   <TableCell>{`${worker.first_name} ${worker.last_name}`}</TableCell>
                   <TableCell>{worker.location}</TableCell>
-                  <TableCell>{worker.available_days.join(', ')}</TableCell>
+                  <TableCell>{worker.availability}</TableCell>
                   <TableCell>{worker.phone}</TableCell>
                   <TableCell>{worker.email}</TableCell>
                   <TableCell>

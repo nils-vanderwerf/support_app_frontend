@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios'; // Use axios directly for this request
 import 'bootstrap/dist/css/bootstrap.min.css';
 import axiosInstance from '../api/axiosConfig'; // Keep the existing axios configuration for other requests
 
@@ -9,7 +8,7 @@ const ClientList = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get('/clients.json'); // Fetch from static JSON file
+        const response = await axiosInstance.get('/clients');
         setClients(response.data);
       } catch (error) {
         console.error('Error fetching data: ', error);
@@ -18,19 +17,6 @@ const ClientList = () => {
 
     fetchData();
   }, []);
-
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     try {
-  //       const response = await axiosInstance.get('/clients');
-  //       setClients(response.data);
-  //     } catch (error) {
-  //       console.error('Error fetching data: ', error);
-  //     }
-  //   };
-
-  //   fetchData();
-  // }, []);
 
   return (
     <div className="container mt-5">

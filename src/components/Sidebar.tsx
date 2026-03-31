@@ -1,6 +1,7 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { Drawer, List, ListItem, ListItemIcon, ListItemText, Box, Typography } from '@mui/material';
+import { Link, useNavigate } from 'react-router-dom';
+import { Drawer, List, ListItem, ListItemIcon, ListItemText, Box, Typography, Button } from '@mui/material';
+import LogoutIcon from '@mui/icons-material/Logout';
 import HomeIcon from '@mui/icons-material/Home';
 import PeopleIcon from '@mui/icons-material/People';
 import WorkIcon from '@mui/icons-material/Work';
@@ -10,8 +11,15 @@ import { useAuth } from '../context/AuthContext';
 
 const drawerWidth = 240;
 
+
 const Sidebar = () => {
  const auth = useAuth();
+ const navigate = useNavigate();
+
+const handleLogout = () => {
+  auth?.setUser(null);
+  navigate('/login')
+}
   return (
     <Drawer
       variant="permanent"
@@ -29,11 +37,26 @@ const Sidebar = () => {
           height: '100vh',
         }}
         >
-            {auth?.user && (
-              <Box sx={{ p: 2, textAlign: 'center' }}>
-                <Typography variant="subtitle1">Welcome, {auth.user.first_name}</Typography>
-              </Box>
-            )}
+        {auth?.user ? (
+            <Box sx={{ p: 2, textAlign: 'center' }}>
+              <Typography variant="subtitle1">Welcome, {auth.user.first_name}</Typography>
+              <ListItem button onClick={handleLogout}>
+                <ListItemIcon><LogoutIcon /></ListItemIcon>
+                <ListItemText primary="Logout" />
+              </ListItem>
+            </Box>
+          ) : (
+            <>
+              <ListItem button component={Link} to="/login">
+                <ListItemIcon><Login /></ListItemIcon>
+                <ListItemText primary="Login" />
+              </ListItem>
+              <ListItem button component={Link} to="/signup">
+                <ListItemIcon><AccountCircle /></ListItemIcon>
+                <ListItemText primary="Sign Up" />
+              </ListItem>
+            </>
+          )}
           <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'center' }}>
             <List>
                 <ListItem button component={Link} to="/">
@@ -48,32 +71,8 @@ const Sidebar = () => {
                 <ListItemIcon><WorkIcon /></ListItemIcon>
                 <ListItemText primary="Support Workers" />
                 </ListItem>
-                <ListItem button component={Link} to="/signup">
-                  <ListItemIcon><AccountCircle /></ListItemIcon>
-                  <ListItemText primary="Sign Up" />
-                </ListItem>
-                <ListItem button component={Link} to="/login">
-                  <ListItemIcon><Login /></ListItemIcon>
-                  <ListItemText primary="Login" />
-                </ListItem>
             </List>
           </Box>
-            {/* {!isLoading && !user && (
-              <button 
-                className="btn btn-primary btn-block"
-                onClick={() => loginWithRedirect()}
-              >
-                Log In
-              </button>
-            )}
-            {!isLoading && user && (
-              <button 
-                className="btn btn-primary btn-block"
-                onClick={() => logout()}
-              >
-                Log Out
-              </button>
-            )} */}
         </Box>
     </Drawer>
   );

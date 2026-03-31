@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { Box, CssBaseline, List, ListItem, ListItemText } from '@mui/material';
+import SecureRoute from './components/SecureRoute';
 import Home from './components/Home';
 import SupportWorkerList from './components/SupportWorkerList';
 import ClientList from './components/ClientList';
@@ -29,8 +30,8 @@ const App = () => {
         >
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/clients" element={<ClientList />} />
-            <Route path="/support-workers" element={<SupportWorkerList />} />
+            <Route path="/clients" element={<SecureRoute><ClientList/></SecureRoute>} />
+            <Route path='/support-workers' element={<SecureRoute><SupportWorkerList/></SecureRoute>} />
             <Route path="/signup" element={<SignUp />} />
             <Route path="/login" element={<Login />} />
           </Routes>

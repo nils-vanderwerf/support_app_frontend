@@ -53,11 +53,9 @@ const SignUp = () => {
         },
         withCredentials: true
       });
-      console.log('User created successfully:', response.data);
       setSuccess(true);
       setError(null);
     } catch (error) {
-      console.error('There was a problem with the sign-up request:', error);
       setError(error.response.data.errors || ['An error occurred']);
       setSuccess(false);
     }
@@ -99,7 +97,7 @@ const SignUp = () => {
         />
         <button type="submit">Sign Up</button>
       </form>
-      {error && <div style={{ color: 'red' }}>{error.join(', ')}</div>}
+      {error && <div style={{ color: 'red' }}>{error}</div>}
       {success && <div style={{ color: 'green' }}>Sign up successful!</div>}
     </div>
   );
