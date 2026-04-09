@@ -20,12 +20,12 @@ import axiosInstance from '../api/axiosConfig';
 const SupportWorkerTable = () => {
   const [workers, setWorkers] = useState([]);
   const [selectedWorker, setSelectedWorker] = useState(null);
-  const [bookedWorkers, setBookedWorkers] = useState([]);
+  const [bookedWorkers, setBookedWorkers] = useState(new Set());
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axiosInstance.get('/support_workers'); // Fetch from static JSON file
+        const response = await axiosInstance.get('/support_workers');
         setWorkers(response.data);
       } catch (error) {
         console.error('Error fetching data: ', error);
@@ -36,9 +36,7 @@ const SupportWorkerTable = () => {
   }, []);
 
   const handleBook = (workerId) => {
-    // Add the worker to the bookedWorkers state
-    setBookedWorkers((prevBookedWorkers) => [...prevBookedWorkers, workerId]);
-    console.log(`Booked support worker with ID ${workerId}`);
+    setBookedWorkers((prev) => new Set([...prev, workerId]));
   };
 
   const handleOpenModal = (worker) => {

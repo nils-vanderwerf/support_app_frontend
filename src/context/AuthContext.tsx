@@ -5,7 +5,7 @@ interface User {
   id: number;
   first_name: string;
   last_name: string;
-  middle_name: string
+  middle_name: string | null;
   email: string;
   role: string | null;
 }
@@ -19,15 +19,19 @@ interface AuthContextType {
   setUser: (user: User | null) => void;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined) ;
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
   return (
-    <AuthContext.Provider value={ { user, setUser}}>
+    <AuthContext.Provider value={{ user, setUser }}>
       {children}
     </AuthContext.Provider>
   )
 }
 
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) throw new Error('useAuth must be used within AuthProvider');
+  return context;
+};

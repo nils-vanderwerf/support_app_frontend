@@ -37,7 +37,7 @@ const handleLogout = () => {
           height: '100vh',
         }}
         >
-        {auth?.user ? (
+        {auth.user ? (
             <Box sx={{ p: 2, textAlign: 'center' }}>
               <Typography variant="subtitle1">Welcome, {auth.user.first_name}</Typography>
               <ListItem button onClick={handleLogout}>

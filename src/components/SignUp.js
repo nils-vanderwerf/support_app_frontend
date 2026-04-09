@@ -3,7 +3,6 @@ import axiosInstance from '../api/axiosConfig';
 
 
 const SignUp = () => {
-  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
@@ -74,7 +73,7 @@ const SignUp = () => {
          <input
           type="text"
           placeholder="Middle Name"
-          value={firstName}
+          value={middleName}
           onChange={(e) => setMiddleName(e.target.value)}
         />
          <input
