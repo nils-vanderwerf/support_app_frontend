@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Box, Button, TextField, Typography, Alert } from '@mui/material';
 import axiosInstance from '../api/axiosConfig';
 
 
@@ -61,44 +62,33 @@ const SignUp = () => {
   };
 
   return (
-    <div>
-      <h2>Sign Up</h2>
-      <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          placeholder="First Name"
-          value={firstName}
-          onChange={(e) => setFirstName(e.target.value)}
-        />
-         <input
-          type="text"
-          placeholder="Middle Name"
-          value={middleName}
-          onChange={(e) => setMiddleName(e.target.value)}
-        />
-         <input
-          type="text"
-          placeholder="Last Name"
-          value={lastName}
-          onChange={(e) => setLastName(e.target.value)}
-        />
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-        <button type="submit">Sign Up</button>
-      </form>
-      {error && <div style={{ color: 'red' }}>{error}</div>}
-      {success && <div style={{ color: 'green' }}>Sign up successful!</div>}
-    </div>
+    <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
+      <Box sx={{ width: 560 }}>
+        <Typography variant="h4" fontWeight="bold" mb={1} color="#7B2FBE">
+          Create account
+        </Typography>
+        <Typography variant="body2" color="text.secondary" mb={4}>
+          Sign up to get started
+        </Typography>
+        {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
+        {success && <Alert severity="success" sx={{ mb: 3 }}>Account created successfully!</Alert>}
+        <Box component="form" onSubmit={handleSubmit} display="flex" flexDirection="column" gap={3}>
+          <TextField label="First Name" value={firstName} onChange={(e) => setFirstName(e.target.value)} fullWidth />
+          <TextField label="Middle Name" value={middleName} onChange={(e) => setMiddleName(e.target.value)} fullWidth />
+          <TextField label="Last Name" value={lastName} onChange={(e) => setLastName(e.target.value)} fullWidth />
+          <TextField label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} fullWidth />
+          <TextField label="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} fullWidth />
+          <Button
+            type="submit"
+            variant="contained"
+            fullWidth
+            sx={{ backgroundColor: '#7B2FBE', py: 1.5, '&:hover': { backgroundColor: '#6a0dad' } }}
+          >
+            Sign Up
+          </Button>
+        </Box>
+      </Box>
+    </Box>
   );
 }
 export default SignUp;
