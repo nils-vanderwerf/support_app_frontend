@@ -10,6 +10,8 @@ import {
   Avatar
 } from '@mui/material';
 import { styled } from '@mui/system';
+import { useState } from 'react';
+import BookingForm from './BookingForm';
 
 const CustomDialog = styled(Dialog)({
   '& .MuiDialog-paper': {
@@ -46,8 +48,11 @@ const CloseButton = styled(Button)({
   },
 });
 
-const SupportWorker = ({ worker, handleBook, handleClose, isBooked }) => {
+const SupportWorker = ({ worker, handleBook, handleClose, isBooked, onSuccess }) => {
+  const [showBookingForm, setShowBookingForm] = useState(false);
+
   return (
+    <>
     <CustomDialog open onClose={handleClose}>
       <HeaderBox>
         <Typography variant="h6">Support Worker</Typography>
@@ -63,7 +68,7 @@ const SupportWorker = ({ worker, handleBook, handleClose, isBooked }) => {
           <Box sx={{ flex: 1, pl: 2 }}>
             <Typography variant="body1"><strong>ID:</strong> {worker.id}</Typography>
             <Typography variant="body1"><strong>Location:</strong> {worker.location}</Typography>
-            <Typography variant="body1"><strong>Availability:</strong> {worker.available_days.join(', ')}</Typography>
+            <Typography variant="body1"><strong>Availability:</strong> {worker.availability}</Typography>
             <Typography variant="body1"><strong>Phone:</strong> {worker.phone}</Typography>
             <Typography variant="body1"><strong>Email:</strong> {worker.email}</Typography>
             {isBooked && (
@@ -79,12 +84,20 @@ const SupportWorker = ({ worker, handleBook, handleClose, isBooked }) => {
           Close
         </CloseButton>
         {!isBooked && (
-          <Button onClick={() => handleBook(worker.id)} color="primary" variant="contained" sx={{ backgroundColor: '#007bff', color: '#fff' }}>
+          <Button onClick={() => setShowBookingForm(true)} color="primary" variant="contained" sx={{ backgroundColor: '#007bff', color: '#fff' }}>
             Book
           </Button>
         )}
       </DialogActions>
-    </CustomDialog>
+      </CustomDialog>
+        {showBookingForm && (
+          <BookingForm 
+            worker={worker}
+            onSuccess={onSuccess} 
+            onClose={() => setShowBookingForm(false)} 
+          />
+        )}
+    </>
   );
 };
 
