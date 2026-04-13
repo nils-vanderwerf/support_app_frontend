@@ -100,7 +100,7 @@ const SupportWorkerTable = () => {
           worker={selectedWorker}
           handleBook={handleBook}
           handleClose={handleCloseModal}
-          isBooked={bookedWorkers.includes(selectedWorker.id)}
+          isBooked={bookedWorkers.has(selectedWorker.id)}
         />
       )}
     </Container>

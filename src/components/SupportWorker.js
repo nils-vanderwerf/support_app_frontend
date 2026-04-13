@@ -63,7 +63,7 @@ const SupportWorker = ({ worker, handleBook, handleClose, isBooked }) => {
           <Box sx={{ flex: 1, pl: 2 }}>
             <Typography variant="body1"><strong>ID:</strong> {worker.id}</Typography>
             <Typography variant="body1"><strong>Location:</strong> {worker.location}</Typography>
-            <Typography variant="body1"><strong>Availability:</strong> {worker.available_days.join(', ')}</Typography>
+            <Typography variant="body1"><strong>Availability:</strong> {worker.availability}</Typography>
             <Typography variant="body1"><strong>Phone:</strong> {worker.phone}</Typography>
             <Typography variant="body1"><strong>Email:</strong> {worker.email}</Typography>
             {isBooked && (
