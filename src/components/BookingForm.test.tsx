@@ -10,10 +10,17 @@ const mockedAxios = axiosInstance as jest.Mocked<typeof axiosInstance>;
 const mockOnClose = jest.fn();
 const mockOnSuccess = jest.fn();
 
-const renderForm = (props = {}) =>
+const renderForm = (props: Record<string, any> = {}) =>
   render(
     <MemoryRouter>
-      <BookingForm clientId={1} supportWorkerId={1} onClose={mockOnClose} onSuccess={mockOnSuccess} {...props} />
+      <BookingForm
+        clientId={1}
+        supportWorkerId={1}
+        onClose={mockOnClose}
+        onSuccess={mockOnSuccess}
+        suggested={{ duration: 60 }}
+        {...props}
+      />
     </MemoryRouter>
   );
 
@@ -44,7 +51,7 @@ describe('BookingForm', () => {
   it('renders all form fields', () => {
     renderForm();
     expect(screen.getByLabelText(/Date/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/Duration/i)).toBeInTheDocument();
+    expect(screen.getByText(/Duration/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Location/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Notes/i)).toBeInTheDocument();
   });
@@ -120,6 +127,13 @@ describe('BookingForm', () => {
       expect(mockOnClose).toHaveBeenCalled();
       expect(mockOnSuccess).toHaveBeenCalled();
     });
+  });
+
+  it('shows an error and does not submit when duration is 0', async () => {
+    renderForm({ suggested: { duration: 0 } });
+    await userEvent.click(screen.getByRole('button', { name: /^Book$/i }));
+    expect(screen.getByText(/duration greater than 0/i)).toBeInTheDocument();
+    expect(mockedAxios.post).not.toHaveBeenCalled();
   });
 
   describe('recurring bookings', () => {

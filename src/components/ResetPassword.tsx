@@ -1,92 +1,74 @@
 import { useState } from 'react';
-import { Box, Button, TextField, Typography, Alert } from '@mui/material';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { Box, TextField, Button, Typography, Alert, CircularProgress } from '@mui/material';
 import axiosInstance from '../api/axiosConfig';
 
 const ResetPassword = () => {
-  const [searchParams] = useSearchParams();
-  const token = searchParams.get('token') ?? '';
+  const { token } = useParams<{ token: string }>();
   const navigate = useNavigate();
-
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password !== confirm) {
-      setError('Passwords do not match.');
-      return;
-    }
+    if (password !== confirm) { setError('Passwords do not match.'); return; }
+    if (password.length < 6) { setError('Password must be at least 6 characters.'); return; }
     setLoading(true);
     setError('');
     try {
-      await axiosInstance.post('/password_resets/reset', { token, password });
+      await axiosInstance.patch(`/password_resets/${token}`, { password });
       navigate('/login', { state: { notice: 'Password updated. Please log in.' } });
     } catch (err: any) {
-      const msgs = err.response?.data?.errors;
-      setError(msgs ? msgs.join(', ') : 'Invalid or expired link. Please request a new one.');
+      setError(err.response?.data?.error || 'Reset link is invalid or has expired.');
     } finally {
       setLoading(false);
     }
   };
 
-  if (!token) {
-    return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
-        <Box sx={{ width: { xs: '95%', sm: 560 } }}>
-          <Alert severity="error" sx={{ mb: 3 }}>
-            Invalid reset link. Please request a new one.
-          </Alert>
-          <Typography variant="body2" align="center">
-            <Link to="/forgot-password" style={{ color: '#7B2FBE' }}>Request new link</Link>
-          </Typography>
-        </Box>
-      </Box>
-    );
-  }
-
   return (
     <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
-      <Box sx={{ width: { xs: '95%', sm: 560 } }}>
-        <Typography variant="h4" fontWeight="bold" mb={1} color="#7B2FBE">
-          Choose a new password
+      <Box sx={{ width: 440 }}>
+        <Typography variant="h4" fontWeight={700} color="#7B2FBE" mb={1}>
+          Reset password
         </Typography>
         <Typography variant="body2" color="text.secondary" mb={4}>
-          Enter your new password below.
+          Choose a new password for your account.
         </Typography>
-        {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
+
         <Box component="form" onSubmit={handleSubmit} display="flex" flexDirection="column" gap={3}>
+          {error && <Alert severity="error">{error}</Alert>}
           <TextField
             label="New password"
             type="password"
             value={password}
             onChange={e => setPassword(e.target.value)}
-            fullWidth
             required
+            fullWidth
           />
           <TextField
-            label="Confirm password"
+            label="Confirm new password"
             type="password"
             value={confirm}
             onChange={e => setConfirm(e.target.value)}
-            fullWidth
             required
+            fullWidth
           />
           <Button
             type="submit"
             variant="contained"
-            fullWidth
             disabled={loading}
-            sx={{ backgroundColor: '#7B2FBE', py: 1.5, '&:hover': { backgroundColor: '#6a0dad' } }}
+            fullWidth
+            sx={{ py: 1.5, bgcolor: '#7B2FBE', '&:hover': { bgcolor: '#6a27a3' } }}
           >
-            {loading ? 'Updating…' : 'Update password'}
+            {loading ? <CircularProgress size={22} sx={{ color: 'white' }} /> : 'Update password'}
           </Button>
-          <Typography variant="body2" align="center">
-            <Link to="/login" style={{ color: '#7B2FBE', textDecoration: 'none' }}>Back to login</Link>
-          </Typography>
         </Box>
+
+        <Typography variant="body2" color="text.secondary" mt={3} textAlign="center">
+          <Link to="/login" style={{ color: '#7B2FBE', textDecoration: 'none' }}>Back to login</Link>
+        </Typography>
       </Box>
     </Box>
   );

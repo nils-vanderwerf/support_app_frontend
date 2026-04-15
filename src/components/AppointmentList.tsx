@@ -4,7 +4,8 @@ import { useAuth } from '../context/AuthContext';
 import { formatDuration } from '../utils/formatDuration';
 import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-  Paper, Typography, Container, Box,
+  Paper, Typography, Container, Box, Chip,
+  Button, Snackbar, Dialog, DialogTitle, DialogActions, DialogContent,
 } from '@mui/material';
 import axiosInstance from '../api/axiosConfig';
 import { SupportWorker, Client } from '../context/AuthContext';
@@ -19,6 +20,7 @@ export interface Appointment {
   location: string;
   duration: number;
   notes: string;
+  status: string;
 }
 
 const statusChip = (status: string) => {
@@ -122,6 +124,14 @@ const AppointmentList = () => {
 
   useEffect(() => { fetchAppointments(); }, []);
 
+  const now = new Date();
+  const upcoming = appointments
+    .filter(a => new Date(a.date) >= now)
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  const past = appointments
+    .filter(a => new Date(a.date) < now)
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
   const handleDelete = async (appointment: Appointment) => {
     try {
       await axiosInstance.delete(`/appointments/${appointment.id}`);
@@ -139,19 +149,18 @@ const AppointmentList = () => {
     setEditDialogueVisible(true);
   };
 
-  const handleNameClick = (appointment: Appointment) => {
-    if (isClient) {
-      navigate(`/support-workers/${appointment.support_worker.id}`);
-    } else {
-      navigate(`/clients/${appointment.client.id}`);
-    }
-  };
+  const sectionLabel = (title: string, count: number) => (
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1.5, mt: 3 }}>
+      <Typography variant="h6" fontWeight={700}>{title}</Typography>
+      <Chip label={count} size="small" sx={{ bgcolor: '#ede7f6', color: '#7B2FBE', fontWeight: 700 }} />
+    </Box>
+  );
 
   return (
     <Container>
       <Box mt={5}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-          <Typography variant="h4">Appointments</Typography>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+          <Typography variant="h4" fontWeight={700}>Appointments</Typography>
           <Button
             variant="contained"
             sx={{ bgcolor: '#7B2FBE', '&:hover': { bgcolor: '#6a27a3' } }}
@@ -160,53 +169,40 @@ const AppointmentList = () => {
             Book with AI
           </Button>
         </Box>
-        <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
-          <Table sx={{ minWidth: 600 }}>
-            <TableHead>
-              <TableRow>
-                <TableCell>Date</TableCell>
-                <TableCell>{isClient ? 'Support Worker' : 'Client'}</TableCell>
-                <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>Location</TableCell>
-                <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>Duration</TableCell>
-                <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>Notes</TableCell>
-                <TableCell>Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {appointments.map((appointment) => (
-                <TableRow key={appointment.id}>
-                  <TableCell sx={{ whiteSpace: 'nowrap' }}>{new Date(appointment.date).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</TableCell>
-                  <TableCell
-                    onClick={() => handleNameClick(appointment)}
-                    sx={{ cursor: 'pointer', color: '#7B2FBE', fontWeight: 600, '&:hover': { textDecoration: 'underline' }, whiteSpace: 'nowrap' }}
-                  >
-                    {isClient
-                      ? `${appointment.support_worker?.first_name ?? ''} ${appointment.support_worker?.last_name ?? ''}`.trim() || '—'
-                      : `${appointment.client?.first_name ?? ''} ${appointment.client?.last_name ?? ''}`.trim() || '—'
-                    }
-                  </TableCell>
-                  <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>{appointment.location}</TableCell>
-                  <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>{formatDuration(appointment.duration)}</TableCell>
-                  <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>{appointment.notes}</TableCell>
-                  <TableCell sx={{ whiteSpace: 'nowrap' }}>
-                    {new Date(appointment.date) > new Date() ? (
-                      <>
-                        <Button onClick={() => handleEdit(appointment)}>Edit</Button>
-                        <Button onClick={() => { setAppointmentToDelete(appointment); setDeleteDialogueVisible(true); }}>Delete</Button>
-                      </>
-                    ) : (
-                      <Button onClick={() => setRebookAppointment(appointment)}>Rebook</Button>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-        {appointments.length === 0 && (
-          <Typography fontStyle="italic">No appointments found</Typography>
+
+        {upcoming.length === 0 && past.length === 0 && (
+          <Typography fontStyle="italic" mt={2}>No appointments found</Typography>
+        )}
+
+        {upcoming.length > 0 && (
+          <>
+            {sectionLabel('Upcoming', upcoming.length)}
+            <AppointmentTable
+              rows={upcoming}
+              isClient={isClient}
+              onEdit={handleEdit}
+              onDelete={(a) => { setAppointmentToDelete(a); setDeleteDialogueVisible(true); }}
+              onRebook={setRebookAppointment}
+              showActions
+            />
+          </>
+        )}
+
+        {past.length > 0 && (
+          <>
+            {sectionLabel('Past Appointments', past.length)}
+            <AppointmentTable
+              rows={past}
+              isClient={isClient}
+              onEdit={handleEdit}
+              onDelete={(a) => { setAppointmentToDelete(a); setDeleteDialogueVisible(true); }}
+              onRebook={setRebookAppointment}
+              showActions
+            />
+          </>
         )}
       </Box>
+
       {agentOpen && (
         <BookingAgent
           open={agentOpen}

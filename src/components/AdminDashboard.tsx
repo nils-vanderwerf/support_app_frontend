@@ -70,6 +70,28 @@ const StatCard = ({ icon, label, value }: { icon: React.ReactNode; label: string
   </Paper>
 );
 
+const expiryWarningChip = (label: string, expiry: string | null | undefined) => {
+  if (!expiry) return null;
+  const d = new Date(expiry);
+  const days = Math.ceil((d.getTime() - Date.now()) / 86400000);
+  if (days > 30) return null;
+  const expired = days < 0;
+  const color = expired ? '#c62828' : '#e65100';
+  const bg = expired ? '#ffebee' : '#fff3e0';
+  const text = expired
+    ? `${label} Expired`
+    : `${label} exp. ${d.toLocaleDateString('en-AU', { month: 'short', year: 'numeric' })}`;
+  return (
+    <Chip
+      key={label}
+      label={text}
+      size="small"
+      icon={<Warning fontSize="small" />}
+      sx={{ bgcolor: bg, color, '& .MuiChip-icon': { color }, fontWeight: 600 }}
+    />
+  );
+};
+
 const AdminDashboard = () => {
   const [tab, setTab] = useState(0);
   const [applications, setApplications] = useState<Application[]>([]);
@@ -345,6 +367,7 @@ const AdminDashboard = () => {
         </>
       )}
 
+      {/* Approved Workers */}
       {tab === 2 && (
         <>
           {workers.length === 0 ? (

@@ -2,20 +2,8 @@ import React, { Suspense } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { Box, CssBaseline, CircularProgress } from '@mui/material';
 import SecureRoute from './components/SecureRoute';
-import Home from './components/Home';
-import SupportWorkerList from './components/SupportWorkerList';
-import ClientList from './components/ClientList';
-import AppointmentList from './components/AppointmentList';
-import ConversationList from './components/ConversationList';
-import ConversationView from './components/ConversationView';
-import InvitationsPage from './components/InvitationsPage';
-import ReportsPage from './components/ReportsPage';
-import SupportWorkerProfilePage from './components/SupportWorkerProfilePage';
-import ClientProfilePage from './components/ClientProfilePage';
 import Navbar from './components/Navbar';
 import Login from './components/Login';
-import VettingAgent from './components/VettingAgent';
-import AdminDashboard from './components/AdminDashboard';
 import ForgotPassword from './components/ForgotPassword';
 import ResetPassword from './components/ResetPassword';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -34,6 +22,7 @@ const ClientProfilePage = React.lazy(() => import('./components/ClientProfilePag
 const SignUp = React.lazy(() => import('./components/SignUp'));
 const VettingAgent = React.lazy(() => import('./components/VettingAgent'));
 const AdminDashboard = React.lazy(() => import('./components/AdminDashboard'));
+const AdminMessagesPage = React.lazy(() => import('./components/AdminMessagesPage'));
 const SupportWorkerAdminThread = React.lazy(() => import('./components/SupportWorkerAdminThread'));
 
 const PageLoader = () => (
@@ -46,6 +35,12 @@ const ClientsRoute = () => {
   const { client } = useAuth();
   if (client) return <Navigate to="/" replace />;
   return <ClientList />;
+};
+
+const SupportWorkerRoute = () => {
+  const { supportWorker } = useAuth();
+  if (supportWorker) return <Navigate to="/" replace />;
+  return <SupportWorkerList />;
 };
 
 const AdminRoute = ({ children }: { children: React.ReactNode }) => {
@@ -74,28 +69,35 @@ const App = () => {
   return (
     <Router>
       <AuthProvider>
-        <CssBaseline />
-        <Navbar />
-        <Box component="main" sx={{ p: 3, mt: 8 }}>
-          <Routes>
-            <Route path="/" element={<SecureRoute><Home /></SecureRoute>} />
-            <Route path="/clients" element={<SecureRoute><ClientsRoute /></SecureRoute>} />
-            <Route path="/clients/:id" element={<SecureRoute><ClientProfilePage /></SecureRoute>} />
-            <Route path='/support-workers' element={<SecureRoute><SupportWorkerList /></SecureRoute>} />
-            <Route path='/support-workers/:id' element={<SecureRoute><SupportWorkerProfilePage /></SecureRoute>} />
-            <Route path='/appointments' element={<SecureRoute><AppointmentList /></SecureRoute>} />
-            <Route path='/invitations' element={<SecureRoute><InvitationsPage /></SecureRoute>} />
-            <Route path='/reports' element={<RequireSupportWorker><ReportsPage /></RequireSupportWorker>} />
-            <Route path='/messages' element={<SecureRoute><ConversationList /></SecureRoute>} />
-            <Route path='/messages/:id' element={<SecureRoute><ConversationView /></SecureRoute>} />
-            <Route path="/vetting" element={<VettingRoute><VettingAgent /></VettingRoute>} />
-            <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
-            <Route path="/signup" element={<SignUp />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-          </Routes>
-        </Box>
+        <ToastProvider>
+          <CssBaseline />
+          <Navbar />
+          <Box component="main" sx={{ p: 3, mt: 8 }}>
+            <Suspense fallback={<PageLoader />}>
+              <Routes>
+                <Route path="/" element={<SecureRoute><Home /></SecureRoute>} />
+                <Route path="/clients" element={<SecureRoute><ClientsRoute /></SecureRoute>} />
+                <Route path="/clients/:id" element={<SecureRoute><ClientProfilePage /></SecureRoute>} />
+                <Route path='/support-workers' element={<SecureRoute><SupportWorkerRoute /></SecureRoute>} />
+                <Route path='/support-workers/:id' element={<SecureRoute><SupportWorkerProfilePage /></SecureRoute>} />
+                <Route path='/appointments' element={<SecureRoute><AppointmentList /></SecureRoute>} />
+                <Route path='/invitations' element={<SecureRoute><InvitationsPage /></SecureRoute>} />
+                <Route path='/reports' element={<RequireSupportWorker><ReportsPage /></RequireSupportWorker>} />
+                <Route path='/messages' element={<SecureRoute><ConversationList /></SecureRoute>} />
+                <Route path='/messages/admin' element={<RequireSupportWorker><SupportWorkerAdminThread /></RequireSupportWorker>} />
+                <Route path='/messages/:id' element={<SecureRoute><ConversationView /></SecureRoute>} />
+                <Route path="/vetting" element={<VettingRoute><VettingAgent /></VettingRoute>} />
+                <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+                <Route path="/admin/messages" element={<AdminRoute><AdminMessagesPage /></AdminRoute>} />
+                <Route path="/admin/messages/:workerId" element={<AdminRoute><AdminMessagesPage /></AdminRoute>} />
+                <Route path="/signup" element={<SignUp />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/reset-password/:token" element={<ResetPassword />} />
+              </Routes>
+            </Suspense>
+          </Box>
+        </ToastProvider>
       </AuthProvider>
     </Router>
   );

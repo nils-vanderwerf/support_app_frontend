@@ -21,59 +21,6 @@ jest.mock('../context/AuthContext', () => ({
   }),
 }));
 
-const mockSupportWorkerUser = {
-  role: "support_worker",
-  support_worker: {
-    first_name: "John",
-    middle_name: "William",
-    last_name: "Smith",
-    age: '30',
-    gender: 'Male',
-    phone: '0418200000',
-    location: "Sydney",
-    emergency_contact_first_name: "Bob",
-    emergency_contact_last_name: "Brown",
-    emergency_contact_phone: "0411111111",
-    availability: "Tuesday, Wednesday, Thursday",
-    bio: "Test Bio",
-  },
-  user: {
-    email: "john.william.smith@gmail.com",
-    password: "password123",
-    first_name: "John",
-    last_name: "Smith",
-    middle_name: "William"
-  }
-};
-
-const mockClientUser = {
-  client: {
-    age: "23",
-    gender: "Male",
-    phone: "",
-    location: "Glebe",
-    bio: "some more test",
-    health_conditions: "Asthma",
-    medication: "Asthma Puffer",
-    allergies: "Pollen",
-    emergency_contact_first_name: "Lyon",
-    emergency_contact_last_name: "Jones",
-    emergency_contact_phone: "0412345678",
-    first_name: "William",
-    last_name: "Brown",
-    middle_name: "Liam",
-    email: "william.brown@gmail.com"
-  },
-  role: "client",
-  user: {
-    email: "william.brown@gmail.com",
-    password: "password123",
-    first_name: "William",
-    last_name: "Brown",
-    middle_name: "Liam"
-  }
-};
-
 describe('SignUp', () => {
   beforeEach(() => {
     mockedAxios.get.mockResolvedValue({ data: { csrf_token: 'test-token' } });

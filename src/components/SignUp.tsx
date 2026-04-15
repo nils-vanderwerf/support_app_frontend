@@ -8,7 +8,7 @@ import DateOfBirthPicker from './DateOfBirthPicker';
 import InstitutionAutocomplete from './InstitutionAutocomplete';
 import { MEDICATIONS, ALLERGIES, SPECIALISATIONS, QUALIFICATIONS } from '../constants/selectorOptions';
 import { PersonPin, Work } from '@mui/icons-material';
-import axiosInstance from '../api/axiosConfig';
+import axiosInstance, { setAuthToken } from '../api/axiosConfig';
 import { useAuth } from '../context/AuthContext';
 
 const SignUp = () => {
@@ -81,6 +81,7 @@ const SignUp = () => {
         password: userFormData.password,
       }, { withCredentials: true });
 
+      setAuthToken(loginResponse.data.token);
       auth.setUser(loginResponse.data.user);
       auth.setClient(loginResponse.data.client);
       auth.setSupportWorker(loginResponse.data.support_worker);
@@ -209,7 +210,7 @@ const SignUp = () => {
                 {genderSelect}
                 <TextField label="Phone" value={profileData.phone} onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })} fullWidth />
                 <LocationAutocomplete value={profileData.location} onChange={(v) => setProfileData({ ...profileData, location: v })} />
-                <TextField label="Bio" multiline rows={3} value={profileData.bio} onChange={(e) => setProfileData({ ...profileData, bio: e.target.value })} fullWidth />
+                <TextField label="About" multiline rows={3} value={profileData.bio} onChange={(e) => setProfileData({ ...profileData, bio: e.target.value })} fullWidth />
                 <TextField label="Health Conditions" value={profileData.health_conditions} onChange={(e) => setProfileData({ ...profileData, health_conditions: e.target.value })} fullWidth />
                 <ChipSelector label="Medication" options={MEDICATIONS} value={selectedMedications} onChange={setSelectedMedications} />
                 <ChipSelector label="Allergies" options={ALLERGIES} value={selectedAllergies} onChange={setSelectedAllergies} />
@@ -225,8 +226,15 @@ const SignUp = () => {
                 {genderSelect}
                 <TextField label="Phone" value={profileData.phone} onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })} fullWidth />
                 <LocationAutocomplete value={profileData.location} onChange={(v) => setProfileData({ ...profileData, location: v })} />
-                <TextField label="Bio" multiline rows={3} value={profileData.bio} onChange={(e) => setProfileData({ ...profileData, bio: e.target.value })} fullWidth />
-                <TextField label="Experience" multiline rows={3} value={profileData.experience} onChange={(e) => setProfileData({ ...profileData, experience: e.target.value })} fullWidth />
+                <TextField label="About" multiline rows={3} value={profileData.bio} onChange={(e) => setProfileData({ ...profileData, bio: e.target.value })} fullWidth />
+                <TextField
+                  label="Years of experience"
+                  type="number"
+                  value={profileData.experience}
+                  onChange={e => setProfileData({ ...profileData, experience: Math.max(0, parseInt(e.target.value) || 0) })}
+                  fullWidth
+                  inputProps={{ min: 0, max: 50 }}
+                />
                 <AvailabilitySelector value={profileData.availability} onChange={(v) => setProfileData({ ...profileData, availability: v })} />
                 <ChipSelector label="Specialisations" options={SPECIALISATIONS} value={selectedSpecialisations} onChange={setSelectedSpecialisations} />
                 <Divider />

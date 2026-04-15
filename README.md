@@ -4,15 +4,13 @@ A full-stack portfolio project built by someone with cerebral palsy who is on th
 
 **Live app:** [https://suppova.com](https://suppova.com)
 
-In the project directory, you can run:
+The backend Rails API lives in a separate repository: [support_app_backend](https://github.com/nils-vanderwerf/support_app_backend), deployed at [https://api.suppova.com](https://api.suppova.com).
 
-### `npm start`
+---
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## Using the app
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+### As a client
 
 1. Go to [https://suppova.com](https://suppova.com) and click **Sign Up**
 2. Enter your name, email, and password, then select **Client**
@@ -23,8 +21,7 @@ You may also see any lint errors in the console.
 7. Use **Book with AI** to describe what you need in natural language — the AI finds a suitable worker and proposes appointment times on your behalf
 8. Manage your bookings from the **Appointments** page — view status, cancel, or rebook
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### As a support worker
 
 1. Sign up and select **Support Worker**
 2. Fill in your profile (bio, experience, availability, specialisations)
@@ -106,18 +103,32 @@ The following seeded accounts are available to try the app without signing up:
 ### Messaging
 - Conversation threads with chat-bubble UI, encrypted end-to-end using AES-256-GCM
 - Messages are encrypted in the browser before leaving the client; the server stores only ciphertext
-- Per-conversation keys derived via HKDF-SHA256 (IKM = fixed context string, info = `conv-{id}`) — cached in memory so repeated sends are fast
-- The backend mirrors the same HKDF + AES-256-GCM derivation in Ruby/OpenSSL to decrypt messages before passing context to the AI, and encrypts AI replies before storing them
-- System messages (appointment confirmations/declines) rendered inline with a distinct style; the `ENC:` prefix distinguishes encrypted messages from plaintext system messages
+- Per-conversation keys derived via HKDF-SHA256 — cached in memory so repeated sends are fast
+- System messages (appointment confirmations/declines) rendered inline with a distinct style
 - Unread message badges in the navbar
 - AI conversation simulation — each participant in a thread is played by a Claude persona built from their real profile data (name, bio, location, specialisations, health conditions); workers can trigger a simulated client reply and vice versa, including proactive appointment invitation actions
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### AI booking
+- Clients describe what they need in plain language
+- The AI searches available workers, proposes appointment times, and sends invitations
+- Supports single bookings and recurring appointments ("3 sessions over the next month")
+- Supports bulk actions ("decline the rest for me")
+
+### Support worker vetting
+- `VettingAgent` — step-by-step AI conversation that collects police check number, WWCC number, and expiry dates
+- Validates reference numbers (minimum 6 characters, must contain a digit)
+- On completion, worker status moves to `pending` and admin is notified
 
 ### Support worker profiles & list
 - Profile page with editable fields, multi-select availability selector, and specialisation chips
 - **Location filter** — geocodes the search address via Google Places API and filters workers by Haversine distance with an adjustable radius slider
 - **Availability day filter** — parses both JSON and free-form availability strings so legacy data still filters correctly
+
+### Visit reports
+- Support workers can create a visit report for any completed appointment
+- **AI draft generation** — one click populates Activities, Observations, and Follow-up Actions from appointment context
+- Expandable report rows with full detail panel; reports are editable after submission
+- Appointments that already have a report are disabled in the picker to prevent duplicates
 
 ### Admin dashboard
 - Stats bar: approved workers, pending review, total clients, appointments this week
@@ -127,53 +138,27 @@ See the section about [deployment](https://facebook.github.io/create-react-app/d
 - Approved workers tab with avatar, email, location, and specialisations
 - Messages page — admin can view and reply to support worker threads (linked from the navbar)
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## Running locally
 
-- Component composition and reuse across views
-- React hooks (`useState`, `useEffect`, `useContext`)
-- TypeScript interfaces and typing
-- React Context for global auth state
-- Session persistence across refresh
-- Protected and role-gated routes
-- Multi-step forms with conditional rendering
-- Optimistic UI updates (approve/decline without full reload)
-- Timezone-aware date handling — `localOffsetStr()` appends the browser offset to ISO strings; `Intl.DateTimeFormat().resolvedOptions().timeZone` passed to the backend for message formatting
-- MUI component patterns: `ToggleButtonGroup`, `Chip`, `Avatar`, `Table`, `Drawer`, `Dialog`
-- Mocking with Jest (`jest.mock`, `mockResolvedValueOnce`, `jest.MockedFunction`)
-- Testing context with `renderHook` from `@testing-library/react`
-- Agentic AI conversational UI — chat bubbles, loading state, auto-scroll, streaming-style UX
-- Web Crypto API — AES-256-GCM encryption, HKDF key derivation, key caching
-- Geospatial filtering — Haversine distance, async geocoding with debounce, Places API (New)
-- **237 passing tests** across 22 test suites — components, hooks, context, and utility functions
+The frontend requires the backend to be running first. Clone both repos and follow the backend setup instructions, then:
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+```bash
+# Install dependencies
+npm install
 
-## Learn More
+# Create a .env file with:
+# REACT_APP_API_URL=http://localhost:9292/api
+# REACT_APP_GOOGLE_MAPS_API_KEY=your_key
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+npm start
+```
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+Runs on [http://localhost:3000](http://localhost:3000).
 
-### Code Splitting
+## Running tests
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+```bash
+npm test
+```
 
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+237 passing tests across 22 test suites — components, hooks, context, and utility functions.

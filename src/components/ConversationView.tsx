@@ -26,6 +26,7 @@ interface PendingAppointment {
   location: string;
   notes: string;
   status: string;
+  initiated_by?: string;
 }
 
 interface ExistingAppt {
@@ -156,8 +157,12 @@ const ConversationView = () => {
   };
 
   const doApproveAll = async (appts: PendingAppointment[]) => {
-    await Promise.all(appts.map(a => axiosInstance.patch(`/appointments/${a.id}/approve`, { timezone: tz })));
+    await axiosInstance.patch('/appointments/bulk_approve', {
+      appointment_ids: appts.map(a => a.id),
+      timezone: tz,
+    });
     setPendingAppointments([]);
+    showToast(`${appts.length} appointment${appts.length !== 1 ? 's' : ''} confirmed`);
     fetchConversation();
   };
 
@@ -353,13 +358,11 @@ const ConversationView = () => {
 
       {/* Input */}
       <Paper sx={{ p: 1.5, borderRadius: 3, display: 'flex', gap: 1, alignItems: 'flex-end' }}>
-        {client && (
-          <Button size="small" variant="outlined" startIcon={fetchingSuggestion ? <CircularProgress size={14} sx={{ color: '#7B2FBE' }} /> : <CalendarMonth />} onClick={openInviteForm}
-            disabled={fetchingSuggestion}
-            sx={{ borderColor: '#7B2FBE', color: '#7B2FBE', flexShrink: 0, mb: 0.25 }}>
-            Send Invitation
-          </Button>
-        )}
+        <Button size="small" variant="outlined" startIcon={fetchingSuggestion ? <CircularProgress size={14} sx={{ color: '#7B2FBE' }} /> : <CalendarMonth />} onClick={openInviteForm}
+          disabled={fetchingSuggestion}
+          sx={{ borderColor: '#7B2FBE', color: '#7B2FBE', flexShrink: 0, mb: 0.25 }}>
+          Send Invitation
+        </Button>
         <TextField
           fullWidth size="small" placeholder="Type a message…"
           value={input} onChange={e => setInput(e.target.value)}

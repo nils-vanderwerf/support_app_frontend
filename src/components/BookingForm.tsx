@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import axiosInstance from '../api/axiosConfig';
 import {
-  Dialog, DialogTitle, DialogActions, DialogContent, TextField, Box, Button,
+  Dialog, DialogTitle, DialogActions, DialogContent, TextField, Box, Button, Alert,
   Switch, FormControlLabel, ToggleButton, ToggleButtonGroup, Typography, Divider,
-  useMediaQuery, useTheme,
+  useMediaQuery, useTheme, InputAdornment,
 } from '@mui/material';
 import LocationAutocomplete from './LocationAutocomplete';
 import { CloseOutlined, Chat, Warning } from '@mui/icons-material';
@@ -101,6 +101,7 @@ const BookingForm = ({ clientId, supportWorkerId, onClose, onSuccess, appointmen
     clashes: Array<{ date: string; clash: ExistingAppt }>;
     onConfirm: () => void;
   } | null>(null);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     axiosInstance.get('/appointments').then(r => setExistingAppts(r.data)).catch(() => {});
@@ -172,11 +173,16 @@ const BookingForm = ({ clientId, supportWorkerId, onClose, onSuccess, appointmen
   };
 
   const handleSubmit = () => {
+    if (!duration || duration <= 0) {
+      setError('Please set a duration greater than 0 minutes.');
+      return;
+    }
     const offset = localOffsetStr();
     const datesToCheck = recurring && recurringDates.length > 0
       ? recurringDates
       : [date];
-    const clashes = detectClashesForDates(datesToCheck, time, duration, offset, existingAppts);
+    const appts = appointment ? existingAppts.filter(a => a.id !== appointment.id) : existingAppts;
+    const clashes = detectClashesForDates(datesToCheck, time, duration, offset, appts);
     if (clashes.length > 0) {
       setClashDialog({ clashes, onConfirm: doSubmit });
     } else {
@@ -193,6 +199,7 @@ const BookingForm = ({ clientId, supportWorkerId, onClose, onSuccess, appointmen
         </Box>
       </DialogTitle>
 
+      {error && <Alert severity="error" sx={{ mx: 3, mt: 1 }}>{error}</Alert>}
       <DialogContent>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           <TextField
@@ -202,11 +209,42 @@ const BookingForm = ({ clientId, supportWorkerId, onClose, onSuccess, appointmen
             onChange={(e) => setDate(e.target.value)}
           />
           <TextField
-            label="Duration"
-            type="number"
-            value={duration}
-            onChange={(e) => setDuration(parseInt(e.target.value))}
+            label="Time"
+            type="time"
+            value={time}
+            onChange={(e) => setTime(e.target.value)}
           />
+          <Box>
+            <Typography variant="caption" color="text.secondary" display="block" mb={0.5} ml={0.25}>Duration</Typography>
+            <Box display="flex" gap={1}>
+              <TextField
+                type="number"
+                value={Math.floor(duration / 60)}
+                onChange={e => {
+                  const h = Math.max(0, parseInt(e.target.value) || 0);
+                  setDuration(h * 60 + (duration % 60));
+                  setError('');
+                }}
+                size="small"
+                sx={{ width: 100 }}
+                inputProps={{ min: 0, max: 23 }}
+                InputProps={{ endAdornment: <InputAdornment position="end">h</InputAdornment> }}
+              />
+              <TextField
+                type="number"
+                value={duration % 60}
+                onChange={e => {
+                  const m = Math.max(0, Math.min(59, parseInt(e.target.value) || 0));
+                  setDuration(Math.floor(duration / 60) * 60 + m);
+                  setError('');
+                }}
+                size="small"
+                sx={{ width: 110 }}
+                inputProps={{ min: 0, max: 59, step: 15 }}
+                InputProps={{ endAdornment: <InputAdornment position="end">min</InputAdornment> }}
+              />
+            </Box>
+          </Box>
           <LocationAutocomplete value={location} onChange={setLocation} />
           <TextField
             label="Notes"

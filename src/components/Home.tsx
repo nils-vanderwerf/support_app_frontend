@@ -88,63 +88,67 @@ const AppointmentRow = ({ appt, nameOf, isPast = false, onNavigate, onEdit, onDe
     ? `${appt.notes.slice(0, NOTES_LIMIT)}…`
     : appt.notes;
 
+  const dateLabel = isToday ? 'Today' : date.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
+  const timeLabel = `${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} · ${formatDuration(appt.duration)}`;
+
   return (
-    <Box sx={{ py: 1.5, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', opacity: isPast ? 0.75 : 1 }}>
-      <Box display="flex" alignItems="flex-start" gap={2} flex={1} minWidth={0}>
+    <Box sx={{ py: 1.5, opacity: isPast ? 0.75 : 1 }}>
+      {/* Row 1: avatar · name · date chip · action icons */}
+      <Box display="flex" alignItems="center" gap={1.5} minWidth={0}>
         <Avatar
-          sx={{ width: 36, height: 36, bgcolor: isPast ? 'grey.400' : '#7B2FBE', fontSize: 14, flexShrink: 0, mt: 0.25, cursor: 'pointer' }}
+          sx={{ width: 36, height: 36, bgcolor: isPast ? 'grey.400' : '#7B2FBE', fontSize: 14, flexShrink: 0, cursor: 'pointer' }}
           onClick={() => onNavigate(appt)}
         >
           {nameOf.split(' ').map(n => n[0]).join('').slice(0, 2)}
         </Avatar>
-        <Box minWidth={0}>
-          <Typography
-            variant="body2"
-            fontWeight={600}
-            onClick={() => onNavigate(appt)}
-            sx={{ cursor: 'pointer', color: '#7B2FBE', '&:hover': { textDecoration: 'underline' } }}
-          >
-            {nameOf}
-          </Typography>
-          <Typography variant="caption" color="text.secondary">{appt.location || 'No location'}</Typography>
-          {truncatedNotes && (
-            <Typography variant="caption" display="block" color="text.secondary" sx={{ fontStyle: 'italic', mt: 0.25 }}>
-              {truncatedNotes}
-            </Typography>
+        <Typography
+          variant="body2"
+          fontWeight={600}
+          noWrap
+          flex={1}
+          onClick={() => onNavigate(appt)}
+          sx={{ cursor: 'pointer', color: '#7B2FBE', '&:hover': { textDecoration: 'underline' }, minWidth: 0 }}
+        >
+          {nameOf}
+        </Typography>
+        <Chip
+          label={dateLabel}
+          size="small"
+          sx={{ bgcolor: isToday ? '#7B2FBE' : isPast ? 'grey.200' : '#f3e8ff', color: isToday ? 'white' : isPast ? 'text.secondary' : '#7B2FBE', fontWeight: 600, flexShrink: 0 }}
+        />
+        <Box display="flex" flexShrink={0}>
+          {isPast ? (
+            <>
+              <IconButton size="small" onClick={() => onRebook(appt)} sx={{ color: '#7B2FBE' }} title="Rebook">
+                <EventRepeatOutlined fontSize="small" />
+              </IconButton>
+              {onReport && (
+                <IconButton size="small" onClick={() => onReport(appt)} sx={{ color: '#7B2FBE' }} title="Write report">
+                  <NoteAdd fontSize="small" />
+                </IconButton>
+              )}
+            </>
+          ) : (
+            <>
+              <IconButton size="small" onClick={() => onEdit(appt)} sx={{ color: '#7B2FBE' }}>
+                <EditOutlined fontSize="small" />
+              </IconButton>
+              <IconButton size="small" onClick={() => onDelete(appt)} sx={{ color: 'error.main' }}>
+                <DeleteOutlined fontSize="small" />
+              </IconButton>
+            </>
           )}
         </Box>
       </Box>
-      <Box display="flex" alignItems="center" gap={0.5} flexShrink={0} ml={1}>
-        <Box textAlign="right" mr={0.5}>
-          <Chip
-            label={isToday ? 'Today' : date.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })}
-            size="small"
-            sx={{ bgcolor: isToday ? '#7B2FBE' : isPast ? 'grey.200' : '#f3e8ff', color: isToday ? 'white' : isPast ? 'text.secondary' : '#7B2FBE', fontWeight: 600, mb: 0.5 }}
-          />
-          <Typography variant="caption" display="block" color="text.secondary">
-            {date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} · {formatDuration(appt.duration)}
+      {/* Row 2: time · location · notes — indented to sit under the name */}
+      <Box ml="52px">
+        <Typography variant="caption" color="text.secondary" display="block" noWrap>
+          {timeLabel} · {appt.location || 'No location'}
+        </Typography>
+        {truncatedNotes && (
+          <Typography variant="caption" display="block" color="text.secondary" noWrap sx={{ fontStyle: 'italic' }}>
+            {truncatedNotes}
           </Typography>
-        </Box>
-        {isPast ? (
-          <>
-            <IconButton size="small" onClick={() => onRebook(appt)} sx={{ color: '#7B2FBE' }} title="Rebook">
-              <EventRepeatOutlined fontSize="small" />
-            </IconButton>
-            {onReport && (
-              <IconButton size="small" onClick={() => onReport(appt)} sx={{ color: '#7B2FBE' }} title="Write report">
-                <NoteAdd fontSize="small" />
-              </IconButton>
-            )}
-          </>
-        ) : (
-          <>
-            <IconButton size="small" onClick={() => onEdit(appt)} sx={{ color: '#7B2FBE' }}>
-              <EditOutlined fontSize="small" />
-            </IconButton>
-            <IconButton size="small" onClick={() => onDelete(appt)} sx={{ color: 'error.main' }}>
-              <DeleteOutlined fontSize="small" />
-            </IconButton>
-          </>
         )}
       </Box>
     </Box>
@@ -200,8 +204,8 @@ const Home = () => {
   const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
   const [rebookTarget, setRebookTarget] = useState<RebookTarget | null>(null);
   const [reportTarget, setReportTarget] = useState<Appointment | null>(null);
-  const [snackMessage, setSnackMessage] = useState('');
-  const { user } = useAuth();
+  const { showToast } = useToast();
+  const { user, client, supportWorker } = useAuth();
   const navigate = useNavigate();
 
   const fetchDashboard = useCallback(() => {

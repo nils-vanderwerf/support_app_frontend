@@ -17,6 +17,7 @@ const Login = () => {
     e.preventDefault();
     try {
       const response = await axiosInstance.post('/login', { email, password });
+      setAuthToken(response.data.token);
       auth.setUser(response.data.user);
       auth.setClient(response.data.client);
       auth.setSupportWorker(response.data.support_worker);

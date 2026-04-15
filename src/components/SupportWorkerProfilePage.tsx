@@ -4,7 +4,7 @@ import {
   Box, Typography, Avatar, Chip, Button, Paper, Grid, Divider,
   CircularProgress, TextField, MenuItem,
 } from '@mui/material';
-import { LocationOn, Phone, Email, Work, Schedule, ArrowBack, Edit, Save, Cancel, Chat, VerifiedUser, ChildCare } from '@mui/icons-material';
+import { LocationOn, Phone, Email, Work, Schedule, ArrowBack, Edit, Save, Cancel, Chat, VerifiedUser, ChildCare, Cake } from '@mui/icons-material';
 import axiosInstance from '../api/axiosConfig';
 import { SupportWorker } from '../context/AuthContext';
 import { useAuth } from '../context/AuthContext';
@@ -12,6 +12,9 @@ import { useToast } from '../context/ToastContext';
 import AvailabilitySelector, { formatAvailability } from './AvailabilitySelector';
 import BookingForm from './BookingForm';
 import LocationAutocomplete from './LocationAutocomplete';
+import DateOfBirthPicker from './DateOfBirthPicker';
+import InstitutionAutocomplete from './InstitutionAutocomplete';
+import { QUALIFICATIONS } from '../constants/selectorOptions';
 
 const GENDERS = ['Male', 'Female', 'Non-binary', 'Prefer not to say'];
 
@@ -185,9 +188,12 @@ const SupportWorkerProfilePage = () => {
               <Email sx={{ color: '#7B2FBE', fontSize: 20, flexShrink: 0 }} />
               <Typography variant="body2">{worker.email}</Typography>
             </Box>
-            <Box display="flex" alignItems="center" gap={1}>
-              <Schedule sx={{ color: '#7B2FBE', fontSize: 20, flexShrink: 0 }} />
-              {field('availability')}
+            <Box display="flex" alignItems="flex-start" gap={1}>
+              <Schedule sx={{ color: '#7B2FBE', fontSize: 20, flexShrink: 0, mt: 0.25 }} />
+              {editing
+                ? <AvailabilitySelector value={form.availability ?? ''} onChange={v => setForm({ ...form, availability: v })} />
+                : <Typography variant="body2">{formatAvailability(worker.availability) || '—'}</Typography>
+              }
             </Box>
             {!editing && worker.age != null && (
               <Box display="flex" alignItems="center" gap={1} mt={1.5}>

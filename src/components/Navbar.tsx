@@ -7,7 +7,7 @@ import {
 import { Menu as MenuIcon, Close as CloseIcon } from '@mui/icons-material';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import axiosInstance from '../api/axiosConfig';
+import axiosInstance, { setAuthToken } from '../api/axiosConfig';
 
 const Navbar = () => {
   const auth = useAuth();
@@ -16,6 +16,7 @@ const Navbar = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [invitationsBadge, setInvitationsBadge] = useState(0);
+  const [adminUnread, setAdminUnread] = useState(0);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   useEffect(() => {
@@ -33,9 +34,22 @@ const Navbar = () => {
     return () => clearInterval(interval);
   }, [auth.client, auth.supportWorker]);
 
+  useEffect(() => {
+    if (auth.user?.role !== 'admin') return;
+    const fetchAdminNotifications = () => {
+      axiosInstance.get('/admin/stats')
+        .then(res => setAdminUnread(res.data.unread_messages ?? 0))
+        .catch(() => {});
+    };
+    fetchAdminNotifications();
+    const interval = setInterval(fetchAdminNotifications, 15000);
+    return () => clearInterval(interval);
+  }, [auth.user?.role]);
+
   const handleLogout = async () => {
     setDrawerOpen(false);
     try { await axiosInstance.delete('/logout'); } catch {}
+    setAuthToken(null);
     auth?.setUser(null);
     navigate('/login');
   };
@@ -46,12 +60,13 @@ const Navbar = () => {
 
   const navLinks = showNav ? [
     ...(auth.supportWorker ? [{ label: 'Clients', to: '/clients' }] : []),
-    { label: 'Support Workers', to: '/support-workers' },
+    ...(auth.client ? [{ label: 'Support Workers', to: '/support-workers' }] : []),
     { label: 'Appointments', to: '/appointments' },
     ...(auth.client || auth.supportWorker ? [
       { label: 'Messages', to: '/messages', badge: unreadMessages, onNavigate: () => setUnreadMessages(0) },
       { label: 'Invitations', to: '/invitations', badge: invitationsBadge, onNavigate: () => setInvitationsBadge(0) },
     ] : []),
+    ...(auth.supportWorker ? [{ label: 'Reports', to: '/reports' }] : []),
   ] : [];
 
   const profilePath = auth.client
@@ -71,7 +86,7 @@ const Navbar = () => {
       </Box>
       <Divider />
       <List disablePadding>
-        {auth.user && (
+        {auth.user && !isAdmin && (
           <ListItem disablePadding>
             <ListItemButton component={Link} to="/" onClick={() => setDrawerOpen(false)}>
               <ListItemText primary="Home" />
@@ -82,6 +97,17 @@ const Navbar = () => {
           <ListItem disablePadding>
             <ListItemButton component={Link} to="/admin" onClick={() => setDrawerOpen(false)}>
               <ListItemText primary="Admin" />
+            </ListItemButton>
+          </ListItem>
+        )}
+        {isAdmin && (
+          <ListItem disablePadding>
+            <ListItemButton component={Link} to="/admin/messages" onClick={() => { setDrawerOpen(false); setAdminUnread(0); }}>
+              <ListItemText primary={
+                adminUnread > 0
+                  ? <Badge badgeContent={adminUnread} color="error" max={9}>Messages</Badge>
+                  : 'Messages'
+              } />
             </ListItemButton>
           </ListItem>
         )}
@@ -152,8 +178,13 @@ const Navbar = () => {
         {/* Desktop nav links */}
         {!isMobile && (
           <>
-            {auth.user && <Button color="inherit" component={Link} to="/">Home</Button>}
+            {auth.user && !isAdmin && <Button color="inherit" component={Link} to="/">Home</Button>}
             {isAdmin && <Button color="inherit" component={Link} to="/admin">Admin</Button>}
+            {isAdmin && (
+              <Button color="inherit" component={Link} to="/admin/messages" onClick={() => setAdminUnread(0)}>
+                <Badge badgeContent={adminUnread} color="error" max={9}>Messages</Badge>
+              </Button>
+            )}
             {navLinks.map(link => (
               <Button
                 key={link.to}

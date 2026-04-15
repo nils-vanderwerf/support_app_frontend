@@ -191,9 +191,13 @@ Headline: *"AI visit reports — generate a structured draft from appointment co
 **Login as:** admin  
 **URL:** `/admin`
 
+> Seed data includes 2 pending applicants automatically — no extra console steps needed.
+
 - [ ] Stats row: Approved Workers / Pending Review / Clients / Appointments this week
-- [ ] **Pending Applications** tab — worker with Agent Recommendation chip visible
-- [ ] Chip text readable (e.g. "Approved — strong communication, verified credentials…")
+- [ ] **Pending Applications** tab — **Marcus Bell** and **Aisha Koroma** visible with Agent Recommendation chips
+- [ ] Marcus: *"Approved — nursing background adds strong clinical credibility…"*
+- [ ] Aisha: *"Conditionally approved — limited experience (2 years) but youth mental health focus is genuine…"*
+- [ ] Chip text readable — shows AI doesn't just rubber-stamp everyone
 
 Headline: *"Admin oversight — AI vetting recommendations for every applicant"*
 
@@ -278,8 +282,6 @@ Under the hood:
 → Location-aware matching - workers push back if they're too far
 
 The conversations in the demo are AI-to-AI — each person in a chat is a Claude persona built from real profile data. No real users needed to populate it.
-
-It's still a work in progress — no document uploads, no payment or rate handling, no review system yet. Happy to hear feedback from anyone who knows the space.
 
 It's still a work in progress — no document uploads, no payment or rate handling, no review system yet. Happy to hear feedback from anyone who knows the space.
 
