@@ -26,7 +26,7 @@ interface Client {
   phone: string;
 }
 
-interface SupportWorker {
+export interface SupportWorker {
   id: number;
   first_name: string;
   middle_name:  string | null;

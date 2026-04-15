@@ -12,7 +12,8 @@ import {
   Container,
   Box,
   Avatar,
-  Button
+  Button,
+  Snackbar
 } from '@mui/material';
 import SupportWorker from './SupportWorker';
 import axiosInstance from '../api/axiosConfig';
@@ -21,6 +22,7 @@ const SupportWorkerTable = () => {
   const [workers, setWorkers] = useState([]);
   const [selectedWorker, setSelectedWorker] = useState(null);
   const [bookedWorkers, setBookedWorkers] = useState(new Set());
+  const [visibleMessage, setVisibleMessage] = useState('')
 
   useEffect(() => {
     const fetchData = async () => {
@@ -100,11 +102,25 @@ const SupportWorkerTable = () => {
           worker={selectedWorker}
           handleBook={handleBook}
           handleClose={handleCloseModal}
+          onSuccess={(date) => { 
+            setVisibleMessage(`${selectedWorker.first_name} ${selectedWorker.last_name} booked for ${date}`); 
+            handleCloseModal(); 
+          }}
           isBooked={bookedWorkers.has(selectedWorker.id)}
         />
-      )}
-    </Container>
-  );
+        )
+      }
+      {visibleMessage && (
+        <Snackbar
+          open={true}
+          message={visibleMessage}
+          onClose={() => setVisibleMessage(false)}
+          autoHideDuration={5000}
+        />
+        )
+      }
+      </Container>
+    );
 };
 
 export default SupportWorkerTable;
