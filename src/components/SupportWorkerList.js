@@ -21,7 +21,6 @@ import axiosInstance from '../api/axiosConfig';
 const SupportWorkerTable = () => {
   const [workers, setWorkers] = useState([]);
   const [selectedWorker, setSelectedWorker] = useState(null);
-  const [bookedWorkers, setBookedWorkers] = useState(new Set());
   const [visibleMessage, setVisibleMessage] = useState('')
 
   useEffect(() => {
@@ -37,9 +36,6 @@ const SupportWorkerTable = () => {
     fetchData();
   }, []);
 
-  const handleBook = (workerId) => {
-    setBookedWorkers((prev) => new Set([...prev, workerId]));
-  };
 
   const handleOpenModal = (worker) => {
     setSelectedWorker(worker);
@@ -100,13 +96,11 @@ const SupportWorkerTable = () => {
       {selectedWorker && (
         <SupportWorker
           worker={selectedWorker}
-          handleBook={handleBook}
           handleClose={handleCloseModal}
           onSuccess={(date) => { 
             setVisibleMessage(`${selectedWorker.first_name} ${selectedWorker.last_name} booked for ${date}`); 
             handleCloseModal(); 
           }}
-          isBooked={bookedWorkers.has(selectedWorker.id)}
         />
         )
       }
@@ -114,7 +108,7 @@ const SupportWorkerTable = () => {
         <Snackbar
           open={true}
           message={visibleMessage}
-          onClose={() => setVisibleMessage(false)}
+          onClose={() => setVisibleMessage('')}
           autoHideDuration={5000}
         />
         )

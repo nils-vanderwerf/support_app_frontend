@@ -33,7 +33,6 @@ const BookingForm = ({worker, onClose, onSuccess}: BookingProps ) => {
           }
         );
         onClose();
-        console.log('onSuccess called', date)
         onSuccess(date);
         } catch (error) {
           console.error('Error posting data: ', error);
