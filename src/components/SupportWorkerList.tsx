@@ -17,11 +17,11 @@ import {
 } from '@mui/material';
 import SupportWorker from './SupportWorker';
 import axiosInstance from '../api/axiosConfig';
+import { SupportWorker as SupportWorkerType } from '../context/AuthContext';
 
 const SupportWorkerTable = () => {
-  const [workers, setWorkers] = useState([]);
-  const [selectedWorker, setSelectedWorker] = useState(null);
-  const [bookedWorkers, setBookedWorkers] = useState(new Set());
+  const [workers, setWorkers] = useState<SupportWorkerType[]>([]);
+  const [selectedWorker, setSelectedWorker] = useState<SupportWorkerType | null>(null);
   const [visibleMessage, setVisibleMessage] = useState('')
 
   useEffect(() => {
@@ -41,7 +41,7 @@ const SupportWorkerTable = () => {
     setBookedWorkers((prev) => new Set([...prev, workerId]));
   };
 
-  const handleOpenModal = (worker) => {
+  const handleOpenModal = (worker: SupportWorkerType) => {
     setSelectedWorker(worker);
   };
 
