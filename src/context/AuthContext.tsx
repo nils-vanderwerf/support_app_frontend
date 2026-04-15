@@ -10,7 +10,7 @@ interface User {
   role: string | null;
 }
 
-interface Client {
+export interface Client {
   id: number;
   first_name: string;
   last_name: string;

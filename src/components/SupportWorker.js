@@ -48,7 +48,7 @@ const CloseButton = styled(Button)({
   },
 });
 
-const SupportWorker = ({ worker, handleBook, handleClose, isBooked, onSuccess }) => {
+const SupportWorker = ({ worker, handleBook, handleClose, onSuccess }) => {
   const [showBookingForm, setShowBookingForm] = useState(false);
 
   return (
