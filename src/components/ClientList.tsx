@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import axiosInstance from '../api/axiosConfig'; // Keep the existing axios configuration for other requests
+import { Client } from '../context/AuthContext';
 
 const ClientList = () => {
-  const [clients, setClients] = useState([]);
+  const [clients, setClients] = useState<Client[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -26,7 +27,7 @@ const ClientList = () => {
           <div key={client.id} className="col-sm-12 col-md-6 col-lg-3 mb-4">
             <div className="card h-100">
               <div className="card-body">
-                <h5 className="card-title">{client.name}</h5>
+                <h5 className="card-title">{client.first_name} {client.last_name}</h5>
                 <h6 className="card-subtitle mb-2 text-muted">Age: {client.age}</h6>
                 <p className="card-text"><strong>Health Conditions:</strong> {client.health_conditions}</p>
                 <p className="card-text"><strong>Medications:</strong> {client.medication}</p>

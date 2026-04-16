@@ -9,6 +9,7 @@ import {
   Button,
   Avatar
 } from '@mui/material';
+import { SupportWorker as SupportWorkerType } from '../context/AuthContext';
 import { styled } from '@mui/system';
 import { useState } from 'react';
 import BookingForm from './BookingForm';
@@ -48,7 +49,13 @@ const CloseButton = styled(Button)({
   },
 });
 
-const SupportWorker = ({ worker, handleBook, handleClose, onSuccess }) => {
+interface SupportWorkerProps {
+  worker: SupportWorkerType;
+  handleClose: () => void;
+  onSuccess: (date: string) => void;
+}
+
+const SupportWorker = ({ worker, handleClose, onSuccess}: SupportWorkerProps) => {
   const [showBookingForm, setShowBookingForm] = useState(false);
 
   return (
@@ -71,11 +78,6 @@ const SupportWorker = ({ worker, handleBook, handleClose, onSuccess }) => {
             <Typography variant="body1"><strong>Availability:</strong> {worker.availability}</Typography>
             <Typography variant="body1"><strong>Phone:</strong> {worker.phone}</Typography>
             <Typography variant="body1"><strong>Email:</strong> {worker.email}</Typography>
-            {isBooked && (
-              <Typography variant="body2" color="secondary" sx={{ mt: 2 }}>
-                This worker has been booked.
-              </Typography>
-            )}
           </Box>
         </Box>
       </DialogContent>
@@ -83,11 +85,9 @@ const SupportWorker = ({ worker, handleBook, handleClose, onSuccess }) => {
         <CloseButton onClick={handleClose} variant="contained">
           Close
         </CloseButton>
-        {!isBooked && (
           <Button onClick={() => setShowBookingForm(true)} color="primary" variant="contained" sx={{ backgroundColor: '#007bff', color: '#fff' }}>
             Book
           </Button>
-        )}
       </DialogActions>
       </CustomDialog>
         {showBookingForm && (
