@@ -5,6 +5,7 @@ import SecureRoute from './components/SecureRoute';
 import Home from './components/Home';
 import SupportWorkerList from './components/SupportWorkerList';
 import ClientList from './components/ClientList';
+import AppointmentList from './components/AppointmentList';
 import Navbar from './components/Navbar';
 import SignUp from './components/SignUp';
 import Login from './components/Login';
@@ -21,6 +22,7 @@ const App = () => {
             <Route path="/" element={<Home />} />
             <Route path="/clients" element={<SecureRoute><ClientList /></SecureRoute>} />
             <Route path='/support-workers' element={<SecureRoute><SupportWorkerList /></SecureRoute>} />
+            <Route path='/appointments' element={<SecureRoute><AppointmentList /></SecureRoute>} />
             <Route path="/signup" element={<SignUp />} />
             <Route path="/login" element={<Login />} />
           </Routes>
