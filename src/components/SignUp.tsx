@@ -9,8 +9,8 @@ const SignUp = () => {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [middleName, setMiddleName] = useState('');
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
+  const [errors, setErrors] = useState<string[]>([]);
+  const [success, setSuccess] = useState(false);
   const [csrfToken, setCsrfToken] = useState(''); 
 
   const hasFetchcsrf = useRef(false)
@@ -20,24 +20,18 @@ const SignUp = () => {
 {    const fetchcsrf = async () => {
     try{
       const response = await axiosInstance.get('/csrf_token')
-              console.log('Data Object:', response);
-        console.log('CSRF Token fetched:', response.data.csrf_token);
-
-        setCsrfToken(response.data.csrf_token);
-        hasFetchcsrf.current = true
+      setCsrfToken(response.data.csrf_token);
+      hasFetchcsrf.current = true
     } catch(error) {
-        console.error('There was a problem fetching the CSRF token:', error);
-
     }
   }
   fetchcsrf()}
 }
   , []);
 
-  const handleSubmit = async (event) => {
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     try {
-      console.log('CSRF Token used in request:', csrfToken);
       const response = await axiosInstance.post('/users', {
         user: {
         email,
@@ -54,9 +48,9 @@ const SignUp = () => {
         withCredentials: true
       });
       setSuccess(true);
-      setError(null);
-    } catch (error) {
-      setError(error.response.data.errors || ['An error occurred']);
+      setErrors([]);
+    } catch (err: any) {
+      setErrors(err.response.data.errors || ['An error occurred']);
       setSuccess(false);
     }
   };
@@ -70,7 +64,13 @@ const SignUp = () => {
         <Typography variant="body2" color="text.secondary" mb={4}>
           Sign up to get started
         </Typography>
-        {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
+        {errors.length > 0 &&
+          errors.map((msg) => (
+          <Alert severity="error" sx={{ mb: 3 }} key={msg}>
+            {msg}
+          </Alert>
+          ))
+        }
         {success && <Alert severity="success" sx={{ mb: 3 }}>Account created successfully!</Alert>}
         <Box component="form" onSubmit={handleSubmit} display="flex" flexDirection="column" gap={3}>
           <TextField label="First Name" value={firstName} onChange={(e) => setFirstName(e.target.value)} fullWidth />
