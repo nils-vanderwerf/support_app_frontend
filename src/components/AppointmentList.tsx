@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-
+import { SupportWorker, Client } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
+import { formatDuration } from '../utils/formatDuration';
 import { 
   Table,
   TableBody,
@@ -13,12 +15,11 @@ import {
   Box,
 } from '@mui/material';
 import axiosInstance from '../api/axiosConfig';
-
 export interface Appointment {
   id: number;
   date: string;
-  support_worker_id: number;
-  client_id: number;
+  support_worker: SupportWorker;
+  client: Client;
   location: string;
   duration: number;
   notes: string; 
@@ -26,7 +27,8 @@ export interface Appointment {
 
 const AppointmentList = () => {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
-  
+  const { client } = useAuth();
+  const isClient = !!client;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -52,7 +54,7 @@ const AppointmentList = () => {
             <TableHead>
               <TableRow>
                 <TableCell>Date</TableCell>
-                <TableCell>Support Worker</TableCell>
+                <TableCell>{isClient ? "Support Worker" : "Client"}</TableCell>
                 <TableCell>Location</TableCell>
                 <TableCell>Duration</TableCell>
                 <TableCell>Notes</TableCell>
@@ -62,9 +64,14 @@ const AppointmentList = () => {
               {appointments.map((appointment) => (
                 <TableRow key={appointment.id}>
                   <TableCell>{new Date(appointment.date).toLocaleDateString()}</TableCell>
-                  <TableCell>{appointment.client_id}</TableCell>
+                  <TableCell>
+                    {isClient 
+                      ? `${appointment.support_worker.first_name} ${appointment.support_worker.last_name}`
+                      : `${appointment.client.first_name} ${appointment.client.last_name}`
+                    }
+                  </TableCell>
                   <TableCell>{appointment.location}</TableCell>
-                  <TableCell>{appointment.duration}</TableCell>
+                  <TableCell>{formatDuration(appointment.duration)}</TableCell>
                   <TableCell>{appointment.notes}</TableCell>
                 </TableRow>
               ))}
