@@ -34,6 +34,7 @@ describe('BookingForm', () => {
     render(<BookingForm worker={mockWorker} onClose={mockOnClose} onSuccess={mockOnSuccess} />);
     mockedAxios.post.mockResolvedValue({ data: {}});
   })
+  afterEach(() => { jest.clearAllMocks(); })
   it('renders the title', () => {
     expect(screen.getByText(/Book a Support Worker/i)).toBeInTheDocument();
   });
@@ -62,6 +63,7 @@ describe('BookingForm', () => {
   userEvent.type(screen.getByLabelText(/Location/i), 'Melbourne');
   userEvent.type(screen.getByLabelText(/Notes/i), 'Some test notes');
   userEvent.click(screen.getByRole('button', { name: /Book/i }));
+  await waitFor(() => {
   expect(mockedAxios.post).toHaveBeenCalledWith('/appointments', {
     appointment: {
       date: expect.any(String),
@@ -72,11 +74,12 @@ describe('BookingForm', () => {
       support_worker_id: 1
     }
   });
+  });
   })
   it('closes the modal after submission', async () => {
     userEvent.click(screen.getByRole('button', { name: /Book/i }));
     await waitFor(() => {
-      expect(mockOnSuccess).toHaveBeenCalled()
+      expect(mockOnSuccess).toHaveBeenCalled();
     });
     await waitFor(() => {
       expect(mockOnClose).toHaveBeenCalled();
