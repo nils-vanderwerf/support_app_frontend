@@ -17,6 +17,8 @@ const handleLogout = () => {
         <Button color="inherit" component={Link} to="/">Home</Button>
         <Button color="inherit" component={Link} to="/clients">Clients</Button>
         <Button color="inherit" component={Link} to="/support-workers">Support Workers</Button>
+        <Button color="inherit" component={Link} to="/appointments">Appointments</Button>
+        
         <Box sx={{ flexGrow: 1 }} />
         {auth.user ? (
           <>
