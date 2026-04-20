@@ -56,14 +56,13 @@ const AppointmentList = () => {
                 <TableCell>Location</TableCell>
                 <TableCell>Duration</TableCell>
                 <TableCell>Notes</TableCell>
-                <TableCell></TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {appointments.map((appointment) => (
                 <TableRow key={appointment.id}>
-                  <TableCell>{appointment.date}</TableCell>
-                  <TableCell>{`${appointment.client_id ? appointment.client_id : appointment.support_worker_id }`}</TableCell>
+                  <TableCell>{new Date(appointment.date).toLocaleDateString()}</TableCell>
+                  <TableCell>{appointment.client_id}</TableCell>
                   <TableCell>{appointment.location}</TableCell>
                   <TableCell>{appointment.duration}</TableCell>
                   <TableCell>{appointment.notes}</TableCell>
@@ -72,6 +71,9 @@ const AppointmentList = () => {
             </TableBody>
           </Table>
         </TableContainer>
+        {appointments.length === 0 && (
+          <Typography fontStyle="italic">No appointments found</Typography>
+        )}
       </Box>
       </Container>
     );
