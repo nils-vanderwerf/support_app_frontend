@@ -4,17 +4,18 @@ import { Box, Button, TextField, Typography, Alert, Card, Select, MenuItem, Form
 import { PersonPin, Work } from '@mui/icons-material';
 import axiosInstance from '../api/axiosConfig';
 import { useAuth } from '../context/AuthContext';
-const SignUp = () => {
-const [userFormData, setUserFormData] = useState({
-  email: '', password: '', first_name: '', last_name: '', middle_name: ''
-});
 
-const [profileData, setProfileData] = useState({
-  age: '', gender: '', phone: '', location: '', bio: '',
-  experience: '', availability: '', health_conditions: '', medication: '',
-  allergies: '', emergency_contact_first_name: '', emergency_contact_last_name: '',
-  emergency_contact_phone: ''
-});
+const SignUp = () => {
+  const [userFormData, setUserFormData] = useState({
+    email: '', password: '', first_name: '', last_name: '', middle_name: ''
+  });
+
+  const [profileData, setProfileData] = useState({
+    age: '', gender: '', phone: '', location: '', bio: '',
+    experience: '', availability: '', health_conditions: '', medication: '',
+    allergies: '', emergency_contact_first_name: '', emergency_contact_last_name: '',
+    emergency_contact_phone: ''
+  });
 
   const [errors, setErrors] = useState<string[]>([]);
   const [success, setSuccess] = useState(false);
@@ -42,14 +43,14 @@ const [profileData, setProfileData] = useState({
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     const profilePayload = role === 'client'
-  ? { age: profileData.age, gender: profileData.gender, phone: profileData.phone, location: profileData.location, bio: profileData.bio, health_conditions: profileData.health_conditions, medication: profileData.medication, allergies: profileData.allergies, emergency_contact_first_name: profileData.emergency_contact_first_name, emergency_contact_last_name: profileData.emergency_contact_last_name, emergency_contact_phone: profileData.emergency_contact_phone }
-  : { age: profileData.age, gender: profileData.gender, phone: profileData.phone, location: profileData.location, bio: profileData.bio, experience: profileData.experience, availability: profileData.availability, emergency_contact_first_name: profileData.emergency_contact_first_name, emergency_contact_last_name: profileData.emergency_contact_last_name, emergency_contact_phone: profileData.emergency_contact_phone };
+      ? { age: profileData.age, gender: profileData.gender, phone: profileData.phone, location: profileData.location, bio: profileData.bio, health_conditions: profileData.health_conditions, medication: profileData.medication, allergies: profileData.allergies, emergency_contact_first_name: profileData.emergency_contact_first_name, emergency_contact_last_name: profileData.emergency_contact_last_name, emergency_contact_phone: profileData.emergency_contact_phone }
+      : { age: profileData.age, gender: profileData.gender, phone: profileData.phone, location: profileData.location, bio: profileData.bio, experience: profileData.experience, availability: profileData.availability, emergency_contact_first_name: profileData.emergency_contact_first_name, emergency_contact_last_name: profileData.emergency_contact_last_name, emergency_contact_phone: profileData.emergency_contact_phone };
     try {
       await axiosInstance.post('/users', {
         user: { ...userFormData },
         role: role,
-        [role]: { 
-          ...profilePayload, 
+        [role]: {
+          ...profilePayload,
           first_name: userFormData.first_name,
           last_name: userFormData.last_name,
           middle_name: userFormData.middle_name,
@@ -80,6 +81,42 @@ const [profileData, setProfileData] = useState({
     }
   };
 
+  const genderSelect = (
+    <FormControl fullWidth>
+      <InputLabel>Gender</InputLabel>
+      <Select
+        value={profileData.gender}
+        label="Gender"
+        onChange={(e) => setProfileData({ ...profileData, gender: e.target.value })}
+      >
+        <MenuItem value="Male">Male</MenuItem>
+        <MenuItem value="Female">Female</MenuItem>
+        <MenuItem value="Non-binary">Non-binary</MenuItem>
+        <MenuItem value="Prefer not to say">Prefer not to say</MenuItem>
+      </Select>
+    </FormControl>
+  );
+
+  const backAndSubmitButtons = (
+    <Box display="flex" gap={2}>
+      <Button
+        type="button"
+        variant="outlined"
+        onClick={() => setStep(2)}
+        sx={{ py: 1.5, color: '#7B2FBE', borderColor: '#7B2FBE' }}
+      >
+        Back
+      </Button>
+      <Button
+        type="submit"
+        variant="contained"
+        sx={{ flex: 1, backgroundColor: '#7B2FBE', py: 1.5, '&:hover': { backgroundColor: '#6a0dad' } }}
+      >
+        Sign Up
+      </Button>
+    </Box>
+  );
+
   return (
     <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
       <Box sx={{ width: 560 }}>
@@ -104,7 +141,7 @@ const [profileData, setProfileData] = useState({
             <TextField label="Middle Name" value={userFormData.middle_name} onChange={(e) => setUserFormData({ ...userFormData, middle_name: e.target.value })} fullWidth />
             <TextField label="Last Name" value={userFormData.last_name} onChange={(e) => setUserFormData({ ...userFormData, last_name: e.target.value })} fullWidth />
             <TextField label="Email" type="email" value={userFormData.email} onChange={(e) => setUserFormData({ ...userFormData, email: e.target.value })} fullWidth />
-            <TextField label="Password" type="password" value={userFormData.password}  onChange={(e) => setUserFormData({ ...userFormData, password: e.target.value })} fullWidth />
+            <TextField label="Password" type="password" value={userFormData.password} onChange={(e) => setUserFormData({ ...userFormData, password: e.target.value })} fullWidth />
             <Button
               type="button"
               onClick={() => setStep(2)}
@@ -116,96 +153,71 @@ const [profileData, setProfileData] = useState({
             </Button>
           </Box>
         )}
+
         {step === 2 && (
-          <Box display="flex" gap={3} justifyContent="center" mt={3}>
-            <Card
-              onClick={() => { setRole('client'); setStep(3); }}
-              sx={{ width: 200, p: 3, cursor: 'pointer', textAlign: 'center', border: role === 'client' ? '2px solid #7B2FBE' : '2px solid transparent' }}
-            >
-              <PersonPin sx={{ fontSize: 60, color: '#7B2FBE' }} />
-              <Typography variant="h6">Client</Typography>
-            </Card>
-            <Card
-              onClick={() => { setRole('support_worker'); setStep(3); }}
-              sx={{ width: 200, p: 3, cursor: 'pointer', textAlign: 'center', border: role === 'support_worker' ? '2px solid #7B2FBE' : '2px solid transparent' }}
-            >
-              <Work sx={{ fontSize: 60, color: '#7B2FBE' }} />
-              <Typography variant="h6">Support Worker</Typography>
-            </Card>
-          </Box>
+          <>
+            <Box display="flex" gap={3} justifyContent="center" mt={3}>
+              <Card
+                onClick={() => { setRole('client'); setStep(3); }}
+                sx={{ width: 200, p: 3, cursor: 'pointer', textAlign: 'center', border: role === 'client' ? '2px solid #7B2FBE' : '2px solid transparent' }}
+              >
+                <PersonPin sx={{ fontSize: 60, color: '#7B2FBE' }} />
+                <Typography variant="h6">Client</Typography>
+              </Card>
+              <Card
+                onClick={() => { setRole('support_worker'); setStep(3); }}
+                sx={{ width: 200, p: 3, cursor: 'pointer', textAlign: 'center', border: role === 'support_worker' ? '2px solid #7B2FBE' : '2px solid transparent' }}
+              >
+                <Work sx={{ fontSize: 60, color: '#7B2FBE' }} />
+                <Typography variant="h6">Support Worker</Typography>
+              </Card>
+            </Box>
+            <Box display="flex" justifyContent="center" mt={4}>
+              <Button
+                type="button"
+                variant="outlined"
+                onClick={() => setStep(1)}
+                sx={{ px: 9, color: '#7B2FBE', borderColor: '#7B2FBE' }}
+              >
+                Back
+              </Button>
+            </Box>
+          </>
         )}
 
         {step === 3 && (
           <Box display="flex" flexDirection="column" gap={3} mt={3}>
-          {role === 'client' && (
-            <Box component="form" onSubmit={handleSubmit} display="flex" flexDirection="column" gap={3}>
-              <TextField label="Age" type="number" value={profileData.age} onChange={(e) => setProfileData({ ...profileData, age: e.target.value })} fullWidth />
-              <FormControl fullWidth>
-  <InputLabel>Gender</InputLabel>
-  <Select
-    value={profileData.gender}
-    label="Gender"
-    onChange={(e) => setProfileData({ ...profileData, gender: e.target.value })}
-  >
-    <MenuItem value="Male">Male</MenuItem>
-    <MenuItem value="Female">Female</MenuItem>
-    <MenuItem value="Non-binary">Non-binary</MenuItem>
-    <MenuItem value="Prefer not to say">Prefer not to say</MenuItem>
-  </Select>
-</FormControl>
-              <TextField label="Phone" value={profileData.phone} onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })} fullWidth />
-              <TextField label="Location" value={profileData.location} onChange={(e) => setProfileData({ ...profileData, location: e.target.value })} fullWidth />
-              <TextField label="Bio" multiline rows={3} value={profileData.bio} onChange={(e) => setProfileData({ ...profileData, bio: e.target.value })} fullWidth />
-              <TextField label="Health Conditions" value={profileData.health_conditions} onChange={(e) => setProfileData({ ...profileData, health_conditions: e.target.value })} fullWidth />
-              <TextField label="Medication" value={profileData.medication} onChange={(e) => setProfileData({ ...profileData, medication: e.target.value })} fullWidth />
-              <TextField label="Allergies" value={profileData.allergies} onChange={(e) => setProfileData({ ...profileData, allergies: e.target.value })} fullWidth />
-              <TextField label="Emergency Contact First Name" value={profileData.emergency_contact_first_name} onChange={(e) => setProfileData({ ...profileData, emergency_contact_first_name: e.target.value })} fullWidth />
-              <TextField label="Emergency Contact Last Name" value={profileData.emergency_contact_last_name} onChange={(e) => setProfileData({ ...profileData, emergency_contact_last_name: e.target.value })} fullWidth />
-              <TextField label="Emergency Contact Phone" value={profileData.emergency_contact_phone} onChange={(e) => setProfileData({ ...profileData, emergency_contact_phone: e.target.value })} fullWidth />
-              <Button
-                type="submit"
-                variant="contained"
-                fullWidth
-                sx={{ backgroundColor: '#7B2FBE', py: 1.5, '&:hover': { backgroundColor: '#6a0dad' } }}
-              >
-                Sign Up
-              </Button>
-            </Box>
-          )}
-          {role === 'support_worker' && (
-            <Box component="form" onSubmit={handleSubmit} display="flex" flexDirection="column" gap={3}>
-              <TextField label="Age" type="number" value={profileData.age} onChange={(e) => setProfileData({ ...profileData, age: e.target.value })} fullWidth />
-              <FormControl fullWidth>
-  <InputLabel>Gender</InputLabel>
-  <Select
-    value={profileData.gender}
-    label="Gender"
-    onChange={(e) => setProfileData({ ...profileData, gender: e.target.value })}
-  >
-    <MenuItem value="Male">Male</MenuItem>
-    <MenuItem value="Female">Female</MenuItem>
-    <MenuItem value="Non-binary">Non-binary</MenuItem>
-    <MenuItem value="Prefer not to say">Prefer not to say</MenuItem>
-  </Select>
-</FormControl>
-              <TextField label="Phone" value={profileData.phone} onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })} fullWidth />
-              <TextField label="Location" value={profileData.location} onChange={(e) => setProfileData({ ...profileData, location: e.target.value })} fullWidth />
-              <TextField label="Bio" multiline rows={3} value={profileData.bio} onChange={(e) => setProfileData({ ...profileData, bio: e.target.value })} fullWidth />
-              <TextField label="Experience" multiline rows={3} value={profileData.experience} onChange={(e) => setProfileData({ ...profileData, experience: e.target.value })} fullWidth />
-              <TextField label="Availability" value={profileData.availability} onChange={(e) => setProfileData({ ...profileData, availability: e.target.value })} fullWidth />
-              <TextField label="Emergency Contact First Name" value={profileData.emergency_contact_first_name} onChange={(e) => setProfileData({ ...profileData, emergency_contact_first_name: e.target.value })} fullWidth />
-              <TextField label="Emergency Contact Last Name" value={profileData.emergency_contact_last_name} onChange={(e) => setProfileData({ ...profileData, emergency_contact_last_name: e.target.value })} fullWidth />
-              <TextField label="Emergency Contact Phone" value={profileData.emergency_contact_phone} onChange={(e) => setProfileData({ ...profileData, emergency_contact_phone: e.target.value })} fullWidth />
-              <Button
-                type="submit"
-                variant="contained"
-                fullWidth
-                sx={{ backgroundColor: '#7B2FBE', py: 1.5, '&:hover': { backgroundColor: '#6a0dad' } }}
-              >
-                Sign Up
-              </Button>
-            </Box>
-          )}
+            {role === 'client' && (
+              <Box component="form" onSubmit={handleSubmit} display="flex" flexDirection="column" gap={3}>
+                <TextField label="Age" type="number" value={profileData.age} onChange={(e) => setProfileData({ ...profileData, age: e.target.value })} fullWidth />
+                {genderSelect}
+                <TextField label="Phone" value={profileData.phone} onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })} fullWidth />
+                <TextField label="Location" value={profileData.location} onChange={(e) => setProfileData({ ...profileData, location: e.target.value })} fullWidth />
+                <TextField label="Bio" multiline rows={3} value={profileData.bio} onChange={(e) => setProfileData({ ...profileData, bio: e.target.value })} fullWidth />
+                <TextField label="Health Conditions" value={profileData.health_conditions} onChange={(e) => setProfileData({ ...profileData, health_conditions: e.target.value })} fullWidth />
+                <TextField label="Medication" value={profileData.medication} onChange={(e) => setProfileData({ ...profileData, medication: e.target.value })} fullWidth />
+                <TextField label="Allergies" value={profileData.allergies} onChange={(e) => setProfileData({ ...profileData, allergies: e.target.value })} fullWidth />
+                <TextField label="Emergency Contact First Name" value={profileData.emergency_contact_first_name} onChange={(e) => setProfileData({ ...profileData, emergency_contact_first_name: e.target.value })} fullWidth />
+                <TextField label="Emergency Contact Last Name" value={profileData.emergency_contact_last_name} onChange={(e) => setProfileData({ ...profileData, emergency_contact_last_name: e.target.value })} fullWidth />
+                <TextField label="Emergency Contact Phone" value={profileData.emergency_contact_phone} onChange={(e) => setProfileData({ ...profileData, emergency_contact_phone: e.target.value })} fullWidth />
+                {backAndSubmitButtons}
+              </Box>
+            )}
+            {role === 'support_worker' && (
+              <Box component="form" onSubmit={handleSubmit} display="flex" flexDirection="column" gap={3}>
+                <TextField label="Age" type="number" value={profileData.age} onChange={(e) => setProfileData({ ...profileData, age: e.target.value })} fullWidth />
+                {genderSelect}
+                <TextField label="Phone" value={profileData.phone} onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })} fullWidth />
+                <TextField label="Location" value={profileData.location} onChange={(e) => setProfileData({ ...profileData, location: e.target.value })} fullWidth />
+                <TextField label="Bio" multiline rows={3} value={profileData.bio} onChange={(e) => setProfileData({ ...profileData, bio: e.target.value })} fullWidth />
+                <TextField label="Experience" multiline rows={3} value={profileData.experience} onChange={(e) => setProfileData({ ...profileData, experience: e.target.value })} fullWidth />
+                <TextField label="Availability" value={profileData.availability} onChange={(e) => setProfileData({ ...profileData, availability: e.target.value })} fullWidth />
+                <TextField label="Emergency Contact First Name" value={profileData.emergency_contact_first_name} onChange={(e) => setProfileData({ ...profileData, emergency_contact_first_name: e.target.value })} fullWidth />
+                <TextField label="Emergency Contact Last Name" value={profileData.emergency_contact_last_name} onChange={(e) => setProfileData({ ...profileData, emergency_contact_last_name: e.target.value })} fullWidth />
+                <TextField label="Emergency Contact Phone" value={profileData.emergency_contact_phone} onChange={(e) => setProfileData({ ...profileData, emergency_contact_phone: e.target.value })} fullWidth />
+                {backAndSubmitButtons}
+              </Box>
+            )}
           </Box>
         )}
       </Box>
