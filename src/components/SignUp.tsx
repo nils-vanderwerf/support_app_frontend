@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Box, Button, TextField, Typography, Alert, Card, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
 import { PersonPin, Work } from '@mui/icons-material';
 import axiosInstance from '../api/axiosConfig';
-
+import { useAuth } from '../context/AuthContext';
 const SignUp = () => {
 const [userFormData, setUserFormData] = useState({
   email: '', password: '', first_name: '', last_name: '', middle_name: ''
@@ -22,6 +23,8 @@ const [profileData, setProfileData] = useState({
   const [role, setRole] = useState('');
 
   const hasFetchcsrf = useRef(false);
+  const navigate = useNavigate();
+  const auth = useAuth();
 
   useEffect(() => {
     if (!hasFetchcsrf.current) {
@@ -61,6 +64,15 @@ const [profileData, setProfileData] = useState({
       });
       setSuccess(true);
       setErrors([]);
+      const loginResponse = await axiosInstance.post('/login', {
+        email: userFormData.email,
+        password: userFormData.password,
+      }, { withCredentials: true });
+
+      auth.setUser(loginResponse.data.user);
+      auth.setClient(loginResponse.data.client);
+      auth.setSupportWorker(loginResponse.data.support_worker);
+      navigate('/');
     } catch (err: any) {
       const errorData = err.response.data.errors;
       setErrors(Array.isArray(errorData) ? errorData : [errorData || 'An error occurred']);
