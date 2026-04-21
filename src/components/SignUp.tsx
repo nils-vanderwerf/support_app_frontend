@@ -1,64 +1,121 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Box, Button, TextField, Typography, Alert, Card, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
-import ChipSelector from './ChipSelector';
-import AvailabilitySelector from './AvailabilitySelector';
-import { MEDICATIONS, ALLERGIES, SPECIALIZATIONS } from '../constants/selectorOptions';
 import { PersonPin, Work } from '@mui/icons-material';
 import axiosInstance from '../api/axiosConfig';
-
+import { useAuth } from '../context/AuthContext';
 
 const SignUp = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [middleName, setMiddleName] = useState('');
+  const [userFormData, setUserFormData] = useState({
+    email: '', password: '', first_name: '', last_name: '', middle_name: ''
+  });
+
+  const [profileData, setProfileData] = useState({
+    age: '', gender: '', phone: '', location: '', bio: '',
+    experience: '', availability: '', health_conditions: '', medication: '',
+    allergies: '', emergency_contact_first_name: '', emergency_contact_last_name: '',
+    emergency_contact_phone: ''
+  });
+
   const [errors, setErrors] = useState<string[]>([]);
   const [success, setSuccess] = useState(false);
-  const [csrfToken, setCsrfToken] = useState(''); 
+  const [csrfToken, setCsrfToken] = useState('');
+  const [step, setStep] = useState(1);
+  const [role, setRole] = useState('');
 
-  const hasFetchcsrf = useRef(false)
+  const hasFetchcsrf = useRef(false);
+  const navigate = useNavigate();
+  const auth = useAuth();
 
-  useEffect( () => {
-    if (!hasFetchcsrf.current)
-{    const fetchcsrf = async () => {
-    try{
-      const response = await axiosInstance.get('/csrf_token')
-      setCsrfToken(response.data.csrf_token);
-      hasFetchcsrf.current = true
-    } catch(error) {
+  useEffect(() => {
+    if (!hasFetchcsrf.current) {
+      const fetchcsrf = async () => {
+        try {
+          const response = await axiosInstance.get('/csrf_token');
+          setCsrfToken(response.data.csrf_token);
+          hasFetchcsrf.current = true;
+        } catch (error) {}
+      };
+      fetchcsrf();
     }
-  }
-  fetchcsrf()}
-}
-  , []);
+  }, []);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+    const profilePayload = role === 'client'
+      ? { age: profileData.age, gender: profileData.gender, phone: profileData.phone, location: profileData.location, bio: profileData.bio, health_conditions: profileData.health_conditions, medication: profileData.medication, allergies: profileData.allergies, emergency_contact_first_name: profileData.emergency_contact_first_name, emergency_contact_last_name: profileData.emergency_contact_last_name, emergency_contact_phone: profileData.emergency_contact_phone }
+      : { age: profileData.age, gender: profileData.gender, phone: profileData.phone, location: profileData.location, bio: profileData.bio, experience: profileData.experience, availability: profileData.availability, emergency_contact_first_name: profileData.emergency_contact_first_name, emergency_contact_last_name: profileData.emergency_contact_last_name, emergency_contact_phone: profileData.emergency_contact_phone };
     try {
-      const response = await axiosInstance.post('/users', {
-        user: {
-        email,
-        password,
-        first_name: firstName,
-        last_name: lastName,
-        middle_name: middleName
-      }
+      await axiosInstance.post('/users', {
+        user: { ...userFormData },
+        role: role,
+        [role]: {
+          ...profilePayload,
+          first_name: userFormData.first_name,
+          last_name: userFormData.last_name,
+          middle_name: userFormData.middle_name,
+          email: userFormData.email
+        }
       }, {
         headers: {
           'X-CSRF-Token': csrfToken,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
-        withCredentials: true
+        withCredentials: true,
       });
       setSuccess(true);
       setErrors([]);
+      const loginResponse = await axiosInstance.post('/login', {
+        email: userFormData.email,
+        password: userFormData.password,
+      }, { withCredentials: true });
+
+      auth.setUser(loginResponse.data.user);
+      auth.setClient(loginResponse.data.client);
+      auth.setSupportWorker(loginResponse.data.support_worker);
+      navigate('/');
     } catch (err: any) {
-      setErrors(err.response.data.errors || ['An error occurred']);
+      const errorData = err.response.data.errors;
+      setErrors(Array.isArray(errorData) ? errorData : [errorData || 'An error occurred']);
       setSuccess(false);
     }
   };
+
+  const genderSelect = (
+    <FormControl fullWidth>
+      <InputLabel>Gender</InputLabel>
+      <Select
+        value={profileData.gender}
+        label="Gender"
+        onChange={(e) => setProfileData({ ...profileData, gender: e.target.value })}
+      >
+        <MenuItem value="Male">Male</MenuItem>
+        <MenuItem value="Female">Female</MenuItem>
+        <MenuItem value="Non-binary">Non-binary</MenuItem>
+        <MenuItem value="Prefer not to say">Prefer not to say</MenuItem>
+      </Select>
+    </FormControl>
+  );
+
+  const backAndSubmitButtons = (
+    <Box display="flex" gap={2}>
+      <Button
+        type="button"
+        variant="outlined"
+        onClick={() => setStep(2)}
+        sx={{ py: 1.5, color: '#7B2FBE', borderColor: '#7B2FBE' }}
+      >
+        Back
+      </Button>
+      <Button
+        type="submit"
+        variant="contained"
+        sx={{ flex: 1, backgroundColor: '#7B2FBE', py: 1.5, '&:hover': { backgroundColor: '#6a0dad' } }}
+      >
+        Sign Up
+      </Button>
+    </Box>
+  );
 
   return (
     <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
@@ -71,9 +128,9 @@ const SignUp = () => {
         </Typography>
         {errors.length > 0 &&
           errors.map((msg) => (
-          <Alert severity="error" sx={{ mb: 3 }} key={msg}>
-            {msg}
-          </Alert>
+            <Alert severity="error" sx={{ mb: 3 }} key={msg}>
+              {msg}
+            </Alert>
           ))
         }
         {success && <Alert severity="success" sx={{ mb: 3 }}>Account created successfully!</Alert>}
@@ -138,8 +195,8 @@ const SignUp = () => {
                 <TextField label="Location" value={profileData.location} onChange={(e) => setProfileData({ ...profileData, location: e.target.value })} fullWidth />
                 <TextField label="Bio" multiline rows={3} value={profileData.bio} onChange={(e) => setProfileData({ ...profileData, bio: e.target.value })} fullWidth />
                 <TextField label="Health Conditions" value={profileData.health_conditions} onChange={(e) => setProfileData({ ...profileData, health_conditions: e.target.value })} fullWidth />
-                <ChipSelector label="Medication" options={MEDICATIONS} value={selectedMedications} onChange={setSelectedMedications} />
-                <ChipSelector label="Allergies" options={ALLERGIES} value={selectedAllergies} onChange={setSelectedAllergies} />
+                <TextField label="Medication" value={profileData.medication} onChange={(e) => setProfileData({ ...profileData, medication: e.target.value })} fullWidth />
+                <TextField label="Allergies" value={profileData.allergies} onChange={(e) => setProfileData({ ...profileData, allergies: e.target.value })} fullWidth />
                 <TextField label="Emergency Contact First Name" value={profileData.emergency_contact_first_name} onChange={(e) => setProfileData({ ...profileData, emergency_contact_first_name: e.target.value })} fullWidth />
                 <TextField label="Emergency Contact Last Name" value={profileData.emergency_contact_last_name} onChange={(e) => setProfileData({ ...profileData, emergency_contact_last_name: e.target.value })} fullWidth />
                 <TextField label="Emergency Contact Phone" value={profileData.emergency_contact_phone} onChange={(e) => setProfileData({ ...profileData, emergency_contact_phone: e.target.value })} fullWidth />
@@ -154,8 +211,7 @@ const SignUp = () => {
                 <TextField label="Location" value={profileData.location} onChange={(e) => setProfileData({ ...profileData, location: e.target.value })} fullWidth />
                 <TextField label="Bio" multiline rows={3} value={profileData.bio} onChange={(e) => setProfileData({ ...profileData, bio: e.target.value })} fullWidth />
                 <TextField label="Experience" multiline rows={3} value={profileData.experience} onChange={(e) => setProfileData({ ...profileData, experience: e.target.value })} fullWidth />
-                <AvailabilitySelector value={profileData.availability} onChange={(v) => setProfileData({ ...profileData, availability: v })} />
-                <ChipSelector label="Specializations" options={SPECIALIZATIONS} value={selectedSpecializations} onChange={setSelectedSpecializations} />
+                <TextField label="Availability" value={profileData.availability} onChange={(e) => setProfileData({ ...profileData, availability: e.target.value })} fullWidth />
                 <TextField label="Emergency Contact First Name" value={profileData.emergency_contact_first_name} onChange={(e) => setProfileData({ ...profileData, emergency_contact_first_name: e.target.value })} fullWidth />
                 <TextField label="Emergency Contact Last Name" value={profileData.emergency_contact_last_name} onChange={(e) => setProfileData({ ...profileData, emergency_contact_last_name: e.target.value })} fullWidth />
                 <TextField label="Emergency Contact Phone" value={profileData.emergency_contact_phone} onChange={(e) => setProfileData({ ...profileData, emergency_contact_phone: e.target.value })} fullWidth />
@@ -167,5 +223,6 @@ const SignUp = () => {
       </Box>
     </Box>
   );
-}
+};
+
 export default SignUp;
