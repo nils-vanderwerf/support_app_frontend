@@ -16,14 +16,17 @@ export interface Client {
   last_name: string;
   middle_name: string | null;
   age: number;
-  allergies: string;
-  emergency_contact_name: string;
-  emergency_contact_phone: string;
-  address: string;
   gender: string;
+  phone: string;
+  location: string;
+  bio: string;
   health_conditions: string;
   medication: string;
-  phone: string;
+  allergies: string;
+  emergency_contact_first_name: string;
+  emergency_contact_last_name: string;
+  emergency_contact_phone: string;
+  email: string;
 }
 
 export interface SupportWorker {

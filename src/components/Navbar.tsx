@@ -42,7 +42,7 @@ const Navbar = () => {
 
   const navLinks = showNav ? [
     ...(auth.supportWorker ? [{ label: 'Clients', to: '/clients' }] : []),
-    { label: 'Support Workers', to: '/support-workers' },
+    ...(auth.client ? [{ label: 'Support Workers', to: '/support-workers' }] : []),
     { label: 'Appointments', to: '/appointments' },
     ...(auth.client || auth.supportWorker ? [
       { label: 'Messages', to: '/messages', badge: unreadMessages, onNavigate: () => setUnreadMessages(0) },
@@ -143,7 +143,7 @@ const handleLogout = () => {
     <AppBar sx={{ backgroundColor: '#7B2FBE', boxShadow: 'none' }}>
       <Toolbar>
         <Button color="inherit" component={Link} to="/">Home</Button>
-        <Button color="inherit" component={Link} to="/clients">Clients</Button>
+        {auth.supportWorker && <Button color="inherit" component={Link} to="/clients">Clients</Button>}
         <Button color="inherit" component={Link} to="/support-workers">Support Workers</Button>
         <Button color="inherit" component={Link} to="/appointments">Appointments</Button>
         
