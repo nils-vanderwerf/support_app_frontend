@@ -18,7 +18,7 @@ const Login = () => {
       auth.setUser(response.data.user);
       auth.setClient(response.data.client);
       auth.setSupportWorker(response.data.support_worker);
-      navigate('/clients');
+      navigate('/');
     } catch (error) {
       setError('Invalid email or password');
     }
