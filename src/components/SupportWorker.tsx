@@ -9,7 +9,7 @@ import {
   Button,
   Avatar
 } from '@mui/material';
-import { SupportWorker as SupportWorkerType } from '../context/AuthContext';
+import { SupportWorker as SupportWorkerType, useAuth } from '../context/AuthContext';
 import { styled } from '@mui/system';
 import { useState } from 'react';
 import BookingForm from './BookingForm';
@@ -57,6 +57,7 @@ interface SupportWorkerProps {
 
 const SupportWorker = ({ worker, handleClose, onSuccess}: SupportWorkerProps) => {
   const [showBookingForm, setShowBookingForm] = useState(false);
+  const { client } = useAuth();
 
   return (
     <>
@@ -85,9 +86,11 @@ const SupportWorker = ({ worker, handleClose, onSuccess}: SupportWorkerProps) =>
         <CloseButton onClick={handleClose} variant="contained">
           Close
         </CloseButton>
-          <Button onClick={() => setShowBookingForm(true)} color="primary" variant="contained" sx={{ backgroundColor: '#007bff', color: '#fff' }}>
-            Book
-          </Button>
+          {client && (
+            <Button onClick={() => setShowBookingForm(true)} color="primary" variant="contained" sx={{ backgroundColor: '#007bff', color: '#fff' }}>
+              Book
+            </Button>
+          )}
       </DialogActions>
       </CustomDialog>
         {showBookingForm && (
