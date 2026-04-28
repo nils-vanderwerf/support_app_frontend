@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   Box,
   Typography,
@@ -93,11 +92,12 @@ const SupportWorker = ({ worker, handleClose, onSuccess}: SupportWorkerProps) =>
           )}
       </DialogActions>
       </CustomDialog>
-        {showBookingForm && (
-          <BookingForm 
-            worker={worker}
-            onSuccess={onSuccess} 
-            onClose={() => setShowBookingForm(false)} 
+        {showBookingForm && client && (
+          <BookingForm
+            clientId={client.id}
+            supportWorkerId={worker.id}
+            onSuccess={onSuccess}
+            onClose={() => setShowBookingForm(false)}
           />
         )}
     </>
