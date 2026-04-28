@@ -1,5 +1,6 @@
-import { createContext, useState, useContext} from "react";
+import { createContext, useState, useContext, useEffect} from "react";
 import { ReactNode } from 'react'
+import axiosInstance from "../api/axiosConfig";
 
 interface User {
   id: number;
@@ -55,6 +56,8 @@ interface AuthContextType {
   setClient: (client: Client | null) => void;
   supportWorker: SupportWorker | null;
   setSupportWorker: (supportWorker: SupportWorker| null) => void;
+  loading: boolean;
+  setLoading: (loading: boolean) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -63,8 +66,24 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
   const [client, setClient] = useState<Client | null>(null);
   const [supportWorker, setSupportWorker] = useState<SupportWorker | null>(null);
+  const [loading, setLoading] = useState(true)
+  useEffect(() => {
+      const fetchData = async () => {
+          try {
+            const response = await axiosInstance.get('/user');
+            setUser(response.data.user);
+            setClient(response.data.client)
+            setSupportWorker(response.data.support_worker)
+            setLoading(false)
+          } catch (error) {
+            console.error('Error fetching data: ', error);
+            setLoading(false)
+          }
+        };
+        fetchData();
+    }, []);
   return (
-    <AuthContext.Provider value={{ user, setUser, client, setClient, supportWorker, setSupportWorker }}>
+    <AuthContext.Provider value={{ user, setUser, client, setClient, supportWorker, setSupportWorker, loading, setLoading }}>
       {children}
     </AuthContext.Provider>
   )
