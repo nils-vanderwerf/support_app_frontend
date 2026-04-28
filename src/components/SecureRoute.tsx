@@ -6,7 +6,13 @@ interface SecureRouteProps {
 }
 const SecureRoute = ({ children }: SecureRouteProps) => {
   const auth = useAuth()
-  return auth?.user ? children : <Navigate to="/login" />;
+  if (auth.loading ) {
+    return null
+  } else if (auth?.user) {
+    return children;
+  } else {
+    return <Navigate to="/login" />
+  }
 };
 
 export default SecureRoute;;
