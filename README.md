@@ -1,70 +1,51 @@
-# Getting Started with Create React App
+# Support App — Frontend
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A full-stack portfolio project inspired by [Mable](https://mable.com.au), a platform that connects people living with disability to independent support workers. This project is personally meaningful — built by someone with cerebral palsy who understands the value of accessible, well-designed support services.
 
-## Available Scripts
+The backend Rails API lives in a separate repository: [support_app_backend](https://github.com/nils-vanderwerf/support_app_backend).
 
-In the project directory, you can run:
+## What it does
 
-### `npm start`
+- Clients can browse support workers, view their profiles, and book appointments
+- Support workers can browse clients and book appointments with them
+- Multi-step sign up flow with role selection (client or support worker)
+- Session-based authentication with protected routes that persist across page refreshes
+- Role-aware UI — booking buttons and views adapt based on who is logged in
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## Tech stack
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+- **React** with TypeScript
+- **Material UI** for components
+- **Axios** for API requests
+- **React Router** for navigation and protected routes
+- **React Context + hooks** for auth state management
+- **Jest + React Testing Library** for unit and component tests
 
-### `npm test`
+## Frontend concepts practised
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+- Component composition and reuse
+- React hooks (`useState`, `useEffect`, `useContext`)
+- TypeScript interfaces and typing
+- React Context for global auth state
+- Session persistence across refresh using a backend session check
+- Protected routes with loading state handling
+- Multi-step forms with conditional rendering
+- Mocking with Jest (`jest.mock`, `mockResolvedValueOnce`)
+- Testing context with `renderHook`
 
-### `npm run build`
+## Running the app
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+The frontend requires the backend to be running first.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+```bash
+npm install
+npm start
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+Runs on [http://localhost:3000](http://localhost:3000).
 
-### `npm run eject`
+## Running tests
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+```bash
+npm test
+```
