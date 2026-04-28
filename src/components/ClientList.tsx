@@ -59,7 +59,7 @@ const ClientList = () => {
               {clients.map((client) => (
                 <TableRow key={client.id}>
                   <TableCell>
-                    <Avatar>{client.first_name.charAt(0)}{client.last_name.charAt(0)}</Avatar>
+                    <Avatar>{client.first_name?.charAt(0)}{client.last_name?.charAt(0)}</Avatar>
                   </TableCell>
                   <TableCell>{client.first_name} {client.last_name}</TableCell>
                   <TableCell>{client.location}</TableCell>

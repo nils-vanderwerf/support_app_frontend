@@ -19,7 +19,7 @@ const CustomDialog = styled(Dialog)({
     border: '2px solid #e0e0e0',
     borderRadius: '10px',
     boxShadow: '0px 3px 6px rgba(0,0,0,0.16)',
-  },
+  }
 });
 
 const HeaderBox = styled(Box)({
@@ -64,7 +64,7 @@ const ClientProfile = ({ client, handleClose, onSuccess }: ClientProfileProps) =
         <HeaderBox>
           <Typography variant="h6">Client</Typography>
           <IntersectingAvatar>
-            {client.first_name.charAt(0)}{client.last_name.charAt(0)}
+            {client.first_name?.charAt(0)}{client.last_name?.charAt(0)}
           </IntersectingAvatar>
         </HeaderBox>
         <DialogTitle sx={{ textAlign: 'left', mt: 10 }}>
