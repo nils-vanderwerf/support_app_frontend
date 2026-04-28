@@ -1,10 +1,29 @@
-import React, { useState, useEffect } from 'react';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import axiosInstance from '../api/axiosConfig'; // Keep the existing axios configuration for other requests
+import { useState, useEffect } from 'react';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Typography,
+  Container,
+  Box,
+  Avatar,
+  Button,
+  Snackbar,
+} from '@mui/material';
+import ClientProfile from './ClientProfile';
+import axiosInstance from '../api/axiosConfig';
 import { Client } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
 
 const ClientList = () => {
   const [clients, setClients] = useState<Client[]>([]);
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [visibleMessage, setVisibleMessage] = useState('');
+  const { supportWorker } = useAuth();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -15,31 +34,72 @@ const ClientList = () => {
         console.error('Error fetching data: ', error);
       }
     };
-
     fetchData();
   }, []);
 
   return (
-    <div className="container mt-5">
-      <h1 className="text-center mb-5">Clients</h1>
-      <div className="row">
-        {clients.map(client => (
-          <div key={client.id} className="col-sm-12 col-md-6 col-lg-3 mb-4">
-            <div className="card h-100">
-              <div className="card-body">
-                <h5 className="card-title">{client.first_name} {client.last_name}</h5>
-                <h6 className="card-subtitle mb-2 text-muted">Age: {client.age}</h6>
-                <p className="card-text"><strong>Health Conditions:</strong> {client.health_conditions}</p>
-                <p className="card-text"><strong>Medications:</strong> {client.medication}</p>
-                <p className="card-text"><strong>Allergies:</strong> {client.allergies}</p>
-                <p className="card-text"><strong>Phone:</strong> {client.phone}</p>
-                <p className="card-text"><strong>Emergency Contact:</strong> {client.emergency_contact_name} ({client.emergency_contact_phone})</p>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
+    <Container>
+      <Box mt={5}>
+        <Typography variant="h4" align="center" gutterBottom>
+          Clients
+        </Typography>
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Avatar</TableCell>
+                <TableCell>Name</TableCell>
+                <TableCell>Location</TableCell>
+                <TableCell>Phone</TableCell>
+                <TableCell>Health Conditions</TableCell>
+                <TableCell></TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {clients.map((client) => (
+                <TableRow key={client.id}>
+                  <TableCell>
+                    <Avatar>{client.first_name.charAt(0)}{client.last_name.charAt(0)}</Avatar>
+                  </TableCell>
+                  <TableCell>{client.first_name} {client.last_name}</TableCell>
+                  <TableCell>{client.location}</TableCell>
+                  <TableCell>{client.phone}</TableCell>
+                  <TableCell>{client.health_conditions}</TableCell>
+                  <TableCell>
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      onClick={() => setSelectedClient(client)}
+                      style={{ borderRadius: 20 }}
+                    >
+                      {supportWorker ? 'Book' : 'View'}
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Box>
+      {selectedClient && (
+        <ClientProfile
+          client={selectedClient}
+          handleClose={() => setSelectedClient(null)}
+          onSuccess={(date) => {
+            setVisibleMessage(`Appointment booked for ${selectedClient.first_name} ${selectedClient.last_name} on ${date}`);
+            setSelectedClient(null);
+          }}
+        />
+      )}
+      {visibleMessage && (
+        <Snackbar
+          open={true}
+          message={visibleMessage}
+          onClose={() => setVisibleMessage('')}
+          autoHideDuration={5000}
+        />
+      )}
+    </Container>
   );
 };
 
