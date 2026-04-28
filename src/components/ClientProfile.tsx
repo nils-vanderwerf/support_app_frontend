@@ -64,7 +64,7 @@ const ClientProfile = ({ client, handleClose, onSuccess }: ClientProfileProps) =
         <HeaderBox>
           <Typography variant="h6">Client</Typography>
           <IntersectingAvatar>
-            {client.first_name?.charAt(0)}{client.last_name?.charAt(0)}
+            {client.first_name.charAt(0)}{client.last_name.charAt(0)}
           </IntersectingAvatar>
         </HeaderBox>
         <DialogTitle sx={{ textAlign: 'left', mt: 10 }}>
