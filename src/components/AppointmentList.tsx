@@ -5,6 +5,7 @@ import { formatDuration } from '../utils/formatDuration';
 import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   Paper, Typography, Container, Box,
+  Button, Snackbar, Dialog, DialogTitle, DialogActions, DialogContent,
 } from '@mui/material';
 import axiosInstance from '../api/axiosConfig';
 import { SupportWorker, Client } from '../context/AuthContext';
@@ -21,9 +22,33 @@ export interface Appointment {
 
 const AppointmentList = () => {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [visibleMessage, setVisibleMessage] = useState('');
+  const [dialogueVisible, setDialogueVisible] = useState(false);
+  const [appointmentToDelete, setAppointmentToDelete] = useState<Appointment | null>(null);
+
   const { client } = useAuth();
   const isClient = !!client;
   const navigate = useNavigate();
+
+  const handleDelete = async(appointment: Appointment) => {
+    try {
+      await axiosInstance.delete(`/appointments/${appointment.id}`)
+      setAppointments(appointments.filter(a => a.id !== appointment.id))
+      setVisibleMessage("Appointment successfully deleted")
+      setDialogueVisible(false)
+    } catch (error) {
+      setVisibleMessage("Appointment could not be deleted")
+      setDialogueVisible(false)
+    }
+  };
+
+    const handleEdit = async () => {
+    try {
+      
+    } catch (error) {
+    
+    }
+  };
 
   useEffect(() => {
     axiosInstance.get('/appointments')
@@ -54,6 +79,7 @@ const AppointmentList = () => {
                 <TableCell>Location</TableCell>
                 <TableCell>Duration</TableCell>
                 <TableCell>Notes</TableCell>
+                <TableCell>Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -72,6 +98,10 @@ const AppointmentList = () => {
                   <TableCell>{appointment.location}</TableCell>
                   <TableCell>{formatDuration(appointment.duration)}</TableCell>
                   <TableCell>{appointment.notes}</TableCell>
+                  <TableCell>
+                    <Button onClick={handleEdit}>Edit</Button>
+                    <Button onClick={() => { setAppointmentToDelete(appointment); setDialogueVisible(true); }}>Delete</Button>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -81,6 +111,24 @@ const AppointmentList = () => {
           <Typography fontStyle="italic">No appointments found</Typography>
         )}
       </Box>
+      {dialogueVisible && (
+        <Dialog open={true} aria-labelledby="booking-dialog-title">
+          <DialogTitle id="booking-dialog-title">Delete Appointment</DialogTitle>
+          <DialogContent>Are you sure you want to delete this appointment?</DialogContent>
+          <DialogActions>
+            <Button onClick={() => appointmentToDelete && handleDelete(appointmentToDelete)}>Confirm</Button>
+            <Button onClick={() => setDialogueVisible(false)}>Cancel</Button>
+          </DialogActions>
+        </Dialog>
+      )}
+      {visibleMessage && (
+        <Snackbar
+          open={true}
+          message={visibleMessage}
+          onClose={() => setVisibleMessage('')}
+          autoHideDuration={5000}
+        />
+      )}
     </Container>
   );
 };
