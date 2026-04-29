@@ -1,23 +1,30 @@
 import { useState } from 'react';
 import axiosInstance from '../api/axiosConfig';
 import { Dialog, DialogTitle, DialogActions, DialogContent, TextField, Box, Button } from '@mui/material';
+import { Appointment } from './AppointmentList';
 
 interface BookingProps {
   clientId: number;
   supportWorkerId: number;
   onClose: () => void;
   onSuccess: (date: string) => void;
+  appointment?: Appointment;
 }
 
-const BookingForm = ({ clientId, supportWorkerId, onClose, onSuccess }: BookingProps) => {
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-  const [duration, setDuration] = useState(0);
-  const [location, setLocation] = useState('');
-  const [notes, setNotes] = useState('');
+const BookingForm = ({ clientId, supportWorkerId, onClose, onSuccess, appointment }: BookingProps) => {
+  const [date, setDate] = useState(appointment?.date ?? new Date().toISOString().split('T')[0]);
+  const [duration, setDuration] = useState(appointment?.duration ?? 0 );;
+  const [location, setLocation] = useState(appointment?.location ?? '');
+  const [notes, setNotes] = useState(appointment?.notes ?? '');
 
   const handleSubmit = async () => {
     try {
-      await axiosInstance.post('/appointments', {
+      if (appointment) {
+      await axiosInstance.patch(`/appointments/${appointment.id}`, {
+        appointment: { date, duration, location, notes }
+      });
+    } else {
+        await axiosInstance.post('/appointments', {
         appointment: {
           date,
           duration,
@@ -27,6 +34,7 @@ const BookingForm = ({ clientId, supportWorkerId, onClose, onSuccess }: BookingP
           support_worker_id: supportWorkerId,
         }
       });
+    }
       onClose();
       onSuccess(date);
     } catch (error) {
@@ -36,7 +44,7 @@ const BookingForm = ({ clientId, supportWorkerId, onClose, onSuccess }: BookingP
 
   return (
     <Dialog open={true} aria-labelledby="booking-dialog-title">
-      <DialogTitle id="booking-dialog-title">Book Appointment</DialogTitle>
+      <DialogTitle id="booking-dialog-title">{appointment ? "Edit Appointment" : "Book Appointment"}</DialogTitle>
       <DialogContent>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           <TextField

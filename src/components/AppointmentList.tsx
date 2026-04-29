@@ -9,6 +9,7 @@ import {
 } from '@mui/material';
 import axiosInstance from '../api/axiosConfig';
 import { SupportWorker, Client } from '../context/AuthContext';
+import BookingForm from './BookingForm';
 
 export interface Appointment {
   id: number;
@@ -23,31 +24,30 @@ export interface Appointment {
 const AppointmentList = () => {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [visibleMessage, setVisibleMessage] = useState('');
-  const [dialogueVisible, setDialogueVisible] = useState(false);
+  const [deleteDialogueVisible, setDeleteDialogueVisible] = useState(false);
   const [appointmentToDelete, setAppointmentToDelete] = useState<Appointment | null>(null);
+  const [appointmentToEdit, setAppointmentToEdit] = useState<Appointment | undefined>(undefined);
+  const [editDialogueVisible, setEditDialogueVisible] = useState(false);
 
   const { client } = useAuth();
   const isClient = !!client;
   const navigate = useNavigate();
 
-  const handleDelete = async(appointment: Appointment) => {
+  const handleDelete = async (appointment: Appointment) => {
     try {
-      await axiosInstance.delete(`/appointments/${appointment.id}`)
-      setAppointments(appointments.filter(a => a.id !== appointment.id))
-      setVisibleMessage("Appointment successfully deleted")
-      setDialogueVisible(false)
+      await axiosInstance.delete(`/appointments/${appointment.id}`);
+      setAppointments(appointments.filter(a => a.id !== appointment.id));
+      setVisibleMessage('Appointment successfully deleted');
+      setDeleteDialogueVisible(false);
     } catch (error) {
-      setVisibleMessage("Appointment could not be deleted")
-      setDialogueVisible(false)
+      setVisibleMessage('Appointment could not be deleted');
+      setDeleteDialogueVisible(false);
     }
   };
 
-    const handleEdit = async () => {
-    try {
-      
-    } catch (error) {
-    
-    }
+  const handleEdit = (appointment: Appointment) => {
+    setAppointmentToEdit(appointment);
+    setEditDialogueVisible(true);
   };
 
   useEffect(() => {
@@ -99,8 +99,8 @@ const AppointmentList = () => {
                   <TableCell>{formatDuration(appointment.duration)}</TableCell>
                   <TableCell>{appointment.notes}</TableCell>
                   <TableCell>
-                    <Button onClick={handleEdit}>Edit</Button>
-                    <Button onClick={() => { setAppointmentToDelete(appointment); setDialogueVisible(true); }}>Delete</Button>
+                    <Button onClick={() => handleEdit(appointment)}>Edit</Button>
+                    <Button onClick={() => { setAppointmentToDelete(appointment); setDeleteDialogueVisible(true); }}>Delete</Button>
                   </TableCell>
                 </TableRow>
               ))}
@@ -111,13 +111,22 @@ const AppointmentList = () => {
           <Typography fontStyle="italic">No appointments found</Typography>
         )}
       </Box>
-      {dialogueVisible && (
-        <Dialog open={true} aria-labelledby="booking-dialog-title">
-          <DialogTitle id="booking-dialog-title">Delete Appointment</DialogTitle>
+      {editDialogueVisible && appointmentToEdit && (
+        <BookingForm
+          appointment={appointmentToEdit}
+          clientId={appointmentToEdit.client.id}
+          supportWorkerId={appointmentToEdit.support_worker.id}
+          onClose={() => setEditDialogueVisible(false)}
+          onSuccess={() => setVisibleMessage('Appointment successfully updated')}
+        />
+      )}
+      {deleteDialogueVisible && (
+        <Dialog open={true} aria-labelledby="delete-dialog-title">
+          <DialogTitle id="delete-dialog-title">Delete Appointment</DialogTitle>
           <DialogContent>Are you sure you want to delete this appointment?</DialogContent>
           <DialogActions>
             <Button onClick={() => appointmentToDelete && handleDelete(appointmentToDelete)}>Confirm</Button>
-            <Button onClick={() => setDialogueVisible(false)}>Cancel</Button>
+            <Button onClick={() => setDeleteDialogueVisible(false)}>Cancel</Button>
           </DialogActions>
         </Dialog>
       )}
