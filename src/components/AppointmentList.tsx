@@ -10,6 +10,7 @@ import {
 import axiosInstance from '../api/axiosConfig';
 import { SupportWorker, Client } from '../context/AuthContext';
 import BookingForm from './BookingForm';
+import BookingAgent from './BookingAgent';
 
 export interface Appointment {
   id: number;
@@ -28,10 +29,22 @@ const AppointmentList = () => {
   const [appointmentToDelete, setAppointmentToDelete] = useState<Appointment | null>(null);
   const [appointmentToEdit, setAppointmentToEdit] = useState<Appointment | undefined>(undefined);
   const [editDialogueVisible, setEditDialogueVisible] = useState(false);
+  const [agentOpen, setAgentOpen] = useState(false);
 
   const { client } = useAuth();
   const isClient = !!client;
   const navigate = useNavigate();
+
+  const fetchAppointments = async () => {
+    try {
+      const response = await axiosInstance.get('/appointments');
+      setAppointments(response.data);
+    } catch (error) {
+      console.error('Error fetching appointments:', error);
+    }
+  };
+
+  useEffect(() => { fetchAppointments(); }, []);
 
   const handleDelete = async (appointment: Appointment) => {
     try {
@@ -50,12 +63,6 @@ const AppointmentList = () => {
     setEditDialogueVisible(true);
   };
 
-  useEffect(() => {
-    axiosInstance.get('/appointments')
-      .then(res => setAppointments(res.data))
-      .catch(err => console.error('Error fetching appointments:', err));
-  }, []);
-
   const handleNameClick = (appointment: Appointment) => {
     if (isClient) {
       navigate(`/support-workers/${appointment.support_worker.id}`);
@@ -67,9 +74,18 @@ const AppointmentList = () => {
   return (
     <Container>
       <Box mt={5}>
-        <Typography variant="h4" align="center" gutterBottom>
-          Appointments
-        </Typography>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <Typography variant="h4">Appointments</Typography>
+          {isClient && (
+            <Button
+              variant="contained"
+              sx={{ bgcolor: '#7B2FBE', '&:hover': { bgcolor: '#6a27a3' } }}
+              onClick={() => setAgentOpen(true)}
+            >
+              Book with AI
+            </Button>
+          )}
+        </Box>
         <TableContainer component={Paper}>
           <Table>
             <TableHead>
@@ -85,7 +101,7 @@ const AppointmentList = () => {
             <TableBody>
               {appointments.map((appointment) => (
                 <TableRow key={appointment.id}>
-                  <TableCell>{new Date(appointment.date).toLocaleDateString()}</TableCell>
+                  <TableCell>{new Date(appointment.date).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</TableCell>
                   <TableCell
                     onClick={() => handleNameClick(appointment)}
                     sx={{ cursor: 'pointer', color: '#7B2FBE', fontWeight: 600, '&:hover': { textDecoration: 'underline' } }}
@@ -111,6 +127,9 @@ const AppointmentList = () => {
           <Typography fontStyle="italic">No appointments found</Typography>
         )}
       </Box>
+      {agentOpen && (
+        <BookingAgent onClose={() => { setAgentOpen(false); fetchAppointments(); }} />
+      )}
       {editDialogueVisible && appointmentToEdit && (
         <BookingForm
           appointment={appointmentToEdit}
