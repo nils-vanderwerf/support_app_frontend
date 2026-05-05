@@ -61,7 +61,12 @@ const ClientList = () => {
                   <TableCell>
                     <Avatar>{client.first_name.charAt(0)}{client.last_name.charAt(0)}</Avatar>
                   </TableCell>
-                  <TableCell>{client.first_name} {client.last_name}</TableCell>
+                  <TableCell
+                    onClick={() => setSelectedClient(client)}
+                    sx={{ cursor: 'pointer', color: '#7B2FBE', fontWeight: 600, '&:hover': { textDecoration: 'underline' } }}
+                  >
+                    {client.first_name} {client.last_name}
+                  </TableCell>
                   <TableCell>{client.location}</TableCell>
                   <TableCell>{client.phone}</TableCell>
                   <TableCell>{client.health_conditions}</TableCell>

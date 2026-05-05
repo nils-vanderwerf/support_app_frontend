@@ -73,7 +73,12 @@ const SupportWorkerTable = () => {
                     <Avatar>{worker.first_name.charAt(0)}{worker.last_name.charAt(0)}</Avatar>
                   </TableCell>
                   <TableCell>{worker.id}</TableCell>
-                  <TableCell>{`${worker.first_name} ${worker.last_name}`}</TableCell>
+                  <TableCell
+                    onClick={() => handleOpenModal(worker)}
+                    sx={{ cursor: 'pointer', color: '#7B2FBE', fontWeight: 600, '&:hover': { textDecoration: 'underline' } }}
+                  >
+                    {`${worker.first_name} ${worker.last_name}`}
+                  </TableCell>
                   <TableCell>{worker.location}</TableCell>
                   <TableCell>{worker.availability}</TableCell>
                   <TableCell>{worker.phone}</TableCell>
