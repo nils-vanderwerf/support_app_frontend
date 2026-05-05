@@ -10,13 +10,27 @@ interface BookingProps {
   appointment?: Appointment;
 }
 
-const BookingForm = ({ clientId, supportWorkerId, onClose, onSuccess }: BookingProps) => {
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-  const [duration, setDuration] = useState(0);
-  const [location, setLocation] = useState('');
-  const [notes, setNotes] = useState('');
+const toDatePart = (iso: string) => new Date(iso).toLocaleDateString('en-CA');
+const toTimePart = (iso: string) => {
+  const d = new Date(iso);
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+};
+const localOffsetStr = () => {
+  const off = new Date().getTimezoneOffset();
+  const sign = off <= 0 ? '+' : '-';
+  const abs = Math.abs(off);
+  return `${sign}${String(Math.floor(abs / 60)).padStart(2, '0')}:${String(abs % 60).padStart(2, '0')}`;
+};
+
+const BookingForm = ({ clientId, supportWorkerId, onClose, onSuccess, appointment }: BookingProps) => {
+  const [date, setDate] = useState(appointment ? toDatePart(appointment.date) : new Date().toISOString().split('T')[0]);
+  const [time, setTime] = useState(appointment ? toTimePart(appointment.date) : '09:00');
+  const [duration, setDuration] = useState(appointment?.duration ?? 0);
+  const [location, setLocation] = useState(appointment?.location ?? '');
+  const [notes, setNotes] = useState(appointment?.notes ?? '');
 
   const handleSubmit = async () => {
+    const datetime = `${date}T${time}:00${localOffsetStr()}`;
     try {
       await axiosInstance.post('/appointments', {
         appointment: {

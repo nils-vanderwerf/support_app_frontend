@@ -8,6 +8,8 @@ import {
 } from '@mui/material';
 import axiosInstance from '../api/axiosConfig';
 import { SupportWorker, Client } from '../context/AuthContext';
+import BookingForm from './BookingForm';
+import BookingAgent from './BookingAgent';
 
 export interface Appointment {
   id: number;
@@ -97,15 +99,44 @@ const AppointmentTable = ({
 
 const AppointmentList = () => {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [visibleMessage, setVisibleMessage] = useState('');
+  const [deleteDialogueVisible, setDeleteDialogueVisible] = useState(false);
+  const [appointmentToDelete, setAppointmentToDelete] = useState<Appointment | null>(null);
+  const [appointmentToEdit, setAppointmentToEdit] = useState<Appointment | undefined>(undefined);
+  const [editDialogueVisible, setEditDialogueVisible] = useState(false);
+  const [agentOpen, setAgentOpen] = useState(false);
+
   const { client } = useAuth();
   const isClient = !!client;
   const navigate = useNavigate();
 
-  useEffect(() => {
-    axiosInstance.get('/appointments')
-      .then(res => setAppointments(res.data))
-      .catch(err => console.error('Error fetching appointments:', err));
-  }, []);
+  const fetchAppointments = async () => {
+    try {
+      const response = await axiosInstance.get('/appointments');
+      setAppointments(response.data);
+    } catch (error) {
+      console.error('Error fetching appointments:', error);
+    }
+  };
+
+  useEffect(() => { fetchAppointments(); }, []);
+
+  const handleDelete = async (appointment: Appointment) => {
+    try {
+      await axiosInstance.delete(`/appointments/${appointment.id}`);
+      setAppointments(appointments.filter(a => a.id !== appointment.id));
+      setVisibleMessage('Appointment successfully deleted');
+      setDeleteDialogueVisible(false);
+    } catch (error) {
+      setVisibleMessage('Appointment could not be deleted');
+      setDeleteDialogueVisible(false);
+    }
+  };
+
+  const handleEdit = (appointment: Appointment) => {
+    setAppointmentToEdit(appointment);
+    setEditDialogueVisible(true);
+  };
 
   const handleNameClick = (appointment: Appointment) => {
     if (isClient) {
@@ -118,9 +149,16 @@ const AppointmentList = () => {
   return (
     <Container>
       <Box mt={5}>
-        <Typography variant="h4" align="center" gutterBottom>
-          Appointments
-        </Typography>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <Typography variant="h4">Appointments</Typography>
+          <Button
+            variant="contained"
+            sx={{ bgcolor: '#7B2FBE', '&:hover': { bgcolor: '#6a27a3' } }}
+            onClick={() => setAgentOpen(true)}
+          >
+            Book with AI
+          </Button>
+        </Box>
         <TableContainer component={Paper}>
           <Table>
             <TableHead>
@@ -135,7 +173,7 @@ const AppointmentList = () => {
             <TableBody>
               {appointments.map((appointment) => (
                 <TableRow key={appointment.id}>
-                  <TableCell>{new Date(appointment.date).toLocaleDateString()}</TableCell>
+                  <TableCell>{new Date(appointment.date).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</TableCell>
                   <TableCell
                     onClick={() => handleNameClick(appointment)}
                     sx={{ cursor: 'pointer', color: '#7B2FBE', fontWeight: 600, '&:hover': { textDecoration: 'underline' } }}
@@ -157,6 +195,41 @@ const AppointmentList = () => {
           <Typography fontStyle="italic">No appointments found</Typography>
         )}
       </Box>
+      {agentOpen && (
+        <BookingAgent
+          open={agentOpen}
+          onClose={() => setAgentOpen(false)}
+          onBooked={() => { setAgentOpen(false); fetchAppointments(); }}
+          isClient={isClient}
+        />
+      )}
+      {editDialogueVisible && appointmentToEdit && (
+        <BookingForm
+          appointment={appointmentToEdit}
+          clientId={appointmentToEdit.client.id}
+          supportWorkerId={appointmentToEdit.support_worker.id}
+          onClose={() => setEditDialogueVisible(false)}
+          onSuccess={() => setVisibleMessage('Appointment successfully updated')}
+        />
+      )}
+      {deleteDialogueVisible && (
+        <Dialog open={true} aria-labelledby="delete-dialog-title">
+          <DialogTitle id="delete-dialog-title">Delete Appointment</DialogTitle>
+          <DialogContent>Are you sure you want to delete this appointment?</DialogContent>
+          <DialogActions>
+            <Button onClick={() => appointmentToDelete && handleDelete(appointmentToDelete)}>Confirm</Button>
+            <Button onClick={() => setDeleteDialogueVisible(false)}>Cancel</Button>
+          </DialogActions>
+        </Dialog>
+      )}
+      {visibleMessage && (
+        <Snackbar
+          open={true}
+          message={visibleMessage}
+          onClose={() => setVisibleMessage('')}
+          autoHideDuration={5000}
+        />
+      )}
     </Container>
   );
 };
