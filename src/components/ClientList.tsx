@@ -1,40 +1,20 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Typography,
-  Container,
-  Box,
-  Avatar,
-  Button,
-  Snackbar,
+  Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
+  Paper, Typography, Container, Box, Avatar,
 } from '@mui/material';
-import ClientProfile from './ClientProfile';
 import axiosInstance from '../api/axiosConfig';
 import { Client } from '../context/AuthContext';
-import { useAuth } from '../context/AuthContext';
 
 const ClientList = () => {
   const [clients, setClients] = useState<Client[]>([]);
-  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
-  const [visibleMessage, setVisibleMessage] = useState('');
-  const { supportWorker } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axiosInstance.get('/clients');
-        setClients(response.data);
-      } catch (error) {
-        console.error('Error fetching data: ', error);
-      }
-    };
-    fetchData();
+    axiosInstance.get('/clients')
+      .then(res => setClients(res.data))
+      .catch(err => console.error('Error fetching clients:', err));
   }, []);
 
   return (
@@ -49,30 +29,29 @@ const ClientList = () => {
               <TableRow>
                 <TableCell>Avatar</TableCell>
                 <TableCell>Name</TableCell>
-                <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>Location</TableCell>
-                <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>Health Conditions</TableCell>
+                <TableCell>Location</TableCell>
+                <TableCell>Phone</TableCell>
+                <TableCell>Health Conditions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {clients.map((client) => (
-                <TableRow key={client.id}>
+                <TableRow
+                  key={client.id}
+                  onClick={() => navigate(`/clients/${client.id}`)}
+                  sx={{ cursor: 'pointer', '&:hover': { bgcolor: '#f3e8ff' } }}
+                >
                   <TableCell>
-                    <Avatar>{client.first_name.charAt(0)}{client.last_name.charAt(0)}</Avatar>
+                    <Avatar sx={{ bgcolor: '#7B2FBE' }}>
+                      {client.first_name.charAt(0)}{client.last_name.charAt(0)}
+                    </Avatar>
                   </TableCell>
-                  <TableCell>{client.first_name} {client.last_name}</TableCell>
+                  <TableCell sx={{ color: '#7B2FBE', fontWeight: 600 }}>
+                    {client.first_name} {client.last_name}
+                  </TableCell>
                   <TableCell>{client.location}</TableCell>
                   <TableCell>{client.phone}</TableCell>
                   <TableCell>{client.health_conditions}</TableCell>
-                  <TableCell>
-                    <Button
-                      variant="contained"
-                      color="primary"
-                      onClick={() => setSelectedClient(client)}
-                      style={{ borderRadius: 20 }}
-                    >
-                      {supportWorker ? 'Book' : 'View'}
-                    </Button>
-                  </TableCell>
                 </TableRow>
               ) : (
                 filteredClients.map(c => (
@@ -98,24 +77,6 @@ const ClientList = () => {
           </Table>
         </TableContainer>
       </Box>
-      {selectedClient && (
-        <ClientProfile
-          client={selectedClient}
-          handleClose={() => setSelectedClient(null)}
-          onSuccess={(date) => {
-            setVisibleMessage(`Appointment booked for ${selectedClient.first_name} ${selectedClient.last_name} on ${date}`);
-            setSelectedClient(null);
-          }}
-        />
-      )}
-      {visibleMessage && (
-        <Snackbar
-          open={true}
-          message={visibleMessage}
-          onClose={() => setVisibleMessage('')}
-          autoHideDuration={5000}
-        />
-      )}
     </Container>
   );
 };

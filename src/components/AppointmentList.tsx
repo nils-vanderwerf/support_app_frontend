@@ -1,15 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { SupportWorker, Client } from '../context/AuthContext';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { formatDuration } from '../utils/formatDuration';
 import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-  Paper, Typography, Container, Box, Chip,
-  Button, Snackbar, Dialog, DialogTitle, DialogActions, DialogContent,
+  Paper, Typography, Container, Box,
 } from '@mui/material';
 import axiosInstance from '../api/axiosConfig';
 import { SupportWorker, Client } from '../context/AuthContext';
-import BookingForm from './BookingForm';
 
 export interface Appointment {
   id: number;
@@ -19,7 +17,6 @@ export interface Appointment {
   location: string;
   duration: number;
   notes: string;
-  status: string;
 }
 
 const statusChip = (status: string) => {
@@ -100,139 +97,66 @@ const AppointmentTable = ({
 
 const AppointmentList = () => {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [visibleMessage, setVisibleMessage] = useState('');
-  const [deleteDialogueVisible, setDeleteDialogueVisible] = useState(false);
-  const [appointmentToDelete, setAppointmentToDelete] = useState<Appointment | null>(null);
-  const [appointmentToEdit, setAppointmentToEdit] = useState<Appointment | undefined>(undefined);
-  const [editDialogueVisible, setEditDialogueVisible] = useState(false);
-  const [rebookAppointment, setRebookAppointment] = useState<Appointment | null>(null);
-  const [agentOpen, setAgentOpen] = useState(false);
-
   const { client } = useAuth();
   const isClient = !!client;
+  const navigate = useNavigate();
 
-  const now = new Date();
-  const upcoming = appointments
-    .filter(a => new Date(a.date) >= now)
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  const past = appointments
-    .filter(a => new Date(a.date) < now)
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  useEffect(() => {
+    axiosInstance.get('/appointments')
+      .then(res => setAppointments(res.data))
+      .catch(err => console.error('Error fetching appointments:', err));
+  }, []);
 
-  const handleDelete = async (appointment: Appointment) => {
-    try {
-      await axiosInstance.delete(`/appointments/${appointment.id}`);
-      setAppointments(appointments.filter(a => a.id !== appointment.id));
-      setVisibleMessage('Appointment successfully deleted');
-      setDeleteDialogueVisible(false);
-    } catch (error) {
-      setVisibleMessage('Appointment could not be deleted');
-      setDeleteDialogueVisible(false);
+  const handleNameClick = (appointment: Appointment) => {
+    if (isClient) {
+      navigate(`/support-workers/${appointment.support_worker.id}`);
+    } else {
+      navigate(`/clients/${appointment.client.id}`);
     }
   };
 
-  const handleEdit = (appointment: Appointment) => {
-    setAppointmentToEdit(appointment);
-    setEditDialogueVisible(true);
-  };
-
-  const sectionLabel = (title: string, count: number) => (
-    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1.5, mt: 3 }}>
-      <Typography variant="h6" fontWeight={700}>{title}</Typography>
-      <Chip label={count} size="small" sx={{ bgcolor: '#ede7f6', color: '#7B2FBE', fontWeight: 700 }} />
-    </Box>
-  );
-
   return (
-     <Container>
+    <Container>
       <Box mt={5}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-          <Typography variant="h4" fontWeight={700}>Appointments</Typography>
-          <Button
-            variant="contained"
-            sx={{ bgcolor: '#7B2FBE', '&:hover': { bgcolor: '#6a27a3' } }}
-            onClick={() => setAgentOpen(true)}
-          >
-            Book with AI
-          </Button>
-        </Box>
-
-        {upcoming.length === 0 && past.length === 0 && (
-          <Typography fontStyle="italic" mt={2}>No appointments found</Typography>
-        )}
-
-        {upcoming.length > 0 && (
-          <>
-            {sectionLabel('Upcoming', upcoming.length)}
-            <AppointmentTable
-              rows={upcoming}
-              isClient={isClient}
-              onEdit={handleEdit}
-              onDelete={(a) => { setAppointmentToDelete(a); setDeleteDialogueVisible(true); }}
-              onRebook={setRebookAppointment}
-              showActions
-            />
-          </>
-        )}
-
-        {past.length > 0 && (
-          <>
-            {sectionLabel('Past Appointments', past.length)}
-            <AppointmentTable
-              rows={past}
-              isClient={isClient}
-              onEdit={handleEdit}
-              onDelete={(a) => { setAppointmentToDelete(a); setDeleteDialogueVisible(true); }}
-              onRebook={setRebookAppointment}
-              showActions
-            />
-          </>
+        <Typography variant="h4" align="center" gutterBottom>
+          Appointments
+        </Typography>
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Date</TableCell>
+                <TableCell>{isClient ? 'Support Worker' : 'Client'}</TableCell>
+                <TableCell>Location</TableCell>
+                <TableCell>Duration</TableCell>
+                <TableCell>Notes</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {appointments.map((appointment) => (
+                <TableRow key={appointment.id}>
+                  <TableCell>{new Date(appointment.date).toLocaleDateString()}</TableCell>
+                  <TableCell
+                    onClick={() => handleNameClick(appointment)}
+                    sx={{ cursor: 'pointer', color: '#7B2FBE', fontWeight: 600, '&:hover': { textDecoration: 'underline' } }}
+                  >
+                    {isClient
+                      ? `${appointment.support_worker.first_name} ${appointment.support_worker.last_name}`
+                      : `${appointment.client.first_name} ${appointment.client.last_name}`
+                    }
+                  </TableCell>
+                  <TableCell>{appointment.location}</TableCell>
+                  <TableCell>{formatDuration(appointment.duration)}</TableCell>
+                  <TableCell>{appointment.notes}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+        {appointments.length === 0 && (
+          <Typography fontStyle="italic">No appointments found</Typography>
         )}
       </Box>
-
-      {agentOpen && (
-        <BookingAgent
-          open={agentOpen}
-          onClose={() => setAgentOpen(false)}
-          onBooked={(convId) => { setAgentOpen(false); navigate(`/messages/${convId}`); }}
-          isClient={isClient}
-        />
-      )}
-      {editDialogueVisible && appointmentToEdit && (
-        <BookingForm
-          appointment={appointmentToEdit}
-          clientId={appointmentToEdit.client.id}
-          supportWorkerId={appointmentToEdit.support_worker.id}
-          onClose={() => setEditDialogueVisible(false)}
-          onSuccess={() => setVisibleMessage('Appointment successfully updated')}
-        />
-      )}
-      {rebookAppointment && (
-        <BookingForm
-          clientId={rebookAppointment.client.id}
-          supportWorkerId={rebookAppointment.support_worker.id}
-          onClose={() => setRebookAppointment(null)}
-          onSuccess={() => { setVisibleMessage('Appointment booked'); fetchAppointments(); }}
-        />
-      )}
-      {deleteDialogueVisible && (
-        <Dialog open={true} aria-labelledby="delete-dialog-title">
-          <DialogTitle id="delete-dialog-title">Delete Appointment</DialogTitle>
-          <DialogContent>Are you sure you want to delete this appointment?</DialogContent>
-          <DialogActions>
-            <Button onClick={() => appointmentToDelete && handleDelete(appointmentToDelete)}>Confirm</Button>
-            <Button onClick={() => setDeleteDialogueVisible(false)}>Cancel</Button>
-          </DialogActions>
-        </Dialog>
-      )}
-      {visibleMessage && (
-        <Snackbar
-          open={true}
-          message={visibleMessage}
-          onClose={() => setVisibleMessage('')}
-          autoHideDuration={5000}
-        />
-      )}
     </Container>
   );
 };

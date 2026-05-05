@@ -30,19 +30,28 @@ export interface Client {
   email: string;
 }
 
+export interface Specialization {
+  id: number;
+  name: string;
+}
+
 export interface SupportWorker {
   id: number;
   first_name: string;
-  middle_name:  string | null;
+  middle_name: string | null;
   last_name: string;
   age: number;
-  availability: string; 
+  availability: string;
   bio: string;
   email: string;
   experience: string;
   location: string;
   gender: string;
   phone: string;
+  emergency_contact_first_name: string;
+  emergency_contact_last_name: string;
+  emergency_contact_phone: string;
+  specializations?: Specialization[];
 }
 
 interface AuthProviderProps {
