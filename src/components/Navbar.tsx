@@ -15,7 +15,7 @@ const handleLogout = () => {
     <AppBar sx={{ backgroundColor: '#7B2FBE', boxShadow: 'none' }}>
       <Toolbar>
         <Button color="inherit" component={Link} to="/">Home</Button>
-        <Button color="inherit" component={Link} to="/clients">Clients</Button>
+        {auth.supportWorker && <Button color="inherit" component={Link} to="/clients">Clients</Button>}
         <Button color="inherit" component={Link} to="/support-workers">Support Workers</Button>
         <Button color="inherit" component={Link} to="/appointments">Appointments</Button>
         
