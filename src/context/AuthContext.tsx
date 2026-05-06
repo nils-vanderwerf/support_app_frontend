@@ -38,7 +38,7 @@ export interface Specialization {
 export interface SupportWorker {
   id: number;
   first_name: string;
-  middle_name:  string | null;
+  middle_name: string | null;
   last_name: string;
   age: number;
   availability: string;
@@ -48,6 +48,9 @@ export interface SupportWorker {
   location: string;
   gender: string;
   phone: string;
+  emergency_contact_first_name: string;
+  emergency_contact_last_name: string;
+  emergency_contact_phone: string;
   specializations?: Specialization[];
 }
 
