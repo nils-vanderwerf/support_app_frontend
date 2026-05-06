@@ -80,7 +80,7 @@ const SignUp = () => {
       auth.setSupportWorker(loginResponse.data.support_worker);
       navigate('/');
     } catch (err: any) {
-      const errorData = err.response.data.errors;
+      const errorData = err.response?.data?.errors || err.response?.data?.error;
       setErrors(Array.isArray(errorData) ? errorData : [errorData || 'An error occurred']);
       setSuccess(false);
     }
