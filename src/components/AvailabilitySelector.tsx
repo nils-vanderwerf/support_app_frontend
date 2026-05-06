@@ -1,0 +1,193 @@
+import { useState, useEffect } from 'react';
+import {
+  Box, Typography, Chip, TextField, FormControlLabel, Checkbox, ToggleButton, ToggleButtonGroup,
+} from '@mui/material';
+
+const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+const PRESETS = [
+  { label: 'Morning', value: '06:00-12:00' },
+  { label: 'Afternoon', value: '12:00-18:00' },
+  { label: 'Evening', value: '18:00-22:00' },
+  { label: 'Full Day', value: '06:00-22:00' },
+  { label: 'Custom', value: 'custom' },
+];
+
+interface AvailabilityValue {
+  days: string[];
+  time_window: string;
+}
+
+interface Props {
+  value: string;
+  onChange: (value: string) => void;
+}
+
+function parse(raw: string): AvailabilityValue {
+  try {
+    const parsed = JSON.parse(raw);
+    if (parsed && Array.isArray(parsed.days) && typeof parsed.time_window === 'string') {
+      return parsed;
+    }
+  } catch {}
+  return { days: [], time_window: '' };
+}
+
+function encode(days: string[], timeWindow: string): string {
+  return JSON.stringify({ days, time_window: timeWindow });
+}
+
+export function formatAvailability(raw: string): string {
+  try {
+    const parsed = JSON.parse(raw);
+    if (!parsed?.days || !parsed?.time_window) return raw;
+    const days: string[] = parsed.days;
+    const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+    const weekend = ['Sat', 'Sun'];
+    let dayLabel: string;
+    if (days.length === 7) {
+      dayLabel = 'Every day';
+    } else if (weekdays.every(d => days.includes(d)) && days.length === 5) {
+      dayLabel = 'Weekdays';
+    } else if (weekend.every(d => days.includes(d)) && days.length === 2) {
+      dayLabel = 'Weekends';
+    } else {
+      dayLabel = days.join(', ');
+    }
+    const preset = PRESETS.find(p => p.value === parsed.time_window);
+    const timeLabel = preset && preset.value !== 'custom' ? `${preset.label} (${parsed.time_window})` : parsed.time_window;
+    return `${dayLabel} · ${timeLabel}`;
+  } catch {
+    return raw;
+  }
+}
+
+const AvailabilitySelector = ({ value, onChange }: Props) => {
+  const initial = parse(value);
+  const [selectedDays, setSelectedDays] = useState<string[]>(initial.days);
+  const presetMatch = PRESETS.find(p => p.value === initial.time_window);
+  const [preset, setPreset] = useState<string>(presetMatch ? initial.time_window : initial.time_window ? 'custom' : '');
+  const [customFrom, setCustomFrom] = useState(() => {
+    if (!presetMatch && initial.time_window.includes('-')) return initial.time_window.split('-')[0];
+    return '09:00';
+  });
+  const [customTo, setCustomTo] = useState(() => {
+    if (!presetMatch && initial.time_window.includes('-')) return initial.time_window.split('-')[1];
+    return '17:00';
+  });
+
+  useEffect(() => {
+    const timeWindow = preset === 'custom' ? `${customFrom}-${customTo}` : preset;
+    onChange(encode(selectedDays, timeWindow));
+  }, [selectedDays, preset, customFrom, customTo]);
+
+  const toggleDay = (day: string) => {
+    setSelectedDays(prev =>
+      prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]
+    );
+  };
+
+  const selectWeekdays = () => setSelectedDays(['Mon', 'Tue', 'Wed', 'Thu', 'Fri']);
+  const selectWeekend = () => setSelectedDays(['Sat', 'Sun']);
+  const selectAll = () => setSelectedDays([...DAYS]);
+  const clearDays = () => setSelectedDays([]);
+
+  const daysSummary = () => {
+    if (selectedDays.length === 7) return 'Every day';
+    if (['Mon', 'Tue', 'Wed', 'Thu', 'Fri'].every(d => selectedDays.includes(d)) && selectedDays.length === 5) return 'Weekdays';
+    if (['Sat', 'Sun'].every(d => selectedDays.includes(d)) && selectedDays.length === 2) return 'Weekends';
+    return null;
+  };
+
+  const summary = daysSummary();
+
+  return (
+    <Box>
+      <Typography variant="body2" color="text.secondary" mb={1}>Available Days</Typography>
+      <Box display="flex" gap={0.5} flexWrap="wrap" mb={1}>
+        {DAYS.map(day => (
+          <FormControlLabel
+            key={day}
+            control={
+              <Checkbox
+                checked={selectedDays.includes(day)}
+                onChange={() => toggleDay(day)}
+                size="small"
+                sx={{ color: '#7B2FBE', '&.Mui-checked': { color: '#7B2FBE' } }}
+              />
+            }
+            label={day}
+            sx={{ mr: 0.5 }}
+          />
+        ))}
+      </Box>
+      <Box display="flex" gap={1} mb={summary ? 1 : 0}>
+        <Chip label="Weekdays" size="small" variant="outlined" onClick={selectWeekdays} sx={{ cursor: 'pointer' }} />
+        <Chip label="Weekends" size="small" variant="outlined" onClick={selectWeekend} sx={{ cursor: 'pointer' }} />
+        <Chip label="Every day" size="small" variant="outlined" onClick={selectAll} sx={{ cursor: 'pointer' }} />
+        {selectedDays.length > 0 && (
+          <Chip label="Clear" size="small" onClick={clearDays} sx={{ cursor: 'pointer' }} />
+        )}
+      </Box>
+      {summary && (
+        <Typography variant="caption" color="#7B2FBE" fontWeight={600}>{summary} selected</Typography>
+      )}
+
+      <Typography variant="body2" color="text.secondary" mt={2} mb={1}>Time Window</Typography>
+      <ToggleButtonGroup
+        value={preset}
+        exclusive
+        onChange={(_, v) => { if (v !== null) setPreset(v); }}
+        size="small"
+        sx={{ flexWrap: 'wrap', gap: 0.5 }}
+      >
+        {PRESETS.map(p => (
+          <ToggleButton
+            key={p.value}
+            value={p.value}
+            sx={{
+              borderRadius: '20px !important',
+              border: '1px solid #7B2FBE !important',
+              color: '#7B2FBE',
+              '&.Mui-selected': { bgcolor: '#7B2FBE', color: 'white' },
+              '&.Mui-selected:hover': { bgcolor: '#6a27a3' },
+              mr: 0.5,
+              mb: 0.5,
+            }}
+          >
+            {p.label}
+          </ToggleButton>
+        ))}
+      </ToggleButtonGroup>
+
+      {preset === 'custom' && (
+        <Box display="flex" gap={2} mt={1.5} alignItems="center">
+          <TextField
+            label="From"
+            type="time"
+            size="small"
+            value={customFrom}
+            onChange={e => setCustomFrom(e.target.value)}
+            sx={{ width: 130 }}
+          />
+          <Typography>to</Typography>
+          <TextField
+            label="To"
+            type="time"
+            size="small"
+            value={customTo}
+            onChange={e => setCustomTo(e.target.value)}
+            sx={{ width: 130 }}
+          />
+        </Box>
+      )}
+      {preset && preset !== 'custom' && (
+        <Typography variant="caption" color="text.secondary" display="block" mt={0.5}>
+          {PRESETS.find(p => p.value === preset)?.label}: {preset}
+        </Typography>
+      )}
+    </Box>
+  );
+};
+
+export default AvailabilitySelector;
