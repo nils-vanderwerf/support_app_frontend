@@ -21,15 +21,17 @@ interface BookingAgentProps {
   open: boolean;
   onClose: () => void;
   onBooked: () => void;
+  isClient?: boolean;
 }
 
-const WELCOME: Message = {
-  role: 'assistant',
-  content: "Hi! I'm your AI booking assistant. Tell me what kind of support you're looking for and I'll find the right worker for you.",
-};
-
-const BookingAgent = ({ open, onClose, onBooked }: BookingAgentProps) => {
-  const [messages, setMessages] = useState<Message[]>([WELCOME]);
+const BookingAgent = ({ open, onClose, onBooked, isClient = true }: BookingAgentProps) => {
+  const welcome: Message = {
+    role: 'assistant',
+    content: isClient
+      ? "Hi! I'm your AI booking assistant. Tell me what kind of support you're looking for and I'll find the right worker for you."
+      : "Hi! I'm your AI booking assistant. Tell me what kind of client you're looking to support and I'll help you find a match.",
+  };
+  const [messages, setMessages] = useState<Message[]>([welcome]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -48,7 +50,8 @@ const BookingAgent = ({ open, onClose, onBooked }: BookingAgentProps) => {
     setLoading(true);
 
     try {
-      const { data } = await axiosInstance.post('/ai_booking/chat', { messages: next });
+      const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      const { data } = await axiosInstance.post('/ai_booking/chat', { messages: next, timezone });
       const reply = data.message as string;
       setMessages([...next, { role: 'assistant', content: reply }]);
       if (reply.toLowerCase().includes('confirmed') || reply.toLowerCase().includes('booked')) {

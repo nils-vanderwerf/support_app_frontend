@@ -76,15 +76,13 @@ const AppointmentList = () => {
       <Box mt={5}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
           <Typography variant="h4">Appointments</Typography>
-          {isClient && (
-            <Button
-              variant="contained"
-              sx={{ bgcolor: '#7B2FBE', '&:hover': { bgcolor: '#6a27a3' } }}
-              onClick={() => setAgentOpen(true)}
-            >
-              Book with AI
-            </Button>
-          )}
+          <Button
+            variant="contained"
+            sx={{ bgcolor: '#7B2FBE', '&:hover': { bgcolor: '#6a27a3' } }}
+            onClick={() => setAgentOpen(true)}
+          >
+            Book with AI
+          </Button>
         </Box>
         <TableContainer component={Paper}>
           <Table>
@@ -128,7 +126,12 @@ const AppointmentList = () => {
         )}
       </Box>
       {agentOpen && (
-        <BookingAgent onClose={() => { setAgentOpen(false); fetchAppointments(); }} />
+        <BookingAgent
+          open={agentOpen}
+          onClose={() => setAgentOpen(false)}
+          onBooked={() => { setAgentOpen(false); fetchAppointments(); }}
+          isClient={isClient}
+        />
       )}
       {editDialogueVisible && appointmentToEdit && (
         <BookingForm
