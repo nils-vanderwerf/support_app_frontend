@@ -29,6 +29,7 @@ const AppointmentList = () => {
   const [appointmentToDelete, setAppointmentToDelete] = useState<Appointment | null>(null);
   const [appointmentToEdit, setAppointmentToEdit] = useState<Appointment | undefined>(undefined);
   const [editDialogueVisible, setEditDialogueVisible] = useState(false);
+  const [rebookAppointment, setRebookAppointment] = useState<Appointment | null>(null);
   const [agentOpen, setAgentOpen] = useState(false);
 
   const { client } = useAuth();
@@ -113,8 +114,14 @@ const AppointmentList = () => {
                   <TableCell>{formatDuration(appointment.duration)}</TableCell>
                   <TableCell>{appointment.notes}</TableCell>
                   <TableCell>
-                    <Button onClick={() => handleEdit(appointment)}>Edit</Button>
-                    <Button onClick={() => { setAppointmentToDelete(appointment); setDeleteDialogueVisible(true); }}>Delete</Button>
+                    {new Date(appointment.date) > new Date() ? (
+                      <>
+                        <Button onClick={() => handleEdit(appointment)}>Edit</Button>
+                        <Button onClick={() => { setAppointmentToDelete(appointment); setDeleteDialogueVisible(true); }}>Delete</Button>
+                      </>
+                    ) : (
+                      <Button onClick={() => setRebookAppointment(appointment)}>Rebook</Button>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}
@@ -140,6 +147,14 @@ const AppointmentList = () => {
           supportWorkerId={appointmentToEdit.support_worker.id}
           onClose={() => setEditDialogueVisible(false)}
           onSuccess={() => setVisibleMessage('Appointment successfully updated')}
+        />
+      )}
+      {rebookAppointment && (
+        <BookingForm
+          clientId={rebookAppointment.client.id}
+          supportWorkerId={rebookAppointment.support_worker.id}
+          onClose={() => setRebookAppointment(null)}
+          onSuccess={() => { setVisibleMessage('Appointment booked'); fetchAppointments(); }}
         />
       )}
       {deleteDialogueVisible && (
