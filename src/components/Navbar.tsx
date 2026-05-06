@@ -22,7 +22,15 @@ const handleLogout = () => {
         <Box sx={{ flexGrow: 1 }} />
         {auth.user ? (
           <>
-            <Typography sx={{ mr: 2 }}>Welcome, {auth.user.first_name}</Typography>
+            <Typography
+              sx={{ mr: 2, cursor: (auth.client || auth.supportWorker) ? 'pointer' : 'default', '&:hover': { textDecoration: (auth.client || auth.supportWorker) ? 'underline' : 'none' } }}
+              onClick={() => {
+                if (auth.client) navigate(`/clients/${auth.client.id}`);
+                else if (auth.supportWorker) navigate(`/support-workers/${auth.supportWorker.id}`);
+              }}
+            >
+              Welcome, {auth.user.first_name}
+            </Typography>
             {(auth.client || auth.supportWorker) && (
               <Tooltip title="My Profile">
                 <IconButton
