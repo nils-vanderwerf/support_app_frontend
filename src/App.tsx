@@ -50,8 +50,8 @@ const App = () => {
         <Navbar />
         <Box component="main" sx={{ p: 3, mt: 8 }}>
           <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/clients" element={<SecureRoute><ClientList /></SecureRoute>} />
+            <Route path="/" element={<SecureRoute><Home /></SecureRoute>} />
+            <Route path="/clients" element={<SecureRoute><ClientsRoute /></SecureRoute>} />
             <Route path="/clients/:id" element={<SecureRoute><ClientProfilePage /></SecureRoute>} />
             <Route path='/support-workers' element={<SecureRoute><SupportWorkerList /></SecureRoute>} />
             <Route path='/support-workers/:id' element={<SecureRoute><SupportWorkerProfilePage /></SecureRoute>} />
