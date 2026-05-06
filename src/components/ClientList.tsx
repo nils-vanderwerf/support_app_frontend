@@ -2,13 +2,16 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-  Paper, Typography, Container, Box, Avatar,
+  Paper, Typography, Container, Box, Avatar, Button,
 } from '@mui/material';
 import axiosInstance from '../api/axiosConfig';
-import { Client } from '../context/AuthContext';
+import { Client, useAuth } from '../context/AuthContext';
+import BookingAgent from './BookingAgent';
 
 const ClientList = () => {
   const [clients, setClients] = useState<Client[]>([]);
+  const [agentOpen, setAgentOpen] = useState(false);
+  const { supportWorker } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -20,9 +23,14 @@ const ClientList = () => {
   return (
     <Container>
       <Box mt={5}>
-        <Typography variant="h4" align="center" gutterBottom>
-          Clients
-        </Typography>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <Typography variant="h4">Clients</Typography>
+          {supportWorker && (
+            <Button variant="contained" sx={{ bgcolor: '#7B2FBE', '&:hover': { bgcolor: '#6a27a3' } }} onClick={() => setAgentOpen(true)}>
+              Book with AI
+            </Button>
+          )}
+        </Box>
         <TableContainer component={Paper}>
           <Table>
             <TableHead>
@@ -58,6 +66,9 @@ const ClientList = () => {
           </Table>
         </TableContainer>
       </Box>
+      {agentOpen && (
+        <BookingAgent open={agentOpen} onClose={() => setAgentOpen(false)} onBooked={() => setAgentOpen(false)} isClient={false} />
+      )}
     </Container>
   );
 };

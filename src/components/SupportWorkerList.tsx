@@ -2,13 +2,17 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-  Paper, Typography, Container, Box, Avatar,
+  Paper, Typography, Container, Box, Avatar, Button,
 } from '@mui/material';
 import axiosInstance from '../api/axiosConfig';
 import { SupportWorker as SupportWorkerType } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
+import BookingAgent from './BookingAgent';
 
 const SupportWorkerList = () => {
   const [workers, setWorkers] = useState<SupportWorkerType[]>([]);
+  const [agentOpen, setAgentOpen] = useState(false);
+  const { client } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -20,9 +24,14 @@ const SupportWorkerList = () => {
   return (
     <Container>
       <Box mt={5}>
-        <Typography variant="h4" align="center" gutterBottom>
-          Support Workers
-        </Typography>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <Typography variant="h4">Support Workers</Typography>
+          {client && (
+            <Button variant="contained" sx={{ bgcolor: '#7B2FBE', '&:hover': { bgcolor: '#6a27a3' } }} onClick={() => setAgentOpen(true)}>
+              Book with AI
+            </Button>
+          )}
+        </Box>
         <TableContainer component={Paper}>
           <Table>
             <TableHead>
@@ -60,6 +69,9 @@ const SupportWorkerList = () => {
           </Table>
         </TableContainer>
       </Box>
+      {agentOpen && (
+        <BookingAgent open={agentOpen} onClose={() => setAgentOpen(false)} onBooked={() => setAgentOpen(false)} isClient={true} />
+      )}
     </Container>
   );
 };
