@@ -6,7 +6,8 @@ import {
   DialogContent,
   DialogActions,
   Button,
-  Avatar
+  Avatar,
+  Chip
 } from '@mui/material';
 import { SupportWorker as SupportWorkerType, useAuth } from '../context/AuthContext';
 import { styled } from '@mui/system';
@@ -73,11 +74,20 @@ const SupportWorker = ({ worker, handleClose, onSuccess}: SupportWorkerProps) =>
       <DialogContent>
         <Box display="flex">
           <Box sx={{ flex: 1, pl: 2 }}>
-            <Typography variant="body1"><strong>ID:</strong> {worker.id}</Typography>
             <Typography variant="body1"><strong>Location:</strong> {worker.location}</Typography>
             <Typography variant="body1"><strong>Availability:</strong> {worker.availability}</Typography>
             <Typography variant="body1"><strong>Phone:</strong> {worker.phone}</Typography>
             <Typography variant="body1"><strong>Email:</strong> {worker.email}</Typography>
+            {worker.specializations && worker.specializations.length > 0 && (
+              <Box mt={1}>
+                <Typography variant="body1"><strong>Specializations:</strong></Typography>
+                <Box display="flex" flexWrap="wrap" gap={0.5} mt={0.5}>
+                  {worker.specializations.map((s) => (
+                    <Chip key={s.id} label={s.name} size="small" sx={{ bgcolor: '#7B2FBE', color: 'white' }} />
+                  ))}
+                </Box>
+              </Box>
+            )}
           </Box>
         </Box>
       </DialogContent>

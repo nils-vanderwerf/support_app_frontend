@@ -1,20 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import { SupportWorker, Client } from '../context/AuthContext';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { formatDuration } from '../utils/formatDuration';
-import { 
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Typography,
-  Container,
-  Box,
+import {
+  Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
+  Paper, Typography, Container, Box,
 } from '@mui/material';
 import axiosInstance from '../api/axiosConfig';
+import { SupportWorker, Client } from '../context/AuthContext';
+
 export interface Appointment {
   id: number;
   date: string;
@@ -22,29 +16,31 @@ export interface Appointment {
   client: Client;
   location: string;
   duration: number;
-  notes: string; 
+  notes: string;
 }
 
 const AppointmentList = () => {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const { client } = useAuth();
   const isClient = !!client;
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-      const response = await axiosInstance.get('/appointments')
-      setAppointments(response.data);
-      } catch (error) {
-        console.error('Error fetching data: ', error);
-      }
-    };
-
-    fetchData();
+    axiosInstance.get('/appointments')
+      .then(res => setAppointments(res.data))
+      .catch(err => console.error('Error fetching appointments:', err));
   }, []);
 
+  const handleNameClick = (appointment: Appointment) => {
+    if (isClient) {
+      navigate(`/support-workers/${appointment.support_worker.id}`);
+    } else {
+      navigate(`/clients/${appointment.client.id}`);
+    }
+  };
+
   return (
-     <Container>
+    <Container>
       <Box mt={5}>
         <Typography variant="h4" align="center" gutterBottom>
           Appointments
@@ -54,7 +50,7 @@ const AppointmentList = () => {
             <TableHead>
               <TableRow>
                 <TableCell>Date</TableCell>
-                <TableCell>{isClient ? "Support Worker" : "Client"}</TableCell>
+                <TableCell>{isClient ? 'Support Worker' : 'Client'}</TableCell>
                 <TableCell>Location</TableCell>
                 <TableCell>Duration</TableCell>
                 <TableCell>Notes</TableCell>
@@ -64,8 +60,11 @@ const AppointmentList = () => {
               {appointments.map((appointment) => (
                 <TableRow key={appointment.id}>
                   <TableCell>{new Date(appointment.date).toLocaleDateString()}</TableCell>
-                  <TableCell>
-                    {isClient 
+                  <TableCell
+                    onClick={() => handleNameClick(appointment)}
+                    sx={{ cursor: 'pointer', color: '#7B2FBE', fontWeight: 600, '&:hover': { textDecoration: 'underline' } }}
+                  >
+                    {isClient
                       ? `${appointment.support_worker.first_name} ${appointment.support_worker.last_name}`
                       : `${appointment.client.first_name} ${appointment.client.last_name}`
                     }
@@ -82,8 +81,8 @@ const AppointmentList = () => {
           <Typography fontStyle="italic">No appointments found</Typography>
         )}
       </Box>
-      </Container>
-    );
+    </Container>
+  );
 };
 
 export default AppointmentList;
