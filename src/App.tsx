@@ -6,6 +6,8 @@ import Home from './components/Home';
 import SupportWorkerList from './components/SupportWorkerList';
 import ClientList from './components/ClientList';
 import AppointmentList from './components/AppointmentList';
+import SupportWorkerProfilePage from './components/SupportWorkerProfilePage';
+import ClientProfilePage from './components/ClientProfilePage';
 import Navbar from './components/Navbar';
 import SignUp from './components/SignUp';
 import Login from './components/Login';
@@ -27,7 +29,9 @@ const App = () => {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/clients" element={<SecureRoute><ClientsRoute /></SecureRoute>} />
+            <Route path="/clients/:id" element={<SecureRoute><ClientProfilePage /></SecureRoute>} />
             <Route path='/support-workers' element={<SecureRoute><SupportWorkerList /></SecureRoute>} />
+            <Route path='/support-workers/:id' element={<SecureRoute><SupportWorkerProfilePage /></SecureRoute>} />
             <Route path='/appointments' element={<SecureRoute><AppointmentList /></SecureRoute>} />
             <Route path="/signup" element={<SignUp />} />
             <Route path="/login" element={<Login />} />
