@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { Box, CssBaseline } from '@mui/material';
 import SecureRoute from './components/SecureRoute';
 import Home from './components/Home';
@@ -11,7 +11,13 @@ import ClientProfilePage from './components/ClientProfilePage';
 import Navbar from './components/Navbar';
 import SignUp from './components/SignUp';
 import Login from './components/Login';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
+
+const ClientsRoute = () => {
+  const { client } = useAuth();
+  if (client) return <Navigate to="/" replace />;
+  return <ClientList />;
+};
 
 const App = () => {
   return (
@@ -22,7 +28,7 @@ const App = () => {
         <Box component="main" sx={{ p: 3, mt: 8 }}>
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/clients" element={<SecureRoute><ClientList /></SecureRoute>} />
+            <Route path="/clients" element={<SecureRoute><ClientsRoute /></SecureRoute>} />
             <Route path="/clients/:id" element={<SecureRoute><ClientProfilePage /></SecureRoute>} />
             <Route path='/support-workers' element={<SecureRoute><SupportWorkerList /></SecureRoute>} />
             <Route path='/support-workers/:id' element={<SecureRoute><SupportWorkerProfilePage /></SecureRoute>} />
