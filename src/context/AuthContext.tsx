@@ -9,6 +9,7 @@ interface User {
   middle_name: string | null;
   email: string;
   role: string | null;
+  is_admin: boolean;
 }
 
 export interface Client {
@@ -52,6 +53,7 @@ export interface SupportWorker {
   emergency_contact_last_name: string;
   emergency_contact_phone: string;
   specializations?: Specialization[];
+  status?: string;
 }
 
 interface AuthProviderProps {

@@ -18,7 +18,13 @@ const Login = () => {
       auth.setUser(response.data.user);
       auth.setClient(response.data.client);
       auth.setSupportWorker(response.data.support_worker);
-      navigate('/');
+      if (response.data.user?.is_admin) {
+        navigate('/admin');
+      } else if (response.data.support_worker?.status === 'pending') {
+        navigate('/vetting');
+      } else {
+        navigate('/');
+      }
     } catch (error) {
       setError('Invalid email or password');
     }

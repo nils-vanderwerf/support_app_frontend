@@ -14,12 +14,29 @@ import ClientProfilePage from './components/ClientProfilePage';
 import Navbar from './components/Navbar';
 import SignUp from './components/SignUp';
 import Login from './components/Login';
+import VettingAgent from './components/VettingAgent';
+import AdminDashboard from './components/AdminDashboard';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
 const ClientsRoute = () => {
   const { client } = useAuth();
   if (client) return <Navigate to="/" replace />;
   return <ClientList />;
+};
+
+const AdminRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user, loading } = useAuth();
+  if (loading) return null;
+  if (!user?.is_admin) return <Navigate to="/" replace />;
+  return <>{children}</>;
+};
+
+const VettingRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user, supportWorker, loading } = useAuth();
+  if (loading) return null;
+  if (!user) return <Navigate to="/login" replace />;
+  if (supportWorker?.status !== 'pending') return <Navigate to="/" replace />;
+  return <>{children}</>;
 };
 
 const App = () => {
@@ -39,6 +56,8 @@ const App = () => {
             <Route path='/invitations' element={<SecureRoute><InvitationsPage /></SecureRoute>} />
             <Route path='/messages' element={<SecureRoute><ConversationList /></SecureRoute>} />
             <Route path='/messages/:id' element={<SecureRoute><ConversationView /></SecureRoute>} />
+            <Route path="/vetting" element={<VettingRoute><VettingAgent /></VettingRoute>} />
+            <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
             <Route path="/signup" element={<SignUp />} />
             <Route path="/login" element={<Login />} />
           </Routes>
