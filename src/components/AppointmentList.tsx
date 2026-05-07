@@ -106,8 +106,8 @@ const AppointmentList = () => {
                     sx={{ cursor: 'pointer', color: '#7B2FBE', fontWeight: 600, '&:hover': { textDecoration: 'underline' } }}
                   >
                     {isClient
-                      ? `${appointment.support_worker.first_name} ${appointment.support_worker.last_name}`
-                      : `${appointment.client.first_name} ${appointment.client.last_name}`
+                      ? `${appointment.support_worker?.first_name ?? ''} ${appointment.support_worker?.last_name ?? ''}`.trim() || '—'
+                      : `${appointment.client?.first_name ?? ''} ${appointment.client?.last_name ?? ''}`.trim() || '—'
                     }
                   </TableCell>
                   <TableCell>{appointment.location}</TableCell>

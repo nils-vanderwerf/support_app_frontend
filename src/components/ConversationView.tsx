@@ -68,7 +68,9 @@ const ConversationView = () => {
       setMessages(prev => [...prev, aiRes.data.message]);
       if (aiRes.data.appointment) {
         const appt = aiRes.data.appointment;
-        if (appt.status === 'approved' || appt.status === 'declined') {
+        if (appt.status === 'pending') {
+          setPendingAppointments(prev => [...prev.filter(a => a.id !== appt.id), appt]);
+        } else if (appt.status === 'approved' || appt.status === 'declined') {
           setPendingAppointments(prev => prev.filter(a => a.id !== appt.id));
         }
       }
@@ -171,6 +173,16 @@ const ConversationView = () => {
           <Typography color="text.secondary" fontStyle="italic" textAlign="center" mt={4}>Say hello to get started</Typography>
         )}
         {messages.map(msg => {
+          if (msg.content.startsWith('[SYS]')) {
+            const text = msg.content.replace('[SYS]', '').trim();
+            return (
+              <Box key={msg.id} display="flex" justifyContent="center" my={0.5}>
+                <Box sx={{ px: 2, py: 0.5 }}>
+                  <Typography variant="caption" sx={{ color: '#b0b0b0' }}>{text}</Typography>
+                </Box>
+              </Box>
+            );
+          }
           const isMine = msg.sender_type === mySenderType;
           return (
             <Box key={msg.id} display="flex" justifyContent={isMine ? 'flex-end' : 'flex-start'}>
