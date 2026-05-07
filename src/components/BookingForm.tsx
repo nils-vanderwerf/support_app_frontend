@@ -1,7 +1,8 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../api/axiosConfig';
 import { Dialog, DialogTitle, DialogActions, DialogContent, TextField, Box, Button } from '@mui/material';
-import { CloseOutlined } from '@mui/icons-material';
+import { CloseOutlined, Chat } from '@mui/icons-material';
 import { Appointment } from './AppointmentList';
 
 interface Suggested {
@@ -35,6 +36,7 @@ const localOffsetStr = () => {
 };
 
 const BookingForm = ({ clientId, supportWorkerId, onClose, onSuccess, appointment, isPending = false, suggested }: BookingProps) => {
+  const navigate = useNavigate();
   const [date, setDate] = useState(appointment ? toDatePart(appointment.date) : (suggested?.date ?? new Date().toISOString().split('T')[0]));
   const [time, setTime] = useState(appointment ? toTimePart(appointment.date) : (suggested?.time ?? '09:00'));
   const [duration, setDuration] = useState(appointment?.duration ?? suggested?.duration ?? 0);
@@ -109,8 +111,23 @@ const BookingForm = ({ clientId, supportWorkerId, onClose, onSuccess, appointmen
           />
         </Box>
       </DialogContent>
-      <DialogActions>
-        <Button onClick={handleSubmit} autoFocus>{isPending ? 'Send Invitation' : 'Book'}</Button>
+      <DialogActions sx={{ justifyContent: 'space-between', px: 2, pb: 2 }}>
+        {!isPending && (
+          <Button
+            startIcon={<Chat />}
+            onClick={async () => {
+              const res = await axiosInstance.post('/conversations', { client_id: clientId, support_worker_id: supportWorkerId });
+              onClose();
+              navigate(`/messages/${res.data.id}`);
+            }}
+            sx={{ color: '#7B2FBE' }}
+          >
+            Send Message
+          </Button>
+        )}
+        <Button onClick={handleSubmit} autoFocus sx={{ ml: 'auto' }}>
+          {isPending ? 'Send Invitation' : 'Book'}
+        </Button>
       </DialogActions>
     </Dialog>
   );
