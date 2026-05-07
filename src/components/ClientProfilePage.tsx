@@ -4,7 +4,7 @@ import {
   Box, Typography, Avatar, Chip, Button, Paper, Grid, Divider,
   CircularProgress, TextField, MenuItem,
 } from '@mui/material';
-import { LocationOn, Phone, Email, Favorite, Warning, ArrowBack, CalendarMonth, Edit, Save, Cancel } from '@mui/icons-material';
+import { LocationOn, Phone, Email, Favorite, Warning, ArrowBack, CalendarMonth, Edit, Save, Cancel, Chat } from '@mui/icons-material';
 import axiosInstance from '../api/axiosConfig';
 import { Client } from '../context/AuthContext';
 import { useAuth } from '../context/AuthContext';
@@ -91,9 +91,22 @@ const ClientProfilePage = () => {
                 </>
               )}
               {supportWorker && !editing && (
-                <Button variant="contained" startIcon={<CalendarMonth />} onClick={() => setShowBookingForm(true)} sx={{ bgcolor: '#7B2FBE', '&:hover': { bgcolor: '#6a0dad' } }}>
-                  Book Appointment
-                </Button>
+                <>
+                  <Button
+                    variant="outlined"
+                    startIcon={<Chat />}
+                    onClick={async () => {
+                      const res = await axiosInstance.post('/conversations', { client_id: client.id });
+                      navigate(`/messages/${res.data.id}`);
+                    }}
+                    sx={{ borderColor: '#7B2FBE', color: '#7B2FBE' }}
+                  >
+                    Message
+                  </Button>
+                  <Button variant="contained" startIcon={<CalendarMonth />} onClick={() => setShowBookingForm(true)} sx={{ bgcolor: '#7B2FBE', '&:hover': { bgcolor: '#6a0dad' } }}>
+                    Book Appointment
+                  </Button>
+                </>
               )}
             </Box>
           </Box>
