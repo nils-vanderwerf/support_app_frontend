@@ -32,26 +32,35 @@ const Navbar = () => {
     navigate('/login');
   };
 
+  const isAdmin = auth.user?.is_admin;
+  const isPendingWorker = auth.supportWorker?.status === 'pending';
+
+
   return (
     <AppBar sx={{ backgroundColor: '#7B2FBE', boxShadow: 'none' }}>
       <Toolbar>
         <Button color="inherit" component={Link} to="/">Home</Button>
-        {auth.supportWorker && <Button color="inherit" component={Link} to="/clients">Clients</Button>}
-        <Button color="inherit" component={Link} to="/support-workers">Support Workers</Button>
-        <Button color="inherit" component={Link} to="/appointments">Appointments</Button>
-        {(auth.client || auth.supportWorker) && (
-          <Button color="inherit" component={Link} to="/messages" onClick={() => setUnreadMessages(0)}>
-            <Badge badgeContent={unreadMessages} color="error" max={9}>
-              Messages
-            </Badge>
-          </Button>
-        )}
-        {(auth.client || auth.supportWorker) && (
-          <Button color="inherit" component={Link} to="/invitations" onClick={() => setInvitationsBadge(0)}>
-            <Badge badgeContent={invitationsBadge} color="error" max={9}>
-              Invitations
-            </Badge>
-          </Button>
+        {isAdmin && <Button color="inherit" component={Link} to="/admin">Admin</Button>}
+        {!isAdmin && !isPendingWorker && (
+          <>
+            {auth.supportWorker && <Button color="inherit" component={Link} to="/clients">Clients</Button>}
+            <Button color="inherit" component={Link} to="/support-workers">Support Workers</Button>
+            <Button color="inherit" component={Link} to="/appointments">Appointments</Button>
+            {(auth.client || auth.supportWorker) && (
+              <Button color="inherit" component={Link} to="/messages" onClick={() => setUnreadMessages(0)}>
+                <Badge badgeContent={unreadMessages} color="error" max={9}>
+                  Messages
+                </Badge>
+              </Button>
+            )}
+            {(auth.client || auth.supportWorker) && (
+              <Button color="inherit" component={Link} to="/invitations" onClick={() => setInvitationsBadge(0)}>
+                <Badge badgeContent={invitationsBadge} color="error" max={9}>
+                  Invitations
+                </Badge>
+              </Button>
+            )}
+          </>
         )}
 
         <Box sx={{ flexGrow: 1 }} />
@@ -64,9 +73,9 @@ const Navbar = () => {
                 else if (auth.supportWorker) navigate(`/support-workers/${auth.supportWorker!.id}`);
               }}
             >
-              Welcome, {auth.user.first_name}
+              Welcome, {auth.user.first_name ?? auth.user.email}
             </Typography>
-            {(auth.client || auth.supportWorker) && (
+            {(auth.client || auth.supportWorker) && !isPendingWorker && (
               <Tooltip title="My Profile">
                 <IconButton
                   onClick={() => auth.client

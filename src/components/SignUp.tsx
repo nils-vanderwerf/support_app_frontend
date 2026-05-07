@@ -79,7 +79,12 @@ const SignUp = () => {
       auth.setUser(loginResponse.data.user);
       auth.setClient(loginResponse.data.client);
       auth.setSupportWorker(loginResponse.data.support_worker);
-      navigate('/');
+      const sw = loginResponse.data.support_worker;
+      if (sw && sw.status === 'pending') {
+        navigate('/vetting');
+      } else {
+        navigate('/');
+      }
     } catch (err: any) {
       const errorData = err.response?.data?.errors || err.response?.data?.error;
       setErrors(Array.isArray(errorData) ? errorData : [errorData || 'An error occurred']);

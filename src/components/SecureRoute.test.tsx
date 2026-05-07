@@ -32,4 +32,24 @@ describe('SecureRoute', () => {
     render(<SecureRoute><div>Protected</div></SecureRoute>);
     expect(screen.getByTestId('navigate')).toHaveAttribute('data-to', '/login');
   });
+
+  it('redirects to /vetting when support worker status is pending', () => {
+    mockUseAuth.mockReturnValue({
+      loading: false,
+      user: { id: 1, email: 'sw@test.com' },
+      supportWorker: { status: 'pending' },
+    });
+    render(<SecureRoute><div>Protected</div></SecureRoute>);
+    expect(screen.getByTestId('navigate')).toHaveAttribute('data-to', '/vetting');
+  });
+
+  it('renders children when support worker is approved', () => {
+    mockUseAuth.mockReturnValue({
+      loading: false,
+      user: { id: 1, email: 'sw@test.com' },
+      supportWorker: { status: 'approved' },
+    });
+    render(<SecureRoute><div>Protected</div></SecureRoute>);
+    expect(screen.getByText('Protected')).toBeInTheDocument();
+  });
 });
