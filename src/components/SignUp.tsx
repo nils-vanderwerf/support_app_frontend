@@ -1,8 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Box, Button, TextField, Typography, Alert, Card, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
+import { Box, Button, TextField, Typography, Alert, Card, Select, MenuItem, FormControl, InputLabel, Divider } from '@mui/material';
 import ChipSelector from './ChipSelector';
-import { MEDICATIONS, ALLERGIES, SPECIALIZATIONS } from '../constants/selectorOptions';
+import AvailabilitySelector from './AvailabilitySelector';
+import LocationAutocomplete from './LocationAutocomplete';
+import DateOfBirthPicker from './DateOfBirthPicker';
+import InstitutionAutocomplete from './InstitutionAutocomplete';
+import { MEDICATIONS, ALLERGIES, SPECIALIZATIONS, QUALIFICATIONS } from '../constants/selectorOptions';
 import { PersonPin, Work } from '@mui/icons-material';
 import axiosInstance from '../api/axiosConfig';
 import { useAuth } from '../context/AuthContext';
@@ -13,8 +17,10 @@ const SignUp = () => {
   });
 
   const [profileData, setProfileData] = useState({
-    age: '', gender: '', phone: '', location: '', bio: '',
-    experience: '', availability: '', health_conditions: '',
+    date_of_birth: null as string | null,
+    gender: '', phone: '', location: '', bio: '',
+    experience: '' as string | number, availability: '', health_conditions: '',
+    qualification: '', field_of_study: '', institution: '',
     emergency_contact_first_name: '', emergency_contact_last_name: '',
     emergency_contact_phone: ''
   });
@@ -48,8 +54,8 @@ const SignUp = () => {
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     const profilePayload = role === 'client'
-      ? { age: profileData.age, gender: profileData.gender, phone: profileData.phone, location: profileData.location, bio: profileData.bio, health_conditions: profileData.health_conditions, medication: selectedMedications.join(', '), allergies: selectedAllergies.join(', '), emergency_contact_first_name: profileData.emergency_contact_first_name, emergency_contact_last_name: profileData.emergency_contact_last_name, emergency_contact_phone: profileData.emergency_contact_phone }
-      : { age: profileData.age, gender: profileData.gender, phone: profileData.phone, location: profileData.location, bio: profileData.bio, experience: profileData.experience, availability: profileData.availability, specializations: selectedSpecializations, emergency_contact_first_name: profileData.emergency_contact_first_name, emergency_contact_last_name: profileData.emergency_contact_last_name, emergency_contact_phone: profileData.emergency_contact_phone };
+      ? { date_of_birth: profileData.date_of_birth, gender: profileData.gender, phone: profileData.phone, location: profileData.location, bio: profileData.bio, health_conditions: profileData.health_conditions, medication: selectedMedications.join(', '), allergies: selectedAllergies.join(', '), emergency_contact_first_name: profileData.emergency_contact_first_name, emergency_contact_last_name: profileData.emergency_contact_last_name, emergency_contact_phone: profileData.emergency_contact_phone }
+      : { date_of_birth: profileData.date_of_birth, gender: profileData.gender, phone: profileData.phone, location: profileData.location, bio: profileData.bio, experience: profileData.experience, availability: profileData.availability, qualification: profileData.qualification || null, field_of_study: profileData.field_of_study || null, institution: profileData.institution || null, specializations: selectedSpecializations, emergency_contact_first_name: profileData.emergency_contact_first_name, emergency_contact_last_name: profileData.emergency_contact_last_name, emergency_contact_phone: profileData.emergency_contact_phone };
     try {
       await axiosInstance.post('/users', {
         user: { ...userFormData },
@@ -194,7 +200,7 @@ const SignUp = () => {
           <Box display="flex" flexDirection="column" gap={3} mt={3}>
             {role === 'client' && (
               <Box component="form" onSubmit={handleSubmit} display="flex" flexDirection="column" gap={3}>
-                <TextField label="Age" type="number" value={profileData.age} onChange={(e) => setProfileData({ ...profileData, age: e.target.value })} fullWidth />
+                <DateOfBirthPicker value={profileData.date_of_birth} onChange={v => setProfileData({ ...profileData, date_of_birth: v })} />
                 {genderSelect}
                 <TextField label="Phone" value={profileData.phone} onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })} fullWidth />
                 <LocationAutocomplete value={profileData.location} onChange={(v) => setProfileData({ ...profileData, location: v })} />
@@ -210,14 +216,41 @@ const SignUp = () => {
             )}
             {role === 'support_worker' && (
               <Box component="form" onSubmit={handleSubmit} display="flex" flexDirection="column" gap={3}>
-                <TextField label="Age" type="number" value={profileData.age} onChange={(e) => setProfileData({ ...profileData, age: e.target.value })} fullWidth />
+                <DateOfBirthPicker value={profileData.date_of_birth} onChange={v => setProfileData({ ...profileData, date_of_birth: v })} />
                 {genderSelect}
                 <TextField label="Phone" value={profileData.phone} onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })} fullWidth />
                 <LocationAutocomplete value={profileData.location} onChange={(v) => setProfileData({ ...profileData, location: v })} />
                 <TextField label="About" multiline rows={3} value={profileData.bio} onChange={(e) => setProfileData({ ...profileData, bio: e.target.value })} fullWidth />
-                <TextField label="Experience" multiline rows={3} value={profileData.experience} onChange={(e) => setProfileData({ ...profileData, experience: e.target.value })} fullWidth />
-                <TextField label="Availability" value={profileData.availability} onChange={(e) => setProfileData({ ...profileData, availability: e.target.value })} fullWidth />
+                <TextField
+                  label="Years of experience"
+                  type="number"
+                  value={profileData.experience}
+                  onChange={e => setProfileData({ ...profileData, experience: Math.max(0, parseInt(e.target.value) || 0) })}
+                  fullWidth
+                  inputProps={{ min: 0, max: 50 }}
+                />
+                <AvailabilitySelector value={profileData.availability} onChange={(v) => setProfileData({ ...profileData, availability: v })} />
                 <ChipSelector label="Specializations" options={SPECIALIZATIONS} value={selectedSpecializations} onChange={setSelectedSpecializations} />
+                <Divider />
+                <Typography variant="caption" color="text.secondary" sx={{ mt: -1 }}>
+                  Qualification (optional)
+                </Typography>
+                <FormControl fullWidth>
+                  <InputLabel>Qualification (optional)</InputLabel>
+                  <Select
+                    value={profileData.qualification}
+                    label="Qualification (optional)"
+                    onChange={e => setProfileData({ ...profileData, qualification: e.target.value })}
+                  >
+                    <MenuItem value=""><em>None</em></MenuItem>
+                    {QUALIFICATIONS.map(q => <MenuItem key={q} value={q}>{q}</MenuItem>)}
+                  </Select>
+                </FormControl>
+                <TextField label="Field of study (optional)" value={profileData.field_of_study} onChange={e => setProfileData({ ...profileData, field_of_study: e.target.value })} fullWidth />
+                <InstitutionAutocomplete
+                  value={profileData.institution}
+                  onChange={v => setProfileData({ ...profileData, institution: v })}
+                />
                 <TextField label="Emergency Contact First Name" value={profileData.emergency_contact_first_name} onChange={(e) => setProfileData({ ...profileData, emergency_contact_first_name: e.target.value })} fullWidth />
                 <TextField label="Emergency Contact Last Name" value={profileData.emergency_contact_last_name} onChange={(e) => setProfileData({ ...profileData, emergency_contact_last_name: e.target.value })} fullWidth />
                 <TextField label="Emergency Contact Phone" value={profileData.emergency_contact_phone} onChange={(e) => setProfileData({ ...profileData, emergency_contact_phone: e.target.value })} fullWidth />

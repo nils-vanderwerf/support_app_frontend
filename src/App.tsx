@@ -6,12 +6,16 @@ import Home from './components/Home';
 import SupportWorkerList from './components/SupportWorkerList';
 import ClientList from './components/ClientList';
 import AppointmentList from './components/AppointmentList';
+import ConversationList from './components/ConversationList';
+import ConversationView from './components/ConversationView';
+import InvitationsPage from './components/InvitationsPage';
 import SupportWorkerProfilePage from './components/SupportWorkerProfilePage';
 import ClientProfilePage from './components/ClientProfilePage';
 import Navbar from './components/Navbar';
 import SignUp from './components/SignUp';
 import Login from './components/Login';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ToastProvider } from './context/ToastContext';
 
 const ClientsRoute = () => {
   const { client } = useAuth();
@@ -46,6 +50,7 @@ const App = () => {
   return (
     <Router>
       <AuthProvider>
+        <ToastProvider>
         <CssBaseline />
         <Navbar />
         <Box component="main" sx={{ p: 3, mt: 8 }}>
@@ -56,10 +61,14 @@ const App = () => {
             <Route path='/support-workers' element={<SecureRoute><SupportWorkerList /></SecureRoute>} />
             <Route path='/support-workers/:id' element={<SecureRoute><SupportWorkerProfilePage /></SecureRoute>} />
             <Route path='/appointments' element={<SecureRoute><AppointmentList /></SecureRoute>} />
+            <Route path='/invitations' element={<SecureRoute><InvitationsPage /></SecureRoute>} />
+            <Route path='/messages' element={<SecureRoute><ConversationList /></SecureRoute>} />
+            <Route path='/messages/:id' element={<SecureRoute><ConversationView /></SecureRoute>} />
             <Route path="/signup" element={<SignUp />} />
             <Route path="/login" element={<Login />} />
           </Routes>
         </Box>
+        </ToastProvider>
       </AuthProvider>
     </Router>
   );

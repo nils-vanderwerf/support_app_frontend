@@ -4,11 +4,17 @@ import {
   Box, Typography, Avatar, Chip, Button, Paper, Grid, Divider,
   CircularProgress, TextField, MenuItem,
 } from '@mui/material';
-import { LocationOn, Phone, Email, Work, Schedule, ArrowBack, Edit, Save, Cancel } from '@mui/icons-material';
+import { LocationOn, Phone, Email, Work, Schedule, ArrowBack, Edit, Save, Cancel, Chat, VerifiedUser, ChildCare, Cake } from '@mui/icons-material';
 import axiosInstance from '../api/axiosConfig';
 import { SupportWorker } from '../context/AuthContext';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
+import AvailabilitySelector, { formatAvailability } from './AvailabilitySelector';
 import BookingForm from './BookingForm';
+import LocationAutocomplete from './LocationAutocomplete';
+import DateOfBirthPicker from './DateOfBirthPicker';
+import InstitutionAutocomplete from './InstitutionAutocomplete';
+import { QUALIFICATIONS } from '../constants/selectorOptions';
 
 const GENDERS = ['Male', 'Female', 'Non-binary', 'Prefer not to say'];
 
@@ -16,6 +22,7 @@ const SupportWorkerProfilePage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { client, supportWorker } = useAuth();
+  const { showToast } = useToast();
   const [worker, setWorker] = useState<SupportWorker | null>(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
@@ -93,9 +100,22 @@ const SupportWorkerProfilePage = () => {
                 </>
               )}
               {client && !editing && (
-                <Button variant="contained" onClick={() => setShowBookingForm(true)} sx={{ bgcolor: '#7B2FBE', '&:hover': { bgcolor: '#6a0dad' } }}>
-                  Book Appointment
-                </Button>
+                <>
+                  <Button
+                    variant="outlined"
+                    startIcon={<Chat />}
+                    onClick={async () => {
+                      const res = await axiosInstance.post('/conversations', { support_worker_id: worker.id });
+                      navigate(`/messages/${res.data.id}`);
+                    }}
+                    sx={{ borderColor: '#7B2FBE', color: '#7B2FBE' }}
+                  >
+                    Message
+                  </Button>
+                  <Button variant="contained" onClick={() => setShowBookingForm(true)} sx={{ bgcolor: '#7B2FBE', '&:hover': { bgcolor: '#6a0dad' } }}>
+                    Book Appointment
+                  </Button>
+                </>
               )}
             </Box>
           </Box>
@@ -122,12 +142,24 @@ const SupportWorkerProfilePage = () => {
               <Schedule sx={{ color: '#7B2FBE', fontSize: 20, flexShrink: 0 }} />
               {field('availability')}
             </Box>
+            {!editing && worker.age != null && (
+              <Box display="flex" alignItems="center" gap={1} mt={1.5}>
+                <Cake sx={{ color: '#7B2FBE', fontSize: 20, flexShrink: 0 }} />
+                <Typography variant="body2">{worker.age}</Typography>
+              </Box>
+            )}
             {editing && (
-              <Box mt={2}>
+              <Box mt={2} display="flex" flexDirection="column" gap={1.5}>
                 <TextField select size="small" fullWidth label="Gender" value={form.gender ?? ''} onChange={e => setForm({ ...form, gender: e.target.value })}>
                   {GENDERS.map(g => <MenuItem key={g} value={g}>{g}</MenuItem>)}
                 </TextField>
-                <TextField size="small" fullWidth label="Age" type="number" value={form.age ?? ''} onChange={e => setForm({ ...form, age: Number(e.target.value) })} sx={{ mt: 1.5 }} />
+                <DateOfBirthPicker value={form.date_of_birth} onChange={v => setForm({ ...form, date_of_birth: v })} />
+                <TextField select size="small" fullWidth label="Qualification (optional)" value={form.qualification ?? ''} onChange={e => setForm({ ...form, qualification: e.target.value })}>
+                  <MenuItem value=""><em>None</em></MenuItem>
+                  {QUALIFICATIONS.map(q => <MenuItem key={q} value={q}>{q}</MenuItem>)}
+                </TextField>
+                <TextField size="small" fullWidth label="Field of study (optional)" value={form.field_of_study ?? ''} onChange={e => setForm({ ...form, field_of_study: e.target.value })} />
+                <InstitutionAutocomplete value={form.institution ?? ''} onChange={v => setForm({ ...form, institution: v })} size="small" />
               </Box>
             )}
           </Paper>
@@ -140,6 +172,22 @@ const SupportWorkerProfilePage = () => {
                   <Chip key={s.id} label={s.name} sx={{ bgcolor: '#7B2FBE', color: 'white' }} />
                 ))}
               </Box>
+            </Paper>
+          )}
+
+          {!editing && (worker.qualification || worker.institution) && (
+            <Paper sx={{ p: 3, borderRadius: 3, mt: 3 }}>
+              <Typography variant="h6" fontWeight={600} mb={2}>Education</Typography>
+              {worker.qualification && (
+                <Chip
+                  label={worker.field_of_study ? `${worker.qualification} — ${worker.field_of_study}` : worker.qualification}
+                  size="small"
+                  sx={{ bgcolor: '#7B2FBE', color: 'white', mb: worker.institution ? 1 : 0 }}
+                />
+              )}
+              {worker.institution && (
+                <Typography variant="body2" color="text.secondary">{worker.institution}</Typography>
+              )}
             </Paper>
           )}
 
@@ -179,15 +227,29 @@ const SupportWorkerProfilePage = () => {
             </Box>
             <Divider sx={{ mb: 2 }} />
             {editing
-              ? <TextField multiline rows={4} fullWidth value={form.experience ?? ''} onChange={e => setForm({ ...form, experience: e.target.value })} placeholder="Describe your experience…" />
-              : <Typography variant="body1" color="text.secondary">{worker.experience || '—'}</Typography>
+              ? (
+                <TextField
+                  size="small"
+                  label="Years of experience"
+                  type="number"
+                  value={form.experience ?? ''}
+                  onChange={e => setForm({ ...form, experience: Math.max(0, parseInt(e.target.value) || 0) })}
+                  inputProps={{ min: 0, max: 50 }}
+                  sx={{ width: 180 }}
+                />
+              )
+              : (
+                <Typography variant="body1" color="text.secondary">
+                  {worker.experience != null ? `${worker.experience} year${worker.experience === 1 ? '' : 's'}` : '—'}
+                </Typography>
+              )
             }
           </Paper>
         </Grid>
       </Grid>
 
       {showBookingForm && client && (
-        <BookingForm clientId={client.id} supportWorkerId={worker.id} onSuccess={() => setShowBookingForm(false)} onClose={() => setShowBookingForm(false)} />
+        <BookingForm clientId={client.id} supportWorkerId={worker.id} onSuccess={() => { showToast('Appointment booked'); setShowBookingForm(false); }} onClose={() => setShowBookingForm(false)} />
       )}
     </Box>
   );

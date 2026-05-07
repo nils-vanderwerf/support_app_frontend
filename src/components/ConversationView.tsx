@@ -7,8 +7,8 @@ import {
 import { Send, ArrowBack, CalendarMonth, Check, Close } from '@mui/icons-material';
 import axiosInstance from '../api/axiosConfig';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import BookingForm from './BookingForm';
-import { encryptMessage, decryptMessage } from '../utils/encryption';
 
 interface Message {
   id: number;
@@ -25,7 +25,6 @@ interface PendingAppointment {
   location: string;
   notes: string;
   status: string;
-  initiated_by?: string;
 }
 
 interface ConversationDetail {
@@ -40,6 +39,7 @@ const ConversationView = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { client, supportWorker } = useAuth();
+  const { showToast } = useToast();
   const [conversation, setConversation] = useState<ConversationDetail | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [pendingAppointments, setPendingAppointments] = useState<PendingAppointment[]>([]);
@@ -51,18 +51,13 @@ const ConversationView = () => {
   const [fetchingSuggestion, setFetchingSuggestion] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  const fetchConversation = async () => {
-    const res = await axiosInstance.get(`/conversations/${id}`);
-    const convId: number = res.data.id;
-    const decrypted: Message[] = await Promise.all(
-      res.data.messages.map(async (msg: Message) => ({
-        ...msg,
-        content: await decryptMessage(msg.content, convId),
-      }))
-    );
-    setConversation(res.data);
-    setMessages(decrypted);
-    setPendingAppointments(res.data.appointments.filter((a: PendingAppointment) => a.status === 'pending'));
+  const fetchConversation = () => {
+    axiosInstance.get(`/conversations/${id}`)
+      .then(res => {
+        setConversation(res.data);
+        setMessages(res.data.messages);
+        setPendingAppointments(res.data.appointments.filter((a: PendingAppointment) => a.status === 'pending'));
+      });
   };
 
   useEffect(() => { fetchConversation(); }, [id]);
@@ -72,7 +67,7 @@ const ConversationView = () => {
     if (isTopLevel) setAiTyping(true);
     try {
       const aiRes = await axiosInstance.post(`/conversations/${id}/ai_respond`);
-      setMessages(prev => [...prev, aiRes.data.message]);
+      if (aiRes.data.message) setMessages(prev => [...prev, aiRes.data.message]);
       if (aiRes.data.declined_all) {
         setPendingAppointments([]);
       } else if (aiRes.data.appointments) {
@@ -90,6 +85,8 @@ const ConversationView = () => {
         await new Promise(r => setTimeout(r, 1200));
         await triggerAiResponse(followUpsLeft - 1, false);
       }
+    } catch {
+      // AI response failed silently — user can try sending again
     } finally {
       if (isTopLevel) setAiTyping(false);
     }
@@ -101,10 +98,8 @@ const ConversationView = () => {
     setSending(true);
     setInput('');
     try {
-      const encrypted = await encryptMessage(text, parseInt(id!));
-      const res = await axiosInstance.post(`/conversations/${id}/messages`, { content: encrypted });
-      // Store plaintext locally — the server holds only ciphertext
-      setMessages(prev => [...prev, { ...res.data, content: text }]);
+      const res = await axiosInstance.post(`/conversations/${id}/messages`, { content: text });
+      setMessages(prev => [...prev, res.data]);
       setSending(false);
       await triggerAiResponse();
     } finally {
@@ -116,13 +111,36 @@ const ConversationView = () => {
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
     await axiosInstance.patch(`/appointments/${apptId}/approve`, { timezone: tz });
     setPendingAppointments(prev => prev.filter(a => a.id !== apptId));
+    showToast('Appointment confirmed');
     fetchConversation();
+  };
+
+  const doApproveAll = async (appts: PendingAppointment[]) => {
+    await axiosInstance.patch('/appointments/bulk_approve', {
+      appointment_ids: appts.map(a => a.id),
+      timezone: tz,
+    });
+    setPendingAppointments([]);
+    showToast(`${appts.length} appointment${appts.length !== 1 ? 's' : ''} confirmed`);
+    fetchConversation();
+  };
+
+  const handleApprove = (apptId: number) => {
+    const appt = pendingAppointments.find(a => a.id === apptId);
+    if (!appt) return;
+    const clashes = detectClashes([appt], existingAppts);
+    if (clashes.length > 0) {
+      setClashDialog({ clashes, onConfirm: () => doApprove(apptId) });
+    } else {
+      doApprove(apptId);
+    }
   };
 
   const handleDecline = async (apptId: number) => {
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
     await axiosInstance.patch(`/appointments/${apptId}/decline`, { timezone: tz });
     setPendingAppointments(prev => prev.filter(a => a.id !== apptId));
+    showToast('Appointment declined', 'info');
     fetchConversation();
   };
 
@@ -141,6 +159,7 @@ const ConversationView = () => {
 
   const handleInviteSent = async () => {
     setShowInviteForm(false);
+    showToast('Invitation sent');
     fetchConversation();
     await triggerAiResponse();
   };
@@ -181,17 +200,13 @@ const ConversationView = () => {
             {appt.location ? ` · ${appt.location}` : ''}
           </Typography>
           {appt.notes && <Typography variant="caption" color="text.secondary">{appt.notes}</Typography>}
-          {(() => {
-            const canRespond = appt.initiated_by === 'support_worker' ? !!client : !!supportWorker;
-            return canRespond ? (
-              <Box display="flex" gap={1} mt={1.5}>
-                <Button variant="contained" size="small" startIcon={<Check />} onClick={() => handleApprove(appt.id)} sx={{ bgcolor: '#7B2FBE', '&:hover': { bgcolor: '#6a27a3' } }}>Approve</Button>
-                <Button variant="outlined" size="small" startIcon={<Close />} onClick={() => handleDecline(appt.id)} color="error">Decline</Button>
-              </Box>
-            ) : (
-              <Typography variant="caption" color="text.secondary" display="block" mt={1}>Waiting for response…</Typography>
-            );
-          })()}
+          {supportWorker && (
+            <Box display="flex" gap={1} mt={1.5}>
+              <Button variant="contained" size="small" startIcon={<Check />} onClick={() => handleApprove(appt.id)} sx={{ bgcolor: '#7B2FBE', '&:hover': { bgcolor: '#6a27a3' } }}>Approve</Button>
+              <Button variant="outlined" size="small" startIcon={<Close />} onClick={() => handleDecline(appt.id)} color="error">Decline</Button>
+            </Box>
+          )}
+          {client && <Typography variant="caption" color="text.secondary" display="block" mt={1}>Waiting for response…</Typography>}
         </Paper>
       ))}
 
@@ -241,15 +256,38 @@ const ConversationView = () => {
         <div ref={bottomRef} />
       </Paper>
 
+      {/* Conversation starters on new conversations */}
+      {messages.length === 0 && (supportWorker || client) && (
+        <Box display="flex" flexWrap="wrap" gap={0.75} mb={1}>
+          {(supportWorker ? [
+            `Hey ${otherPerson.first_name}, I'm ${supportWorker.first_name} — what kind of support are you after?`,
+            `Hi ${otherPerson.first_name}, what does your week usually look like?`,
+            `Hey, what kinds of things do you need a hand with day to day?`,
+            `Hi ${otherPerson.first_name} — what would make the biggest difference for you right now?`,
+          ] : [
+            `Hi ${otherPerson.first_name}, I came across your profile and thought we might be a good match — happy to tell you more about what I need.`,
+            `Hey ${otherPerson.first_name}, I'm looking for some regular support — can we chat about what that might look like?`,
+            `Hi ${otherPerson.first_name}, saw your profile and wanted to reach out. What do you generally help people with?`,
+            `Hey, just wanted to say hi and see if we're a good fit before going into detail.`,
+          ]).map(starter => (
+            <Chip
+              key={starter}
+              label={starter}
+              size="small"
+              onClick={() => setInput(starter)}
+              sx={{ cursor: 'pointer', bgcolor: '#f3e8ff', color: '#7B2FBE', '&:hover': { bgcolor: '#e8d5ff' }, height: 'auto', '& .MuiChip-label': { whiteSpace: 'normal', py: 0.5 } }}
+            />
+          ))}
+        </Box>
+      )}
+
       {/* Input */}
       <Paper sx={{ p: 1.5, borderRadius: 3, display: 'flex', gap: 1, alignItems: 'flex-end' }}>
-        {client && (
-          <Button size="small" variant="outlined" startIcon={fetchingSuggestion ? <CircularProgress size={14} sx={{ color: '#7B2FBE' }} /> : <CalendarMonth />} onClick={openInviteForm}
-            disabled={fetchingSuggestion}
-            sx={{ borderColor: '#7B2FBE', color: '#7B2FBE', flexShrink: 0, mb: 0.25 }}>
-            Send Invitation
-          </Button>
-        )}
+        <Button size="small" variant="outlined" startIcon={fetchingSuggestion ? <CircularProgress size={14} sx={{ color: '#7B2FBE' }} /> : <CalendarMonth />} onClick={openInviteForm}
+          disabled={fetchingSuggestion}
+          sx={{ borderColor: '#7B2FBE', color: '#7B2FBE', flexShrink: 0, mb: 0.25 }}>
+          Send Invitation
+        </Button>
         <TextField
           fullWidth size="small" placeholder="Type a message…"
           value={input} onChange={e => setInput(e.target.value)}

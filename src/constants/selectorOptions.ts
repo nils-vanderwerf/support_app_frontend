@@ -10,6 +10,19 @@ export const ALLERGIES = [
   'Eggs', 'Soy', 'Fish', 'Ibuprofen', 'Codeine',
 ];
 
+export const QUALIFICATIONS = [
+  "Bachelor's Degree",
+  "Master's Degree",
+  "Graduate Diploma",
+  "Advanced Diploma",
+  "Diploma",
+  "Certificate IV",
+  "Certificate III",
+  "Associate Degree",
+  "PhD / Doctorate",
+  "Other",
+];
+
 export const SPECIALIZATIONS = [
   'Personal Care', 'Meal Preparation', 'Medication Management',
   'Mobility Assistance', 'Community Access', 'Domestic Assistance',

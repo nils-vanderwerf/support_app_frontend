@@ -26,7 +26,7 @@ describe('BookingAgent', () => {
 
   it('shows support worker welcome message when isClient is false', () => {
     renderComponent(false);
-    expect(screen.getByText(/which client you'd like to book with/i)).toBeInTheDocument();
+    expect(screen.getByText(/what kind of client you'd like to work with/i)).toBeInTheDocument();
   });
 
   it('renders the text input field', () => {

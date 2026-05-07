@@ -20,7 +20,7 @@ interface Message {
 interface BookingAgentProps {
   open: boolean;
   onClose: () => void;
-  onBooked: () => void;
+  onBooked: (conversationId: number) => void;
   isClient?: boolean;
 }
 
@@ -28,8 +28,8 @@ const BookingAgent = ({ open, onClose, onBooked, isClient = true }: BookingAgent
   const welcome: Message = {
     role: 'assistant',
     content: isClient
-      ? "Hi! I'm your AI booking assistant. Tell me what kind of support you're looking for and I'll find the right worker for you."
-      : "Hi! I'm your AI booking assistant. Tell me what kind of client you're looking to support and I'll help you find a match.",
+      ? "Hi! I'm your AI booking assistant. Tell me what kind of support you're looking for and I'll find the right worker and send them an invitation on your behalf."
+      : "Hi! I'm your AI booking assistant. Tell me what kind of client you'd like to work with — whether that's a particular health condition, specific needs, or tasks you'd like to help with — and I'll find the right match.",
   };
   const [messages, setMessages] = useState<Message[]>([welcome]);
   const [input, setInput] = useState('');
@@ -54,8 +54,8 @@ const BookingAgent = ({ open, onClose, onBooked, isClient = true }: BookingAgent
       const { data } = await axiosInstance.post('/ai_booking/chat', { messages: next, timezone });
       const reply = data.message as string;
       setMessages([...next, { role: 'assistant', content: reply }]);
-      if (reply.toLowerCase().includes('confirmed') || reply.toLowerCase().includes('booked')) {
-        onBooked();
+      if (data.conversation_id) {
+        onBooked(data.conversation_id);
       }
     } catch {
       setMessages([...next, { role: 'assistant', content: 'Sorry, something went wrong. Please try again.' }]);

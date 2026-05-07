@@ -1,6 +1,17 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../api/axiosConfig';
 import { Dialog, DialogTitle, DialogActions, DialogContent, TextField, Box, Button } from '@mui/material';
+import { CloseOutlined, Chat } from '@mui/icons-material';
+import { Appointment } from './AppointmentList';
+
+interface Suggested {
+  date?: string | null;
+  time?: string | null;
+  duration?: number | null;
+  location?: string | null;
+  notes?: string | null;
+}
 
 interface BookingProps {
   clientId: number;
@@ -8,6 +19,8 @@ interface BookingProps {
   onClose: () => void;
   onSuccess: (date: string) => void;
   appointment?: Appointment;
+  isPending?: boolean;
+  suggested?: Suggested;
 }
 
 const toDatePart = (iso: string) => new Date(iso).toLocaleDateString('en-CA');
@@ -22,26 +35,34 @@ const localOffsetStr = () => {
   return `${sign}${String(Math.floor(abs / 60)).padStart(2, '0')}:${String(abs % 60).padStart(2, '0')}`;
 };
 
-const BookingForm = ({ clientId, supportWorkerId, onClose, onSuccess, appointment }: BookingProps) => {
-  const [date, setDate] = useState(appointment ? toDatePart(appointment.date) : new Date().toISOString().split('T')[0]);
-  const [time, setTime] = useState(appointment ? toTimePart(appointment.date) : '09:00');
-  const [duration, setDuration] = useState(appointment?.duration ?? 0);
-  const [location, setLocation] = useState(appointment?.location ?? '');
-  const [notes, setNotes] = useState(appointment?.notes ?? '');
+const BookingForm = ({ clientId, supportWorkerId, onClose, onSuccess, appointment, isPending = false, suggested }: BookingProps) => {
+  const navigate = useNavigate();
+  const [date, setDate] = useState(appointment ? toDatePart(appointment.date) : (suggested?.date ?? new Date().toISOString().split('T')[0]));
+  const [time, setTime] = useState(appointment ? toTimePart(appointment.date) : (suggested?.time ?? '09:00'));
+  const [duration, setDuration] = useState(appointment?.duration ?? suggested?.duration ?? 0);
+  const [location, setLocation] = useState(appointment?.location ?? suggested?.location ?? '');
+  const [notes, setNotes] = useState(appointment?.notes ?? suggested?.notes ?? '');
 
   const handleSubmit = async () => {
     const datetime = `${date}T${time}:00${localOffsetStr()}`;
     try {
-      await axiosInstance.post('/appointments', {
-        appointment: {
-          date,
-          duration,
-          location,
-          notes,
-          client_id: clientId,
-          support_worker_id: supportWorkerId,
-        }
-      });
+      if (appointment) {
+        await axiosInstance.patch(`/appointments/${appointment.id}`, {
+          appointment: { date: datetime, duration, location, notes }
+        });
+      } else {
+        await axiosInstance.post('/appointments', {
+          appointment: {
+            date: datetime,
+            duration,
+            location,
+            notes,
+            client_id: clientId,
+            support_worker_id: supportWorkerId,
+            status: isPending ? 'pending' : 'approved',
+          }
+        });
+      }
       onClose();
       onSuccess(date);
     } catch (error) {
@@ -51,7 +72,13 @@ const BookingForm = ({ clientId, supportWorkerId, onClose, onSuccess, appointmen
 
   return (
     <Dialog open={true} aria-labelledby="booking-dialog-title">
-      <DialogTitle id="booking-dialog-title">Book Appointment</DialogTitle>
+      <DialogTitle id="booking-dialog-title">
+        <Box display='flex' justifyContent='space-between' alignItems='center'>
+          {appointment ? "Edit Appointment" : isPending ? "Send Appointment Invitation" : "Book Appointment"}
+          <CloseOutlined sx={{ color: 'text.secondary' }} onClick={onClose} />
+        </Box>
+      </DialogTitle>
+
       <DialogContent>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           <TextField
@@ -78,8 +105,23 @@ const BookingForm = ({ clientId, supportWorkerId, onClose, onSuccess, appointmen
           />
         </Box>
       </DialogContent>
-      <DialogActions>
-        <Button onClick={handleSubmit} autoFocus>Book</Button>
+      <DialogActions sx={{ justifyContent: 'space-between', px: 2, pb: 2 }}>
+        {!isPending && (
+          <Button
+            startIcon={<Chat />}
+            onClick={async () => {
+              const res = await axiosInstance.post('/conversations', { client_id: clientId, support_worker_id: supportWorkerId });
+              onClose();
+              navigate(`/messages/${res.data.id}`);
+            }}
+            sx={{ color: '#7B2FBE' }}
+          >
+            Send Message
+          </Button>
+        )}
+        <Button onClick={handleSubmit} autoFocus sx={{ ml: 'auto' }}>
+          {isPending ? 'Send Invitation' : 'Book'}
+        </Button>
       </DialogActions>
     </Dialog>
   );

@@ -4,11 +4,13 @@ import {
   Box, Typography, Avatar, Chip, Button, Paper, Grid, Divider,
   CircularProgress, TextField, MenuItem,
 } from '@mui/material';
-import { LocationOn, Phone, Email, Favorite, Warning, ArrowBack, CalendarMonth, Edit, Save, Cancel } from '@mui/icons-material';
+import { LocationOn, Phone, Email, Favorite, Warning, ArrowBack, CalendarMonth, Edit, Save, Cancel, Chat, Cake } from '@mui/icons-material';
 import axiosInstance from '../api/axiosConfig';
 import { Client } from '../context/AuthContext';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import BookingForm from './BookingForm';
+import DateOfBirthPicker from './DateOfBirthPicker';
 
 const GENDERS = ['Male', 'Female', 'Non-binary', 'Prefer not to say'];
 
@@ -16,6 +18,7 @@ const ClientProfilePage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { supportWorker, client: authClient } = useAuth();
+  const { showToast } = useToast();
   const [client, setClient] = useState<Client | null>(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
@@ -91,9 +94,22 @@ const ClientProfilePage = () => {
                 </>
               )}
               {supportWorker && !editing && (
-                <Button variant="contained" startIcon={<CalendarMonth />} onClick={() => setShowBookingForm(true)} sx={{ bgcolor: '#7B2FBE', '&:hover': { bgcolor: '#6a0dad' } }}>
-                  Book Appointment
-                </Button>
+                <>
+                  <Button
+                    variant="outlined"
+                    startIcon={<Chat />}
+                    onClick={async () => {
+                      const res = await axiosInstance.post('/conversations', { client_id: client.id });
+                      navigate(`/messages/${res.data.id}`);
+                    }}
+                    sx={{ borderColor: '#7B2FBE', color: '#7B2FBE' }}
+                  >
+                    Message
+                  </Button>
+                  <Button variant="contained" startIcon={<CalendarMonth />} onClick={() => setShowBookingForm(true)} sx={{ bgcolor: '#7B2FBE', '&:hover': { bgcolor: '#6a0dad' } }}>
+                    Book Appointment
+                  </Button>
+                </>
               )}
             </Box>
           </Box>
@@ -111,23 +127,33 @@ const ClientProfilePage = () => {
                 : <Typography variant="body2">{client.location || '—'}</Typography>
               }
             </Box>
-            <Box display="flex" alignItems="center" gap={1} mb={1.5}>
-              <Phone sx={{ color: '#7B2FBE', fontSize: 20, flexShrink: 0 }} />
-              {editing
-                ? <TextField size="small" fullWidth value={form.phone ?? ''} onChange={e => setForm({ ...form, phone: e.target.value })} />
-                : <Typography variant="body2">{client.phone || '—'}</Typography>
-              }
-            </Box>
-            <Box display="flex" alignItems="center" gap={1}>
-              <Email sx={{ color: '#7B2FBE', fontSize: 20, flexShrink: 0 }} />
-              <Typography variant="body2">{client.email}</Typography>
-            </Box>
+            {(editing || client.phone) && (
+              <Box display="flex" alignItems="center" gap={1} mb={1.5}>
+                <Phone sx={{ color: '#7B2FBE', fontSize: 20, flexShrink: 0 }} />
+                {editing
+                  ? <TextField size="small" fullWidth value={form.phone ?? ''} onChange={e => setForm({ ...form, phone: e.target.value })} />
+                  : <Typography variant="body2">{client.phone}</Typography>
+                }
+              </Box>
+            )}
+            {(editing || client.email) && (
+              <Box display="flex" alignItems="center" gap={1}>
+                <Email sx={{ color: '#7B2FBE', fontSize: 20, flexShrink: 0 }} />
+                <Typography variant="body2">{client.email}</Typography>
+              </Box>
+            )}
+            {!editing && client.age != null && (
+              <Box display="flex" alignItems="center" gap={1} mt={1.5}>
+                <Cake sx={{ color: '#7B2FBE', fontSize: 20, flexShrink: 0 }} />
+                <Typography variant="body2">{client.age}</Typography>
+              </Box>
+            )}
             {editing && (
               <Box mt={2} display="flex" flexDirection="column" gap={1.5}>
                 <TextField select size="small" fullWidth label="Gender" value={form.gender ?? ''} onChange={e => setForm({ ...form, gender: e.target.value })}>
                   {GENDERS.map(g => <MenuItem key={g} value={g}>{g}</MenuItem>)}
                 </TextField>
-                <TextField size="small" fullWidth label="Age" type="number" value={form.age ?? ''} onChange={e => setForm({ ...form, age: Number(e.target.value) })} />
+                <DateOfBirthPicker value={form.date_of_birth} onChange={v => setForm({ ...form, date_of_birth: v })} />
               </Box>
             )}
           </Paper>
@@ -198,7 +224,7 @@ const ClientProfilePage = () => {
       </Grid>
 
       {showBookingForm && supportWorker && (
-        <BookingForm clientId={client.id} supportWorkerId={supportWorker.id} onSuccess={() => setShowBookingForm(false)} onClose={() => setShowBookingForm(false)} />
+        <BookingForm clientId={client.id} supportWorkerId={supportWorker.id} onSuccess={() => { showToast('Appointment booked'); setShowBookingForm(false); }} onClose={() => setShowBookingForm(false)} />
       )}
     </Box>
   );
