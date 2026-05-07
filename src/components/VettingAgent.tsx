@@ -19,7 +19,7 @@ const VettingAgent = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
-      content: `Hi ${supportWorker?.first_name ?? 'there'}! Welcome to the vetting process. Before you can be listed on the platform, I need to collect a few details for compliance. This won't take long — I'll walk you through it step by step.`,
+      content: `Hi ${supportWorker?.first_name ?? 'there'}! Welcome to the vetting process. Before you can be listed on the platform, I need to collect two compliance check numbers — your Police Check and your Working With Children Check (WWCC).\n\nLet's start: what is your Police Check reference number?`,
     },
   ]);
   const [input, setInput] = useState('');
