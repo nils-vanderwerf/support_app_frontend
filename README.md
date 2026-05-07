@@ -21,8 +21,73 @@ See the section about [running tests](https://facebook.github.io/create-react-ap
 
 ### `npm run build`
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### Demo accounts
+
+The following seeded accounts are available to try the app without signing up:
+
+| Role | Email | Password |
+|------|-------|----------|
+| Client | elena.martinez@example.com | password123 |
+| Client | raj.patel@example.com | password123 |
+| Client | sophie.chen@example.com | password123 |
+| Support Worker | olivia.williams@example.com | password123 |
+| Support Worker | james.smith@example.com | password123 |
+| Admin | admin@example.com | password123 |
+
+> **Note:** The backend runs on Render's free tier and may take up to 50 seconds to respond after a period of inactivity while the server wakes up.
+
+---
+
+## What it does
+
+- Clients can browse support workers, view profiles, and book appointments
+- Support workers can browse clients and connect with them
+- Multi-step sign-up flow with role selection (client or support worker)
+- Messaging between clients and support workers with in-thread appointment invitations
+- Pending invitations page where support workers approve or decline bookings
+- Token-based auth stored in localStorage with protected routes that persist across page refresh
+- Role-aware and status-aware UI — pending workers are redirected to vetting; approved workers see their full dashboard
+- **AI conversation simulation** — every message thread is populated by a Claude persona built from real profile data; no real users needed to test the end-to-end flow
+- **AI Booking Assistant** — conversational agent that finds and connects users in natural language
+- **AI Vetting Agent** — guided interview that collects and validates support worker credentials
+- **AI Visit Reports** — generates a structured draft from appointment context; workers edit and submit from the same page
+- **Admin Dashboard** — stats bar, pending applications with AI vetting recommendations, appointment management, and approved workers list
+- **Forgot password** — email-based reset flow via Resend
+
+## Tech stack
+
+**Frontend**
+- React with TypeScript
+- Material UI for components
+- Axios for API requests with Bearer token auth
+- React Router for navigation and protected routes
+- React Context + hooks for auth state management
+- Jest + React Testing Library for component tests
+
+**Backend** (separate repo)
+- Ruby on Rails API
+- PostgreSQL via Neon (persistent, serverless)
+- Token-based authentication (signed tokens via `Rails.application.message_verifier`)
+- Claude API (Anthropic) for AI agents
+- Resend for transactional email
+- Deployed on Render (Docker)
+
+## Features
+
+### Authentication & routing
+- Token-based login — signed token returned on login/signup, stored in localStorage, sent as `Authorization: Bearer` header on every request
+- `SecureRoute` wrapper redirects unauthenticated users to `/login`, pending workers to `/vetting`, and serves role-appropriate content
+- Navbar adapts per role — admin link, worker-only links, and client-only links all conditionally rendered
+- Forgot password — email reset link sent via Resend, token validated on the backend
+
+### Home dashboard
+- Client view: upcoming appointments, days since last visit, total appointments, health info summary, edit/delete actions
+- Support worker view: today's appointments, hours this week, total clients, upcoming and recent appointments with rebook shortcut
+
+### Appointment system
+- `BookingForm` submits dates with the local timezone offset so the backend stores and formats times correctly
+- Pending invitations page with approve/decline — passes browser timezone so confirmation system messages show the right local time
+- Admin appointment table with status filter (All / Pending / Approved / Declined)
 
 ### Messaging
 - Conversation threads with chat-bubble UI, encrypted end-to-end using AES-256-GCM
@@ -31,7 +96,7 @@ It correctly bundles React in production mode and optimizes the build for the be
 - The backend mirrors the same HKDF + AES-256-GCM derivation in Ruby/OpenSSL to decrypt messages before passing context to the AI, and encrypts AI replies before storing them
 - System messages (appointment confirmations/declines) rendered inline with a distinct style; the `ENC:` prefix distinguishes encrypted messages from plaintext system messages
 - Unread message badges in the navbar
-- **AI chat simulation** — support workers can trigger an AI-simulated client reply; clients can trigger an AI-simulated support worker reply, including proactive appointment invitation JSON actions
+- AI conversation simulation — each participant in a thread is played by a Claude persona built from their real profile data (name, bio, location, specialisations, health conditions); workers can trigger a simulated client reply and vice versa, including proactive appointment invitation actions
 
 See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
 
@@ -43,7 +108,19 @@ See the section about [deployment](https://facebook.github.io/create-react-app/d
 - **Availability day filter** — `parseAvail` parses both JSON (`{"days":["Mon","Tue"...]}`) and free-form strings ("Weekdays", "Mon/Wed/Fri") so legacy data still filters correctly
 - `LocationAutocomplete` component with session token management and an `onCoordinates` callback to avoid a redundant geocoding round-trip after the user selects a suggestion
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+### Visit reports
+- Support workers can create a visit report for any completed appointment
+- **AI draft generation** — one click populates Activities, Observations, and Follow-up Actions from appointment context
+- Expandable report rows with full detail panel; reports are editable after submission
+- Appointments that already have a report are disabled in the picker to prevent duplicates
+
+### Admin dashboard
+- Stats bar: approved workers, pending review, total clients, appointments this week
+- Pending applications tab with police check, WWCC, AI vetting recommendation chips, and approve/reject buttons
+- Optimistic UI: approving a worker moves them instantly between lists without a reload
+- Appointments tab with status filter
+- Approved workers tab with avatar, email, location, and specialisations
+- Messages page — admin can view and reply to support worker threads (linked from the navbar)
 
 If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
 
