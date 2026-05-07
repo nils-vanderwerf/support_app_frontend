@@ -8,6 +8,7 @@ import axiosInstance from '../api/axiosConfig';
 import { SupportWorker as SupportWorkerType } from '../context/AuthContext';
 import { useAuth } from '../context/AuthContext';
 import BookingAgent from './BookingAgent';
+import { formatAvailability } from './AvailabilitySelector';
 
 const SupportWorkerList = () => {
   const [workers, setWorkers] = useState<SupportWorkerType[]>([]);
@@ -60,7 +61,7 @@ const SupportWorkerList = () => {
                     {worker.first_name} {worker.last_name}
                   </TableCell>
                   <TableCell>{worker.location}</TableCell>
-                  <TableCell>{worker.availability}</TableCell>
+                  <TableCell>{formatAvailability(worker.availability) || '—'}</TableCell>
                   <TableCell>{worker.phone}</TableCell>
                   <TableCell>{worker.email}</TableCell>
                 </TableRow>

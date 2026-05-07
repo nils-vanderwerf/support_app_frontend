@@ -106,13 +106,15 @@ const InvitationsPage = () => {
     }).catch(() => {}).finally(() => setLoading(false));
   }, []);
 
+  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
   const handleApprove = async (id: number) => {
-    await axiosInstance.patch(`/appointments/${id}/approve`);
+    await axiosInstance.patch(`/appointments/${id}/approve`, { timezone: tz });
     setPending(prev => prev.filter(a => a.id !== id));
   };
 
   const handleDecline = async (id: number) => {
-    await axiosInstance.patch(`/appointments/${id}/decline`);
+    await axiosInstance.patch(`/appointments/${id}/decline`, { timezone: tz });
     setPending(prev => prev.filter(a => a.id !== id));
   };
 
