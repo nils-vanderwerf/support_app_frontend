@@ -32,12 +32,16 @@ const Navbar = () => {
     navigate('/login');
   };
 
+  const isAdmin = auth.user?.is_admin;
+  const isPendingWorker = auth.supportWorker?.status === 'pending';
+
+
   return (
     <AppBar sx={{ backgroundColor: '#7B2FBE', boxShadow: 'none' }}>
       <Toolbar>
-        {auth.user && <Button color="inherit" component={Link} to="/">Home</Button>}
+        <Button color="inherit" component={Link} to="/">Home</Button>
         {isAdmin && <Button color="inherit" component={Link} to="/admin">Admin</Button>}
-        {auth.user && !isAdmin && !isPendingWorker && (
+        {!isAdmin && !isPendingWorker && (
           <>
             {auth.supportWorker && <Button color="inherit" component={Link} to="/clients">Clients</Button>}
             <Button color="inherit" component={Link} to="/support-workers">Support Workers</Button>
@@ -69,9 +73,9 @@ const Navbar = () => {
                 else if (auth.supportWorker) navigate(`/support-workers/${auth.supportWorker!.id}`);
               }}
             >
-              Welcome, {auth.user.first_name}
+              Welcome, {auth.user.first_name ?? auth.user.email}
             </Typography>
-            {(auth.client || auth.supportWorker) && (
+            {(auth.client || auth.supportWorker) && !isPendingWorker && (
               <Tooltip title="My Profile">
                 <IconButton
                   onClick={() => auth.client

@@ -9,6 +9,7 @@ interface User {
   middle_name: string | null;
   email: string;
   role: string | null;
+  is_admin: boolean;
 }
 
 export interface Client {
@@ -56,7 +57,9 @@ export interface SupportWorker {
   specializations?: Specialization[];
   status?: string;
   police_check_number?: string | null;
+  police_check_expiry?: string | null;
   wwcc_number?: string | null;
+  wwcc_expiry?: string | null;
   qualification?: string | null;
   field_of_study?: string | null;
   institution?: string | null;

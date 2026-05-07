@@ -14,6 +14,11 @@ import ClientProfilePage from './components/ClientProfilePage';
 import Navbar from './components/Navbar';
 import SignUp from './components/SignUp';
 import Login from './components/Login';
+import VettingAgent from './components/VettingAgent';
+import AdminDashboard from './components/AdminDashboard';
+import SupportWorkerAdminThread from './components/SupportWorkerAdminThread';
+import ForgotPassword from './components/ForgotPassword';
+import ResetPassword from './components/ResetPassword';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 
@@ -23,16 +28,10 @@ const ClientsRoute = () => {
   return <ClientList />;
 };
 
-const SupportWorkerRoute = () => {
-  const { supportWorker } = useAuth();
-  if (supportWorker) return <Navigate to="/" replace />;
-  return <SupportWorkerList />;
-};
-
 const AdminRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
   if (loading) return null;
-  if (user?.role !== 'admin') return <Navigate to="/" replace />;
+  if (!user?.is_admin) return <Navigate to="/" replace />;
   return <>{children}</>;
 };
 
@@ -40,11 +39,16 @@ const VettingRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, supportWorker, loading } = useAuth();
   if (loading) return null;
   if (!user) return <Navigate to="/login" replace />;
-  if (supportWorker?.status !== 'pending') return <Navigate to="/" replace />;
+  if (supportWorker?.status === 'approved') return <Navigate to="/" replace />;
   return <>{children}</>;
 };
 
-const MAPS_LIBRARIES: ('places')[] = ['places'];
+const RequireSupportWorker = ({ children }: { children: React.ReactNode }) => {
+  const { user, supportWorker, loading } = useAuth();
+  if (loading) return null;
+  if (!user || !supportWorker) return <Navigate to="/login" replace />;
+  return <>{children}</>;
+};
 
 const App = () => {
   return (
@@ -63,7 +67,10 @@ const App = () => {
             <Route path='/appointments' element={<SecureRoute><AppointmentList /></SecureRoute>} />
             <Route path='/invitations' element={<SecureRoute><InvitationsPage /></SecureRoute>} />
             <Route path='/messages' element={<SecureRoute><ConversationList /></SecureRoute>} />
+            <Route path='/messages/admin' element={<RequireSupportWorker><SupportWorkerAdminThread /></RequireSupportWorker>} />
             <Route path='/messages/:id' element={<SecureRoute><ConversationView /></SecureRoute>} />
+            <Route path="/vetting" element={<VettingRoute><VettingAgent /></VettingRoute>} />
+            <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
             <Route path="/signup" element={<SignUp />} />
             <Route path="/login" element={<Login />} />
           </Routes>
