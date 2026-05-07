@@ -70,7 +70,7 @@ const SupportWorkerList = () => {
         </TableContainer>
       </Box>
       {agentOpen && (
-        <BookingAgent open={agentOpen} onClose={() => setAgentOpen(false)} onBooked={() => setAgentOpen(false)} isClient={true} />
+        <BookingAgent open={agentOpen} onClose={() => setAgentOpen(false)} onBooked={(convId) => { setAgentOpen(false); navigate(`/messages/${convId}`); }} isClient={true} />
       )}
     </Container>
   );

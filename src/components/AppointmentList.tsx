@@ -136,7 +136,7 @@ const AppointmentList = () => {
         <BookingAgent
           open={agentOpen}
           onClose={() => setAgentOpen(false)}
-          onBooked={() => { setAgentOpen(false); fetchAppointments(); }}
+          onBooked={(convId) => { setAgentOpen(false); navigate(`/messages/${convId}`); }}
           isClient={isClient}
         />
       )}

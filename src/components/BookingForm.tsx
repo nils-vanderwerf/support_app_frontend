@@ -4,12 +4,22 @@ import { Dialog, DialogTitle, DialogActions, DialogContent, TextField, Box, Butt
 import { CloseOutlined } from '@mui/icons-material';
 import { Appointment } from './AppointmentList';
 
+interface Suggested {
+  date?: string | null;
+  time?: string | null;
+  duration?: number | null;
+  location?: string | null;
+  notes?: string | null;
+}
+
 interface BookingProps {
   clientId: number;
   supportWorkerId: number;
   onClose: () => void;
   onSuccess: (date: string) => void;
   appointment?: Appointment;
+  isPending?: boolean;
+  suggested?: Suggested;
 }
 
 const toDatePart = (iso: string) => new Date(iso).toLocaleDateString('en-CA');
@@ -24,12 +34,12 @@ const localOffsetStr = () => {
   return `${sign}${String(Math.floor(abs / 60)).padStart(2, '0')}:${String(abs % 60).padStart(2, '0')}`;
 };
 
-const BookingForm = ({ clientId, supportWorkerId, onClose, onSuccess, appointment }: BookingProps) => {
-  const [date, setDate] = useState(appointment ? toDatePart(appointment.date) : new Date().toISOString().split('T')[0]);
-  const [time, setTime] = useState(appointment ? toTimePart(appointment.date) : '09:00');
-  const [duration, setDuration] = useState(appointment?.duration ?? 0);
-  const [location, setLocation] = useState(appointment?.location ?? '');
-  const [notes, setNotes] = useState(appointment?.notes ?? '');
+const BookingForm = ({ clientId, supportWorkerId, onClose, onSuccess, appointment, isPending = false, suggested }: BookingProps) => {
+  const [date, setDate] = useState(appointment ? toDatePart(appointment.date) : (suggested?.date ?? new Date().toISOString().split('T')[0]));
+  const [time, setTime] = useState(appointment ? toTimePart(appointment.date) : (suggested?.time ?? '09:00'));
+  const [duration, setDuration] = useState(appointment?.duration ?? suggested?.duration ?? 0);
+  const [location, setLocation] = useState(appointment?.location ?? suggested?.location ?? '');
+  const [notes, setNotes] = useState(appointment?.notes ?? suggested?.notes ?? '');
 
   const handleSubmit = async () => {
     const datetime = `${date}T${time}:00${localOffsetStr()}`;
@@ -47,6 +57,7 @@ const BookingForm = ({ clientId, supportWorkerId, onClose, onSuccess, appointmen
             notes,
             client_id: clientId,
             support_worker_id: supportWorkerId,
+            status: isPending ? 'pending' : 'approved',
           }
         });
       }
@@ -61,7 +72,7 @@ const BookingForm = ({ clientId, supportWorkerId, onClose, onSuccess, appointmen
     <Dialog open={true} aria-labelledby="booking-dialog-title">
       <DialogTitle id="booking-dialog-title">
         <Box display='flex' justifyContent='space-between' alignItems='center'>
-          {appointment ? "Edit Appointment" : "Book Appointment"}
+          {appointment ? "Edit Appointment" : isPending ? "Send Appointment Invitation" : "Book Appointment"}
           <CloseOutlined sx={{ color: 'text.secondary' }} onClick={onClose} />
         </Box>
       </DialogTitle>
@@ -99,7 +110,7 @@ const BookingForm = ({ clientId, supportWorkerId, onClose, onSuccess, appointmen
         </Box>
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleSubmit} autoFocus>Book</Button>
+        <Button onClick={handleSubmit} autoFocus>{isPending ? 'Send Invitation' : 'Book'}</Button>
       </DialogActions>
     </Dialog>
   );

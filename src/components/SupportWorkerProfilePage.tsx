@@ -4,7 +4,7 @@ import {
   Box, Typography, Avatar, Chip, Button, Paper, Grid, Divider,
   CircularProgress, TextField, MenuItem,
 } from '@mui/material';
-import { LocationOn, Phone, Email, Work, Schedule, ArrowBack, Edit, Save, Cancel } from '@mui/icons-material';
+import { LocationOn, Phone, Email, Work, Schedule, ArrowBack, Edit, Save, Cancel, Chat } from '@mui/icons-material';
 import axiosInstance from '../api/axiosConfig';
 import { SupportWorker } from '../context/AuthContext';
 import { useAuth } from '../context/AuthContext';
@@ -94,9 +94,22 @@ const SupportWorkerProfilePage = () => {
                 </>
               )}
               {client && !editing && (
-                <Button variant="contained" onClick={() => setShowBookingForm(true)} sx={{ bgcolor: '#7B2FBE', '&:hover': { bgcolor: '#6a0dad' } }}>
-                  Book Appointment
-                </Button>
+                <>
+                  <Button
+                    variant="outlined"
+                    startIcon={<Chat />}
+                    onClick={async () => {
+                      const res = await axiosInstance.post('/conversations', { support_worker_id: worker.id });
+                      navigate(`/messages/${res.data.id}`);
+                    }}
+                    sx={{ borderColor: '#7B2FBE', color: '#7B2FBE' }}
+                  >
+                    Message
+                  </Button>
+                  <Button variant="contained" onClick={() => setShowBookingForm(true)} sx={{ bgcolor: '#7B2FBE', '&:hover': { bgcolor: '#6a0dad' } }}>
+                    Book Appointment
+                  </Button>
+                </>
               )}
             </Box>
           </Box>

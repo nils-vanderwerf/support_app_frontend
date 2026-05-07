@@ -67,7 +67,7 @@ const ClientList = () => {
         </TableContainer>
       </Box>
       {agentOpen && (
-        <BookingAgent open={agentOpen} onClose={() => setAgentOpen(false)} onBooked={() => setAgentOpen(false)} isClient={false} />
+        <BookingAgent open={agentOpen} onClose={() => setAgentOpen(false)} onBooked={(convId) => { setAgentOpen(false); navigate(`/messages/${convId}`); }} isClient={false} />
       )}
     </Container>
   );
