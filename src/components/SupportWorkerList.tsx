@@ -20,8 +20,38 @@ const DAY_LABELS: Record<string, string> = {
   friday: 'Fri', saturday: 'Sat', sunday: 'Sun',
 };
 
-function parseAvail(raw: string): Record<string, boolean> {
-  try { return JSON.parse(raw); } catch { return {}; }
+const DAY_ALIASES: Record<string, string> = {
+  mon: 'monday', tue: 'tuesday', tues: 'tuesday', wed: 'wednesday',
+  thu: 'thursday', thur: 'thursday', thurs: 'thursday', fri: 'friday',
+  sat: 'saturday', sun: 'sunday',
+};
+const WEEKDAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
+
+export function parseAvail(raw: string | null | undefined): Record<string, boolean> {
+  if (!raw) return {};
+  try {
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === 'object') return parsed;
+  } catch { /* fall through to string parsing */ }
+
+  const lower = raw.toLowerCase().trim();
+  if (['all', 'all days', 'any', 'anytime', 'flexible', 'now', 'immediately'].includes(lower)) {
+    return Object.fromEntries(DAYS.map(d => [d, true]));
+  }
+  if (['weekdays', 'weekday', 'mon-fri', 'monday to friday', 'monday - friday'].includes(lower)) {
+    return Object.fromEntries(WEEKDAYS.map(d => [d, true]));
+  }
+  if (['weekends', 'weekend', 'sat-sun', 'saturday and sunday'].includes(lower)) {
+    return { saturday: true, sunday: true };
+  }
+
+  const result: Record<string, boolean> = {};
+  const tokens = lower.split(/[\s,/&+]+/);
+  tokens.forEach(token => {
+    const day = DAY_ALIASES[token] ?? (DAYS.includes(token) ? token : null);
+    if (day) result[day] = true;
+  });
+  return result;
 }
 
 const SupportWorkerList = () => {
@@ -96,9 +126,10 @@ const SupportWorkerList = () => {
         if (!selectedSpecs.every(id => ids.includes(id))) return false;
       }
 
-      if (selectedDays.length > 0) {
+      if (selectedDays.length > 0 && selectedDays.length < DAYS.length) {
         const avail = parseAvail(w.availability);
-        if (!selectedDays.every(d => avail[d])) return false;
+        const hasAvailData = Object.keys(avail).length > 0;
+        if (hasAvailData && !selectedDays.some(d => avail[d])) return false;
       }
 
       if (searchPos) {
@@ -116,7 +147,7 @@ const SupportWorkerList = () => {
     setSelectedSpecs(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
 
   const activeFilterCount = [
-    nameFilter, selectedSpecs.length > 0, selectedDays.length > 0, searchPos,
+    nameFilter, selectedSpecs.length > 0, selectedDays.length > 0 && selectedDays.length < DAYS.length, searchPos,
   ].filter(Boolean).length;
 
   return (
