@@ -55,12 +55,12 @@ npm start
 ## 3 · Forgot Password
 
 - [ Y ] Click "Forgot password?" on login page → `/forgot-password`
-- [ Y ] Enter email → submit — "Check your inbox" success message shown
-- [ Y ] Email arrives from `onboarding@resend.dev` (or `noreply@suppova.com` once domain verified)
-- [ Y ] Reset link in email goes to `/reset-password/<token>` (path param, not query string)
-- [ Y ] Follow reset link → `/reset-password/:token` page loads
-- [ Y ] Enter new password → redirect to `/login` with "Password updated" notice
-- [ Y ] Old password no longer works; new password logs in successfully
+- [ ] Enter email → submit — "Check your inbox" success message shown
+- [ ] Email arrives from `onboarding@resend.dev` (or `noreply@suppova.com` once domain verified)
+- [ ] Reset link in email goes to `/reset-password/<token>` (path param, not query string)
+- [ ] Follow reset link → `/reset-password/:token` page loads
+- [ ] Enter new password → redirect to `/login` with "Password updated" notice
+- [ ] Old password no longer works; new password logs in successfully
 
 ---
 

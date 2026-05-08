@@ -4,6 +4,8 @@ import { Box, CssBaseline, CircularProgress } from '@mui/material';
 import SecureRoute from './components/SecureRoute';
 import Navbar from './components/Navbar';
 import Login from './components/Login';
+import VettingAgent from './components/VettingAgent';
+import AdminDashboard from './components/AdminDashboard';
 import ForgotPassword from './components/ForgotPassword';
 import ResetPassword from './components/ResetPassword';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -62,33 +64,27 @@ const App = () => {
   return (
     <Router>
       <AuthProvider>
-        <ToastProvider>
-          <CssBaseline />
-          <Navbar />
-          <Box component="main" sx={{ p: 3, mt: 8 }}>
-            <Suspense fallback={<PageLoader />}>
-              <Routes>
-                <Route path="/" element={<SecureRoute><Home /></SecureRoute>} />
-                <Route path="/clients" element={<SecureRoute><ClientsRoute /></SecureRoute>} />
-                <Route path="/clients/:id" element={<SecureRoute><ClientProfilePage /></SecureRoute>} />
-                <Route path='/support-workers' element={<SecureRoute><SupportWorkerRoute /></SecureRoute>} />
-                <Route path='/support-workers/:id' element={<SecureRoute><SupportWorkerProfilePage /></SecureRoute>} />
-                <Route path='/appointments' element={<SecureRoute><AppointmentList /></SecureRoute>} />
-                <Route path='/invitations' element={<SecureRoute><InvitationsPage /></SecureRoute>} />
-                <Route path='/reports' element={<RequireSupportWorker><ReportsPage /></RequireSupportWorker>} />
-                <Route path='/messages' element={<SecureRoute><ConversationList /></SecureRoute>} />
-                <Route path='/messages/admin' element={<RequireSupportWorker><SupportWorkerAdminThread /></RequireSupportWorker>} />
-                <Route path='/messages/:id' element={<SecureRoute><ConversationView /></SecureRoute>} />
-                <Route path="/vetting" element={<VettingRoute><VettingAgent /></VettingRoute>} />
-                <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
-                <Route path="/signup" element={<SignUp />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/forgot-password" element={<ForgotPassword />} />
-                <Route path="/reset-password/:token" element={<ResetPassword />} />
-              </Routes>
-            </Suspense>
-          </Box>
-        </ToastProvider>
+        <CssBaseline />
+        <Navbar />
+        <Box component="main" sx={{ p: 3, mt: 8 }}>
+          <Routes>
+            <Route path="/" element={<SecureRoute><Home /></SecureRoute>} />
+            <Route path="/clients" element={<SecureRoute><ClientsRoute /></SecureRoute>} />
+            <Route path="/clients/:id" element={<SecureRoute><ClientProfilePage /></SecureRoute>} />
+            <Route path='/support-workers' element={<SecureRoute><SupportWorkerList /></SecureRoute>} />
+            <Route path='/support-workers/:id' element={<SecureRoute><SupportWorkerProfilePage /></SecureRoute>} />
+            <Route path='/appointments' element={<SecureRoute><AppointmentList /></SecureRoute>} />
+            <Route path='/invitations' element={<SecureRoute><InvitationsPage /></SecureRoute>} />
+            <Route path='/messages' element={<SecureRoute><ConversationList /></SecureRoute>} />
+            <Route path='/messages/:id' element={<SecureRoute><ConversationView /></SecureRoute>} />
+            <Route path="/vetting" element={<VettingRoute><VettingAgent /></VettingRoute>} />
+            <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+            <Route path="/signup" element={<SignUp />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+          </Routes>
+        </Box>
       </AuthProvider>
     </Router>
   );

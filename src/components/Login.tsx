@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Box, Button, TextField, Typography, Paper, Alert } from '@mui/material';
+import { Box, Button, TextField, Typography, Alert } from '@mui/material';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import axiosInstance, { setAuthToken } from '../api/axiosConfig';
 
 const Login = () => {
@@ -10,6 +10,8 @@ const Login = () => {
   const [error, setError] = useState('');
   const auth = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const notice = (location.state as any)?.notice as string | undefined;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,6 +41,7 @@ const Login = () => {
         <Typography variant="body2" color="text.secondary" mb={4}>
           Log in to your account
         </Typography>
+        {notice && <Alert severity="success" sx={{ mb: 3 }}>{notice}</Alert>}
         {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
         <Box component="form" onSubmit={handleSubmit} display="flex" flexDirection="column" gap={3}>
           <TextField label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} fullWidth />
@@ -52,9 +55,9 @@ const Login = () => {
             Login
           </Button>
           <Typography variant="body2" align="center">
-            <a href="/forgot-password" style={{ color: '#7B2FBE', textDecoration: 'none' }}>
+            <Link to="/forgot-password" style={{ color: '#7B2FBE', textDecoration: 'none' }}>
               Forgot password?
-            </a>
+            </Link>
           </Typography>
         </Box>
       </Box>
