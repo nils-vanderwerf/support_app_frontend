@@ -93,7 +93,7 @@ describe('Home — client dashboard', () => {
     mockedAxios.get.mockResolvedValueOnce({ data: clientDashboard });
     renderComponent();
     await waitFor(() => screen.getByText('Olivia Williams'));
-    await userEvent.click(screen.getByTitle ? document.querySelector('[data-testid="EditOutlinedIcon"]')?.closest('button')! : screen.getAllByRole('button')[0]);
+    await userEvent.click(document.querySelector('[data-testid="EditOutlinedIcon"]')!.closest('button')!);
     // BookingForm modal heading should appear
     await waitFor(() => expect(screen.getByText(/Book Appointment|Edit/i)).toBeInTheDocument());
   });
