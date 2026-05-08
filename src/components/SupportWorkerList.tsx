@@ -5,13 +5,14 @@ import {
   Paper, Typography, Container, Box, Avatar, Button, TextField,
   Chip, Slider, ToggleButton, ToggleButtonGroup, InputAdornment,
 } from '@mui/material';
-import { Search, LocationOn } from '@mui/icons-material';
+import { Search } from '@mui/icons-material';
 import axiosInstance from '../api/axiosConfig';
 import { SupportWorker as SupportWorkerType, Specialization } from '../context/AuthContext';
 import { useAuth } from '../context/AuthContext';
 import BookingAgent from './BookingAgent';
 import { formatAvailability } from './AvailabilitySelector';
 import { geocodeAddress, haversineDistance, LatLng } from '../utils/geoDistance';
+import LocationAutocomplete from './LocationAutocomplete';
 
 const DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 const DAY_LABELS: Record<string, string> = {
@@ -146,15 +147,14 @@ const SupportWorkerList = () => {
                 sx={{ flex: 1, minWidth: 180 }}
                 InputProps={{ startAdornment: <InputAdornment position="start"><Search fontSize="small" /></InputAdornment> }}
               />
-              <TextField
-                label="Near location"
-                size="small"
-                value={locationInput}
-                onChange={e => setLocationInput(e.target.value)}
-                placeholder="e.g. Surry Hills, Sydney"
-                sx={{ flex: 1, minWidth: 220 }}
-                InputProps={{ startAdornment: <InputAdornment position="start"><LocationOn fontSize="small" sx={{ color: searchPos ? '#7B2FBE' : 'text.disabled' }} /></InputAdornment> }}
-              />
+              <Box sx={{ flex: 1, minWidth: 220 }}>
+                <LocationAutocomplete
+                  label="Near location"
+                  value={locationInput}
+                  onChange={setLocationInput}
+                  size="small"
+                />
+              </Box>
             </Box>
 
             {/* Radius slider — only when location is typed */}

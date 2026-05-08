@@ -5,11 +5,12 @@ import {
   Paper, Typography, Container, Box, Avatar, Button, TextField,
   Chip, Slider, InputAdornment,
 } from '@mui/material';
-import { Search, LocationOn } from '@mui/icons-material';
+import { Search } from '@mui/icons-material';
 import axiosInstance from '../api/axiosConfig';
 import { Client, useAuth } from '../context/AuthContext';
 import BookingAgent from './BookingAgent';
 import { geocodeAddress, haversineDistance, LatLng } from '../utils/geoDistance';
+import LocationAutocomplete from './LocationAutocomplete';
 
 const ClientList = () => {
   const [clients, setClients] = useState<Client[]>([]);
@@ -120,15 +121,14 @@ const ClientList = () => {
                 sx={{ flex: 1, minWidth: 200 }}
                 InputProps={{ startAdornment: <InputAdornment position="start"><Search fontSize="small" /></InputAdornment> }}
               />
-              <TextField
-                label="Near location"
-                size="small"
-                value={locationInput}
-                onChange={e => setLocationInput(e.target.value)}
-                placeholder="e.g. Parramatta, Sydney"
-                sx={{ flex: 1, minWidth: 220 }}
-                InputProps={{ startAdornment: <InputAdornment position="start"><LocationOn fontSize="small" sx={{ color: searchPos ? '#7B2FBE' : 'text.disabled' }} /></InputAdornment> }}
-              />
+              <Box sx={{ flex: 1, minWidth: 220 }}>
+                <LocationAutocomplete
+                  label="Near location"
+                  value={locationInput}
+                  onChange={setLocationInput}
+                  size="small"
+                />
+              </Box>
             </Box>
 
             {locationInput && (
