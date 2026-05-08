@@ -95,7 +95,7 @@ const SupportWorkerList = () => {
 
       return true;
     });
-  }, [workers, nameFilter, selectedSpecs, selectedDays, searchPos, radius]);
+  }, [workers, nameFilter, selectedSpecs, selectedDays, searchPos, radius, workerPositions]);
 
   const toggleSpec = (id: number) =>
     setSelectedSpecs(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);

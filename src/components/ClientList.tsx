@@ -66,7 +66,7 @@ const ClientList = () => {
 
       return true;
     });
-  }, [clients, nameFilter, conditionFilter, searchPos, radius]);
+  }, [clients, nameFilter, conditionFilter, searchPos, radius, clientPositions]);
 
   const activeFilterCount = [nameFilter, conditionFilter, searchPos].filter(Boolean).length;
 
