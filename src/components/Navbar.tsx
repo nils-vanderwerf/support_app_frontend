@@ -39,9 +39,9 @@ const Navbar = () => {
   return (
     <AppBar sx={{ backgroundColor: '#7B2FBE', boxShadow: 'none' }}>
       <Toolbar>
-        <Button color="inherit" component={Link} to="/">Home</Button>
+        {auth.user && <Button color="inherit" component={Link} to="/">Home</Button>}
         {isAdmin && <Button color="inherit" component={Link} to="/admin">Admin</Button>}
-        {!isAdmin && !isPendingWorker && (
+        {auth.user && !isAdmin && !isPendingWorker && (
           <>
             {auth.supportWorker && <Button color="inherit" component={Link} to="/clients">Clients</Button>}
             <Button color="inherit" component={Link} to="/support-workers">Support Workers</Button>
