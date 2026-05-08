@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Box, Button, TextField, Typography, Alert, Card, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
 import ChipSelector from './ChipSelector';
 import AvailabilitySelector from './AvailabilitySelector';
+import LocationAutocomplete from './LocationAutocomplete';
 import { MEDICATIONS, ALLERGIES, SPECIALIZATIONS } from '../constants/selectorOptions';
 import { PersonPin, Work } from '@mui/icons-material';
 import axiosInstance from '../api/axiosConfig';
@@ -203,7 +204,7 @@ const SignUp = () => {
                 <TextField label="Age" type="number" value={profileData.age} onChange={(e) => setProfileData({ ...profileData, age: e.target.value })} fullWidth />
                 {genderSelect}
                 <TextField label="Phone" value={profileData.phone} onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })} fullWidth />
-                <TextField label="Location" value={profileData.location} onChange={(e) => setProfileData({ ...profileData, location: e.target.value })} fullWidth />
+                <LocationAutocomplete value={profileData.location} onChange={(v) => setProfileData({ ...profileData, location: v })} />
                 <TextField label="Bio" multiline rows={3} value={profileData.bio} onChange={(e) => setProfileData({ ...profileData, bio: e.target.value })} fullWidth />
                 <TextField label="Health Conditions" value={profileData.health_conditions} onChange={(e) => setProfileData({ ...profileData, health_conditions: e.target.value })} fullWidth />
                 <ChipSelector label="Medication" options={MEDICATIONS} value={selectedMedications} onChange={setSelectedMedications} />
@@ -219,7 +220,7 @@ const SignUp = () => {
                 <TextField label="Age" type="number" value={profileData.age} onChange={(e) => setProfileData({ ...profileData, age: e.target.value })} fullWidth />
                 {genderSelect}
                 <TextField label="Phone" value={profileData.phone} onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })} fullWidth />
-                <TextField label="Location" value={profileData.location} onChange={(e) => setProfileData({ ...profileData, location: e.target.value })} fullWidth />
+                <LocationAutocomplete value={profileData.location} onChange={(v) => setProfileData({ ...profileData, location: v })} />
                 <TextField label="Bio" multiline rows={3} value={profileData.bio} onChange={(e) => setProfileData({ ...profileData, bio: e.target.value })} fullWidth />
                 <TextField label="Experience" multiline rows={3} value={profileData.experience} onChange={(e) => setProfileData({ ...profileData, experience: e.target.value })} fullWidth />
                 <AvailabilitySelector value={profileData.availability} onChange={(v) => setProfileData({ ...profileData, availability: v })} />

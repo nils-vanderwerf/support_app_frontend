@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { Box, CssBaseline } from '@mui/material';
+import { LoadScript } from '@react-google-maps/api';
 import SecureRoute from './components/SecureRoute';
 import Home from './components/Home';
 import SupportWorkerList from './components/SupportWorkerList';
@@ -39,8 +40,14 @@ const VettingRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
+const MAPS_LIBRARIES: ('places')[] = ['places'];
+
 const App = () => {
   return (
+    <LoadScript
+      googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY!}
+      libraries={MAPS_LIBRARIES}
+    >
     <Router>
       <AuthProvider>
         <CssBaseline />
@@ -64,6 +71,7 @@ const App = () => {
         </Box>
       </AuthProvider>
     </Router>
+    </LoadScript>
   );
 };
 
