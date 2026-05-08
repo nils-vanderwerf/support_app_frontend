@@ -60,6 +60,7 @@ const Navbar = () => {
       { label: 'Messages', to: '/messages', badge: unreadMessages, onNavigate: () => setUnreadMessages(0) },
       { label: 'Invitations', to: '/invitations', badge: invitationsBadge, onNavigate: () => setInvitationsBadge(0) },
     ] : []),
+    ...(auth.supportWorker ? [{ label: 'Reports', to: '/reports' }] : []),
   ] : [];
 
   const profilePath = auth.client

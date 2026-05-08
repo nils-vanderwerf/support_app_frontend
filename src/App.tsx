@@ -2,6 +2,16 @@ import React, { Suspense } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { Box, CssBaseline, CircularProgress } from '@mui/material';
 import SecureRoute from './components/SecureRoute';
+import Home from './components/Home';
+import SupportWorkerList from './components/SupportWorkerList';
+import ClientList from './components/ClientList';
+import AppointmentList from './components/AppointmentList';
+import ConversationList from './components/ConversationList';
+import ConversationView from './components/ConversationView';
+import InvitationsPage from './components/InvitationsPage';
+import ReportsPage from './components/ReportsPage';
+import SupportWorkerProfilePage from './components/SupportWorkerProfilePage';
+import ClientProfilePage from './components/ClientProfilePage';
 import Navbar from './components/Navbar';
 import Login from './components/Login';
 import VettingAgent from './components/VettingAgent';
@@ -75,6 +85,7 @@ const App = () => {
             <Route path='/support-workers/:id' element={<SecureRoute><SupportWorkerProfilePage /></SecureRoute>} />
             <Route path='/appointments' element={<SecureRoute><AppointmentList /></SecureRoute>} />
             <Route path='/invitations' element={<SecureRoute><InvitationsPage /></SecureRoute>} />
+            <Route path='/reports' element={<RequireSupportWorker><ReportsPage /></RequireSupportWorker>} />
             <Route path='/messages' element={<SecureRoute><ConversationList /></SecureRoute>} />
             <Route path='/messages/:id' element={<SecureRoute><ConversationView /></SecureRoute>} />
             <Route path="/vetting" element={<VettingRoute><VettingAgent /></VettingRoute>} />
