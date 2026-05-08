@@ -17,18 +17,24 @@ const cache = new Map<string, LatLng | null>();
 export async function geocodeAddress(address: string): Promise<LatLng | null> {
   const key = address.trim().toLowerCase();
   if (cache.has(key)) return cache.get(key)!;
-  return new Promise(resolve => {
-    const geocoder = new google.maps.Geocoder();
-    geocoder.geocode({ address, region: 'AU' }, (results, status) => {
-      if (status === 'OK' && results?.[0]) {
-        const { lat, lng } = results[0].geometry.location;
-        const pos = { lat: lat(), lng: lng() };
-        cache.set(key, pos);
-        resolve(pos);
-      } else {
-        cache.set(key, null);
-        resolve(null);
-      }
+  try {
+    const { suggestions } = await google.maps.places.AutocompleteSuggestion.fetchAutocompleteSuggestions({
+      input: address,
+      includedRegionCodes: ['au'],
     });
-  });
+    if (!suggestions.length || !suggestions[0].placePrediction) {
+      cache.set(key, null);
+      return null;
+    }
+    const place = suggestions[0].placePrediction.toPlace();
+    await place.fetchFields({ fields: ['location'] });
+    const loc = (place as any).location;
+    if (!loc) { cache.set(key, null); return null; }
+    const pos = { lat: loc.lat(), lng: loc.lng() };
+    cache.set(key, pos);
+    return pos;
+  } catch {
+    cache.set(key, null);
+    return null;
+  }
 }
