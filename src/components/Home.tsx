@@ -13,6 +13,8 @@ import { useAuth } from '../context/AuthContext';
 import { formatDuration } from '../utils/formatDuration';
 import { SupportWorker, Client } from '../context/AuthContext';
 import BookingForm from './BookingForm';
+import VisitReportDrawer from './VisitReportDrawer';
+import { NoteAdd } from '@mui/icons-material';
 
 const NOTES_LIMIT = 100;
 
@@ -75,9 +77,10 @@ interface AppointmentRowProps {
   onEdit: (appt: Appointment) => void;
   onDelete: (appt: Appointment) => void;
   onRebook: (appt: Appointment) => void;
+  onReport?: (appt: Appointment) => void;
 }
 
-const AppointmentRow = ({ appt, nameOf, isPast = false, onNavigate, onEdit, onDelete, onRebook }: AppointmentRowProps) => {
+const AppointmentRow = ({ appt, nameOf, isPast = false, onNavigate, onEdit, onDelete, onRebook, onReport }: AppointmentRowProps) => {
   const date = new Date(appt.date);
   const isToday = !isPast && new Date().toDateString() === date.toDateString();
   const truncatedNotes = appt.notes && appt.notes.length > NOTES_LIMIT
@@ -122,9 +125,16 @@ const AppointmentRow = ({ appt, nameOf, isPast = false, onNavigate, onEdit, onDe
           </Typography>
         </Box>
         {isPast ? (
-          <IconButton size="small" onClick={() => onRebook(appt)} sx={{ color: '#7B2FBE' }} title="Rebook">
-            <EventRepeatOutlined fontSize="small" />
-          </IconButton>
+          <>
+            <IconButton size="small" onClick={() => onRebook(appt)} sx={{ color: '#7B2FBE' }} title="Rebook">
+              <EventRepeatOutlined fontSize="small" />
+            </IconButton>
+            {onReport && (
+              <IconButton size="small" onClick={() => onReport(appt)} sx={{ color: '#7B2FBE' }} title="Write report">
+                <NoteAdd fontSize="small" />
+              </IconButton>
+            )}
+          </>
         ) : (
           <>
             <IconButton size="small" onClick={() => onEdit(appt)} sx={{ color: '#7B2FBE' }}>
@@ -151,9 +161,10 @@ interface AppointmentSectionProps {
   onEdit: (appt: Appointment) => void;
   onDelete: (appt: Appointment) => void;
   onRebook: (appt: Appointment) => void;
+  onReport?: (appt: Appointment) => void;
 }
 
-const AppointmentSection = ({ title, appointments, nameOf, isPast, emptyText, bordered, onNavigate, onEdit, onDelete, onRebook }: AppointmentSectionProps) => (
+const AppointmentSection = ({ title, appointments, nameOf, isPast, emptyText, bordered, onNavigate, onEdit, onDelete, onRebook, onReport }: AppointmentSectionProps) => (
   <Paper sx={{ p: 3, borderRadius: 3, ...(bordered ? { border: '2px solid #7B2FBE' } : {}) }}>
     <Typography variant="h6" fontWeight={600} mb={1} color={bordered ? '#7B2FBE' : 'inherit'}>{title}</Typography>
     <Divider sx={{ mb: 1 }} />
@@ -162,7 +173,7 @@ const AppointmentSection = ({ title, appointments, nameOf, isPast, emptyText, bo
     ) : (
       appointments.map((appt, i) => (
         <Box key={appt.id}>
-          <AppointmentRow appt={appt} nameOf={nameOf(appt)} isPast={isPast} onNavigate={onNavigate} onEdit={onEdit} onDelete={onDelete} onRebook={onRebook} />
+          <AppointmentRow appt={appt} nameOf={nameOf(appt)} isPast={isPast} onNavigate={onNavigate} onEdit={onEdit} onDelete={onDelete} onRebook={onRebook} onReport={onReport} />
           {i < appointments.length - 1 && <Divider />}
         </Box>
       ))
@@ -187,6 +198,7 @@ const Home = () => {
   const [editTarget, setEditTarget] = useState<Appointment | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
   const [rebookTarget, setRebookTarget] = useState<RebookTarget | null>(null);
+  const [reportTarget, setReportTarget] = useState<Appointment | null>(null);
   const [snackMessage, setSnackMessage] = useState('');
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -363,10 +375,13 @@ const Home = () => {
           <AppointmentSection title="Upcoming (Next 7 Days)" appointments={upcoming_appointments} nameOf={clientName} emptyText="No upcoming appointments in the next 7 days" {...props} />
         </Grid>
         <Grid item xs={12}>
-          <AppointmentSection title="Recent Appointments" appointments={recent_appointments} nameOf={clientName} isPast emptyText="No appointments in the past 7 days" {...props} />
+          <AppointmentSection title="Recent Appointments" appointments={recent_appointments} nameOf={clientName} isPast emptyText="No appointments in the past 7 days" onReport={setReportTarget} {...props} />
         </Grid>
       </Grid>
       {modals}
+      {reportTarget && (
+        <VisitReportDrawer appointment={reportTarget} open={!!reportTarget} onClose={() => setReportTarget(null)} />
+      )}
     </Box>
   );
 };
