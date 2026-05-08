@@ -95,14 +95,14 @@ describe('SignUp', () => {
 
   describe('step 3 - support worker form', () => {
     beforeEach(async () => {
-      userEvent.click(screen.getByRole('button', { name: /Next/i }));
-      await waitFor(() => { screen.getByRole('heading', { name: 'Support Worker' }); });
-      userEvent.click(screen.getByRole('heading', { name: 'Support Worker' }));
-      await waitFor(() => { screen.getByLabelText(/Availability/i); });
+      await userEvent.click(screen.getByRole('button', { name: /Next/i }));
+      await waitFor(() => expect(screen.getByRole('heading', { name: 'Support Worker' })).toBeInTheDocument());
+      await userEvent.click(screen.getByRole('heading', { name: 'Support Worker' }));
+      await waitFor(() => expect(screen.getByText(/Available Days/i)).toBeInTheDocument());
     });
 
     it('shows support worker-specific fields', () => {
-      expect(screen.getByLabelText(/Availability/i)).toBeInTheDocument();
+      expect(screen.getByText(/Available Days/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/Experience/i)).toBeInTheDocument();
     });
 
