@@ -1,6 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
-import { TextField, Autocomplete, CircularProgress } from '@mui/material';
-import usePlacesAutocomplete, { getGeocode, getLatLng } from 'use-places-autocomplete';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { Autocomplete, TextField, CircularProgress } from '@mui/material';
 
 interface Props {
   value: string;
@@ -12,49 +11,59 @@ interface Props {
 }
 
 const LocationAutocomplete = ({ value, onChange, label = 'Location', fullWidth = true, size, required }: Props) => {
-  const {
-    ready,
-    suggestions: { status, data },
-    setValue: setQuery,
-    clearSuggestions,
-  } = usePlacesAutocomplete({
-    requestOptions: { componentRestrictions: { country: 'au' } },
-    debounce: 300,
-  });
-
   const [inputValue, setInputValue] = useState(value);
-  const skipSync = useRef(false);
+  const [options, setOptions] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const sessionTokenRef = useRef<google.maps.places.AutocompleteSessionToken | null>(null);
 
-  // Keep input in sync when parent value changes externally (e.g. form reset)
-  useEffect(() => {
-    if (!skipSync.current) setInputValue(value);
-    skipSync.current = false;
-  }, [value]);
+  useEffect(() => { setInputValue(value); }, [value]);
 
-  const options = status === 'OK' ? data.map(d => d.description) : [];
+  const fetchSuggestions = useCallback(async (input: string) => {
+    if (!input || input.length < 2) { setOptions([]); return; }
+    setLoading(true);
+    try {
+      if (!sessionTokenRef.current) {
+        sessionTokenRef.current = new google.maps.places.AutocompleteSessionToken();
+      }
+      const { suggestions } = await google.maps.places.AutocompleteSuggestion.fetchAutocompleteSuggestions({
+        input,
+        sessionToken: sessionTokenRef.current,
+        includedRegionCodes: ['au'],
+      });
+      setOptions(suggestions.map(s => s.placePrediction?.text?.text ?? '').filter(Boolean));
+    } catch {
+      setOptions([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const handleInputChange = (_: unknown, newInput: string, reason: string) => {
+    setInputValue(newInput);
+    if (reason === 'clear') { onChange(''); setOptions([]); return; }
+    if (reason === 'input') {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => fetchSuggestions(newInput), 300);
+    }
+  };
+
+  const handleChange = (_: unknown, selected: string | null) => {
+    if (selected) {
+      onChange(selected);
+      sessionTokenRef.current = null; // reset session after selection
+    }
+  };
 
   return (
     <Autocomplete
       freeSolo
       options={options}
       inputValue={inputValue}
-      onInputChange={(_, newInput, reason) => {
-        setInputValue(newInput);
-        if (reason === 'input') setQuery(newInput);
-        if (reason === 'clear') { onChange(''); clearSuggestions(); }
-      }}
-      onChange={(_, selected) => {
-        if (typeof selected === 'string') {
-          skipSync.current = true;
-          setInputValue(selected);
-          onChange(selected);
-          clearSuggestions();
-        }
-      }}
-      onBlur={() => {
-        // Commit whatever is typed even if not selected from dropdown
-        if (inputValue !== value) onChange(inputValue);
-      }}
+      onInputChange={handleInputChange}
+      onChange={handleChange}
+      onBlur={() => { if (inputValue !== value) onChange(inputValue); }}
+      loading={loading}
       renderInput={(params) => (
         <TextField
           {...params}
@@ -62,12 +71,11 @@ const LocationAutocomplete = ({ value, onChange, label = 'Location', fullWidth =
           fullWidth={fullWidth}
           size={size}
           required={required}
-          disabled={!ready}
           InputProps={{
             ...params.InputProps,
             endAdornment: (
               <>
-                {!ready && <CircularProgress size={16} />}
+                {loading && <CircularProgress size={16} />}
                 {params.InputProps.endAdornment}
               </>
             ),
