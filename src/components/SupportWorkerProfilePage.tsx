@@ -12,9 +12,6 @@ import { useToast } from '../context/ToastContext';
 import AvailabilitySelector, { formatAvailability } from './AvailabilitySelector';
 import BookingForm from './BookingForm';
 import LocationAutocomplete from './LocationAutocomplete';
-import DateOfBirthPicker from './DateOfBirthPicker';
-import InstitutionAutocomplete from './InstitutionAutocomplete';
-import { QUALIFICATIONS } from '../constants/selectorOptions';
 
 const GENDERS = ['Male', 'Female', 'Non-binary', 'Prefer not to say'];
 
@@ -176,7 +173,9 @@ const SupportWorkerProfilePage = () => {
             <Typography variant="h6" fontWeight={600} mb={2}>Contact</Typography>
             <Box display="flex" alignItems="center" gap={1} mb={1.5}>
               <LocationOn sx={{ color: '#7B2FBE', fontSize: 20, flexShrink: 0 }} />
-              {field('location')}
+              {editing
+                ? <LocationAutocomplete value={form.location ?? ''} onChange={v => setForm({ ...form, location: v })} size="small" />
+                : <Typography variant="body2">{worker.location || '—'}</Typography>}
             </Box>
             <Box display="flex" alignItems="center" gap={1} mb={1.5}>
               <Phone sx={{ color: '#7B2FBE', fontSize: 20, flexShrink: 0 }} />

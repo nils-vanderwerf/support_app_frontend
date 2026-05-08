@@ -1,22 +1,9 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
-import { Box, CssBaseline } from '@mui/material';
+import { Box, CssBaseline, CircularProgress } from '@mui/material';
 import SecureRoute from './components/SecureRoute';
-import Home from './components/Home';
-import SupportWorkerList from './components/SupportWorkerList';
-import ClientList from './components/ClientList';
-import AppointmentList from './components/AppointmentList';
-import ConversationList from './components/ConversationList';
-import ConversationView from './components/ConversationView';
-import InvitationsPage from './components/InvitationsPage';
-import SupportWorkerProfilePage from './components/SupportWorkerProfilePage';
-import ClientProfilePage from './components/ClientProfilePage';
 import Navbar from './components/Navbar';
-import SignUp from './components/SignUp';
 import Login from './components/Login';
-import VettingAgent from './components/VettingAgent';
-import AdminDashboard from './components/AdminDashboard';
-import SupportWorkerAdminThread from './components/SupportWorkerAdminThread';
 import ForgotPassword from './components/ForgotPassword';
 import ResetPassword from './components/ResetPassword';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -35,7 +22,6 @@ const ClientProfilePage = React.lazy(() => import('./components/ClientProfilePag
 const SignUp = React.lazy(() => import('./components/SignUp'));
 const VettingAgent = React.lazy(() => import('./components/VettingAgent'));
 const AdminDashboard = React.lazy(() => import('./components/AdminDashboard'));
-const AdminMessagesPage = React.lazy(() => import('./components/AdminMessagesPage'));
 const SupportWorkerAdminThread = React.lazy(() => import('./components/SupportWorkerAdminThread'));
 
 const PageLoader = () => (
@@ -95,8 +81,6 @@ const App = () => {
                 <Route path='/messages/:id' element={<SecureRoute><ConversationView /></SecureRoute>} />
                 <Route path="/vetting" element={<VettingRoute><VettingAgent /></VettingRoute>} />
                 <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
-                <Route path="/admin/messages" element={<AdminRoute><AdminMessagesPage /></AdminRoute>} />
-                <Route path="/admin/messages/:workerId" element={<AdminRoute><AdminMessagesPage /></AdminRoute>} />
                 <Route path="/signup" element={<SignUp />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />

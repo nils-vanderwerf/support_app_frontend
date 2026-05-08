@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../api/axiosConfig';
 import { Dialog, DialogTitle, DialogActions, DialogContent, TextField, Box, Button } from '@mui/material';
+import LocationAutocomplete from './LocationAutocomplete';
 import { CloseOutlined, Chat } from '@mui/icons-material';
 import { Appointment } from './AppointmentList';
 
@@ -93,11 +94,7 @@ const BookingForm = ({ clientId, supportWorkerId, onClose, onSuccess, appointmen
             value={duration}
             onChange={(e) => setDuration(parseInt(e.target.value))}
           />
-          <TextField
-            label="Location"
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
-          />
+          <LocationAutocomplete value={location} onChange={setLocation} />
           <TextField
             label="Notes"
             value={notes}
