@@ -99,13 +99,17 @@ const ConversationView = () => {
   };
 
   const handleApprove = async (apptId: number) => {
-    await axiosInstance.patch(`/appointments/${apptId}/approve`);
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    await axiosInstance.patch(`/appointments/${apptId}/approve`, { timezone: tz });
     setPendingAppointments(prev => prev.filter(a => a.id !== apptId));
+    fetchConversation();
   };
 
   const handleDecline = async (apptId: number) => {
-    await axiosInstance.patch(`/appointments/${apptId}/decline`);
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    await axiosInstance.patch(`/appointments/${apptId}/decline`, { timezone: tz });
     setPendingAppointments(prev => prev.filter(a => a.id !== apptId));
+    fetchConversation();
   };
 
   const openInviteForm = async () => {
@@ -215,7 +219,7 @@ const ConversationView = () => {
 
       {/* Input */}
       <Paper sx={{ p: 1.5, borderRadius: 3, display: 'flex', gap: 1, alignItems: 'flex-end' }}>
-        {client && (
+        {(client || supportWorker) && (
           <Button size="small" variant="outlined" startIcon={fetchingSuggestion ? <CircularProgress size={14} sx={{ color: '#7B2FBE' }} /> : <CalendarMonth />} onClick={openInviteForm}
             disabled={fetchingSuggestion}
             sx={{ borderColor: '#7B2FBE', color: '#7B2FBE', flexShrink: 0, mb: 0.25 }}>
@@ -233,7 +237,7 @@ const ConversationView = () => {
         </IconButton>
       </Paper>
 
-      {showInviteForm && conversation && client && (
+      {showInviteForm && conversation && (
         <BookingForm
           clientId={conversation.client.id}
           supportWorkerId={conversation.support_worker.id}
