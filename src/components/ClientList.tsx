@@ -22,6 +22,8 @@ const ClientList = () => {
   const [locationInput, setLocationInput] = useState('');
   const [radius, setRadius] = useState(25);
   const [searchPos, setSearchPos] = useState<LatLng | null>(null);
+  const [geocoding, setGeocoding] = useState(false);
+  const [geocodeFailed, setGeocodeFailed] = useState(false);
   const [clientPositions, setClientPositions] = useState<Map<number, LatLng | null>>(new Map());
   const geocodeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -33,10 +35,14 @@ const ClientList = () => {
 
   useEffect(() => {
     if (geocodeTimer.current) clearTimeout(geocodeTimer.current);
-    if (!locationInput.trim()) { setSearchPos(null); return; }
+    if (!locationInput.trim()) { setSearchPos(null); setGeocoding(false); setGeocodeFailed(false); return; }
+    setGeocoding(true);
+    setGeocodeFailed(false);
     geocodeTimer.current = setTimeout(async () => {
       const pos = await geocodeAddress(locationInput);
       setSearchPos(pos);
+      setGeocoding(false);
+      setGeocodeFailed(pos === null);
     }, 500);
   }, [locationInput]);
 
@@ -89,7 +95,7 @@ const ClientList = () => {
               Filters {activeFilterCount > 0 && <Chip label={activeFilterCount} size="small" sx={{ ml: 1, bgcolor: '#7B2FBE', color: 'white', height: 20, fontSize: 11 }} />}
             </Typography>
             {activeFilterCount > 0 && (
-              <Button size="small" sx={{ color: '#7B2FBE' }} onClick={() => { setNameFilter(''); setConditionFilter(''); setLocationInput(''); setSearchPos(null); setRadius(25); }}>
+              <Button size="small" sx={{ color: '#7B2FBE' }} onClick={() => { setNameFilter(''); setConditionFilter(''); setLocationInput(''); setSearchPos(null); setGeocoding(false); setGeocodeFailed(false); setRadius(25); }}>
                 Clear all
               </Button>
             )}
@@ -129,7 +135,8 @@ const ClientList = () => {
               <Box px={1}>
                 <Typography variant="caption" color="text.secondary" gutterBottom display="block">
                   Radius: <strong>{radius} km</strong>
-                  {!searchPos && locationInput && <span style={{ color: '#aaa' }}> — geocoding…</span>}
+                  {geocoding && <span style={{ color: '#aaa' }}> — geocoding…</span>}
+                  {geocodeFailed && <span style={{ color: '#e57373' }}> — address not found</span>}
                 </Typography>
                 <Slider
                   value={radius}

@@ -35,6 +35,8 @@ const SupportWorkerList = () => {
   const [locationInput, setLocationInput] = useState('');
   const [radius, setRadius] = useState(25);
   const [searchPos, setSearchPos] = useState<LatLng | null>(null);
+  const [geocoding, setGeocoding] = useState(false);
+  const [geocodeFailed, setGeocodeFailed] = useState(false);
   const [workerPositions, setWorkerPositions] = useState<Map<number, LatLng | null>>(new Map());
   const geocodeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -47,10 +49,14 @@ const SupportWorkerList = () => {
   // Debounced geocode of the search location
   useEffect(() => {
     if (geocodeTimer.current) clearTimeout(geocodeTimer.current);
-    if (!locationInput.trim()) { setSearchPos(null); return; }
+    if (!locationInput.trim()) { setSearchPos(null); setGeocoding(false); setGeocodeFailed(false); return; }
+    setGeocoding(true);
+    setGeocodeFailed(false);
     geocodeTimer.current = setTimeout(async () => {
       const pos = await geocodeAddress(locationInput);
       setSearchPos(pos);
+      setGeocoding(false);
+      setGeocodeFailed(pos === null);
     }, 500);
   }, [locationInput]);
 
@@ -156,7 +162,8 @@ const SupportWorkerList = () => {
               <Box px={1}>
                 <Typography variant="caption" color="text.secondary" gutterBottom display="block">
                   Radius: <strong>{radius} km</strong>
-                  {!searchPos && locationInput && <span style={{ color: '#aaa' }}> — geocoding…</span>}
+                  {geocoding && <span style={{ color: '#aaa' }}> — geocoding…</span>}
+                  {geocodeFailed && <span style={{ color: '#e57373' }}> — address not found</span>}
                 </Typography>
                 <Slider
                   value={radius}
