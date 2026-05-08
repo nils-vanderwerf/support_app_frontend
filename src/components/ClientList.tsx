@@ -22,7 +22,7 @@ const ClientList = () => {
   const [locationInput, setLocationInput] = useState('');
   const [radius, setRadius] = useState(25);
   const [searchPos, setSearchPos] = useState<LatLng | null>(null);
-  const clientPositions = useRef<Map<number, LatLng | null>>(new Map());
+  const [clientPositions, setClientPositions] = useState<Map<number, LatLng | null>>(new Map());
   const geocodeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -43,9 +43,9 @@ const ClientList = () => {
   useEffect(() => {
     if (!searchPos) return;
     clients.forEach(c => {
-      if (!clientPositions.current.has(c.id) && c.location) {
+      if (!clientPositions.has(c.id) && c.location) {
         geocodeAddress(c.location).then(pos => {
-          clientPositions.current.set(c.id, pos);
+          setClientPositions(prev => new Map(prev).set(c.id, pos));
         });
       }
     });
@@ -58,7 +58,7 @@ const ClientList = () => {
       if (conditionFilter && !c.health_conditions?.toLowerCase().includes(conditionFilter.toLowerCase())) return false;
 
       if (searchPos) {
-        const cPos = clientPositions.current.get(c.id);
+        const cPos = clientPositions.get(c.id);
         if (cPos === undefined) return true;
         if (cPos === null) return false;
         if (haversineDistance(searchPos, cPos) > radius) return false;

@@ -35,7 +35,7 @@ const SupportWorkerList = () => {
   const [locationInput, setLocationInput] = useState('');
   const [radius, setRadius] = useState(25);
   const [searchPos, setSearchPos] = useState<LatLng | null>(null);
-  const workerPositions = useRef<Map<number, LatLng | null>>(new Map());
+  const [workerPositions, setWorkerPositions] = useState<Map<number, LatLng | null>>(new Map());
   const geocodeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -58,9 +58,9 @@ const SupportWorkerList = () => {
   useEffect(() => {
     if (!searchPos) return;
     workers.forEach(w => {
-      if (!workerPositions.current.has(w.id) && w.location) {
+      if (!workerPositions.has(w.id) && w.location) {
         geocodeAddress(w.location).then(pos => {
-          workerPositions.current.set(w.id, pos);
+          setWorkerPositions(prev => new Map(prev).set(w.id, pos));
         });
       }
     });
@@ -87,9 +87,9 @@ const SupportWorkerList = () => {
       }
 
       if (searchPos) {
-        const wPos = workerPositions.current.get(w.id);
+        const wPos = workerPositions.get(w.id);
         if (wPos === undefined) return true; // not yet geocoded — show optimistically
-        if (wPos === null) return false; // couldn't geocode location
+        if (wPos === null) return false;
         if (haversineDistance(searchPos, wPos) > radius) return false;
       }
 
