@@ -34,6 +34,13 @@ const ClientList = () => {
       .catch(err => console.error('Error fetching clients:', err));
   }, []);
 
+  const handleLocationCoordinates = (latLng: LatLng | null) => {
+    if (geocodeTimer.current) { clearTimeout(geocodeTimer.current); geocodeTimer.current = null; }
+    setSearchPos(latLng);
+    setGeocoding(false);
+    setGeocodeFailed(latLng === null);
+  };
+
   useEffect(() => {
     if (geocodeTimer.current) clearTimeout(geocodeTimer.current);
     if (!locationInput.trim()) { setSearchPos(null); setGeocoding(false); setGeocodeFailed(false); return; }
@@ -126,6 +133,7 @@ const ClientList = () => {
                   label="Near location"
                   value={locationInput}
                   onChange={setLocationInput}
+                  onCoordinates={handleLocationCoordinates}
                   size="small"
                 />
               </Box>

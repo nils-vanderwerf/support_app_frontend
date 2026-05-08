@@ -1,21 +1,24 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Autocomplete, TextField, CircularProgress } from '@mui/material';
+import { LatLng } from '../utils/geoDistance';
 
 interface Props {
   value: string;
   onChange: (value: string) => void;
+  onCoordinates?: (latLng: LatLng | null) => void;
   label?: string;
   fullWidth?: boolean;
   size?: 'small' | 'medium';
   required?: boolean;
 }
 
-const LocationAutocomplete = ({ value, onChange, label = 'Location', fullWidth = true, size, required }: Props) => {
+const LocationAutocomplete = ({ value, onChange, onCoordinates, label = 'Location', fullWidth = true, size, required }: Props) => {
   const [inputValue, setInputValue] = useState(value);
   const [options, setOptions] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const sessionTokenRef = useRef<google.maps.places.AutocompleteSessionToken | null>(null);
+  const suggestionMapRef = useRef<Map<string, google.maps.places.AutocompleteSuggestion>>(new Map());
 
   useEffect(() => { setInputValue(value); }, [value]);
 
@@ -31,7 +34,14 @@ const LocationAutocomplete = ({ value, onChange, label = 'Location', fullWidth =
         sessionToken: sessionTokenRef.current,
         includedRegionCodes: ['au'],
       });
-      setOptions(suggestions.map(s => s.placePrediction?.text?.text ?? '').filter(Boolean));
+      const map = new Map<string, google.maps.places.AutocompleteSuggestion>();
+      const texts: string[] = [];
+      suggestions.forEach(s => {
+        const text = s.placePrediction?.text?.text ?? '';
+        if (text) { map.set(text, s); texts.push(text); }
+      });
+      suggestionMapRef.current = map;
+      setOptions(texts);
     } catch {
       setOptions([]);
     } finally {
@@ -41,17 +51,32 @@ const LocationAutocomplete = ({ value, onChange, label = 'Location', fullWidth =
 
   const handleInputChange = (_: unknown, newInput: string, reason: string) => {
     setInputValue(newInput);
-    if (reason === 'clear') { onChange(''); setOptions([]); return; }
+    if (reason === 'clear') { onChange(''); setOptions([]); onCoordinates?.(null); return; }
     if (reason === 'input') {
       if (debounceRef.current) clearTimeout(debounceRef.current);
       debounceRef.current = setTimeout(() => fetchSuggestions(newInput), 300);
     }
   };
 
-  const handleChange = (_: unknown, selected: string | null) => {
-    if (selected) {
-      onChange(selected);
-      sessionTokenRef.current = null; // reset session after selection
+  const handleChange = async (_: unknown, selected: string | null) => {
+    if (!selected) return;
+    onChange(selected);
+    sessionTokenRef.current = null;
+
+    if (onCoordinates) {
+      const suggestion = suggestionMapRef.current.get(selected);
+      if (suggestion?.placePrediction) {
+        try {
+          const place = suggestion.placePrediction.toPlace();
+          await place.fetchFields({ fields: ['location'] });
+          const loc = (place as any).location;
+          onCoordinates(loc ? { lat: loc.lat(), lng: loc.lng() } : null);
+        } catch {
+          onCoordinates(null);
+        }
+      } else {
+        onCoordinates(null);
+      }
     }
   };
 

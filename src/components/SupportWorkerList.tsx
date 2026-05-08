@@ -47,7 +47,15 @@ const SupportWorkerList = () => {
       .catch(err => console.error('Error fetching support workers:', err));
   }, []);
 
-  // Debounced geocode of the search location
+  // Called when the user picks a suggestion — coordinates come from Places Details directly
+  const handleLocationCoordinates = (latLng: LatLng | null) => {
+    if (geocodeTimer.current) { clearTimeout(geocodeTimer.current); geocodeTimer.current = null; }
+    setSearchPos(latLng);
+    setGeocoding(false);
+    setGeocodeFailed(latLng === null);
+  };
+
+  // Debounced geocode fallback for manually typed locations (no suggestion selected)
   useEffect(() => {
     if (geocodeTimer.current) clearTimeout(geocodeTimer.current);
     if (!locationInput.trim()) { setSearchPos(null); setGeocoding(false); setGeocodeFailed(false); return; }
@@ -152,6 +160,7 @@ const SupportWorkerList = () => {
                   label="Near location"
                   value={locationInput}
                   onChange={setLocationInput}
+                  onCoordinates={handleLocationCoordinates}
                   size="small"
                 />
               </Box>
