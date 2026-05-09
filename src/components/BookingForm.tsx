@@ -70,7 +70,7 @@ const BookingForm = ({ clientId, supportWorkerId, onClose, onSuccess, appointmen
   const [repeatCount, setRepeatCount] = useState(4);
 
   const isNew = !appointment;
-  const recurringDates = recurring && isNew ? buildRecurringDates(date, frequency, repeatCount) : [];
+  const recurringDates = recurring ? buildRecurringDates(date, frequency, repeatCount) : [];
 
   const handleSubmit = async () => {
     const offset = localOffsetStr();
@@ -80,6 +80,22 @@ const BookingForm = ({ clientId, supportWorkerId, onClose, onSuccess, appointmen
         await axiosInstance.patch(`/appointments/${appointment.id}`, {
           appointment: { date: datetime, duration, location, notes }
         });
+        // Create follow-on sessions from the second date onward
+        if (recurring && recurringDates.length > 1) {
+          await Promise.all(
+            recurringDates.slice(1).map(d =>
+              axiosInstance.post('/appointments', {
+                appointment: {
+                  date: `${d}T${time}:00${offset}`,
+                  duration, location, notes,
+                  client_id: clientId,
+                  support_worker_id: supportWorkerId,
+                  status: 'approved',
+                }
+              })
+            )
+          );
+        }
         onClose();
         onSuccess(datetime);
       } else if (recurring && recurringDates.length > 0) {
@@ -152,7 +168,7 @@ const BookingForm = ({ clientId, supportWorkerId, onClose, onSuccess, appointmen
             onChange={(e) => setNotes(e.target.value)}
           />
 
-          {isNew && !isPending && (
+          {!isPending && (
             <>
               <Divider />
               <FormControlLabel
@@ -201,7 +217,9 @@ const BookingForm = ({ clientId, supportWorkerId, onClose, onSuccess, appointmen
                   {recurringDates.length > 0 && (
                     <Box sx={{ bgcolor: '#f3e8ff', borderRadius: 2, px: 2, py: 1.5 }}>
                       <Typography variant="caption" fontWeight={600} color="#7B2FBE" display="block" mb={0.5}>
-                        {recurringDates.length} appointments will be created
+                        {isNew
+                          ? `${recurringDates.length} appointments will be created`
+                          : `This appointment updated + ${recurringDates.length - 1} new session${recurringDates.length - 1 !== 1 ? 's' : ''} added`}
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
                         {recurringDates.map(formatPreviewDate).join(' · ')}
@@ -229,7 +247,7 @@ const BookingForm = ({ clientId, supportWorkerId, onClose, onSuccess, appointmen
           </Button>
         )}
         <Button onClick={handleSubmit} autoFocus sx={{ ml: 'auto' }}>
-          {isPending ? 'Send Invitation' : recurring ? `Book ${repeatCount} Sessions` : 'Book'}
+          {isPending ? 'Send Invitation' : recurring ? (isNew ? `Book ${repeatCount} Sessions` : `Save + Add ${repeatCount - 1} More`) : (appointment ? 'Save' : 'Book')}
         </Button>
       </DialogActions>
     </Dialog>
