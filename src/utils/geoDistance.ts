@@ -23,6 +23,7 @@ export async function geocodeAddress(address: string): Promise<LatLng | null> {
       includedRegionCodes: ['au'],
     });
     if (!suggestions.length || !suggestions[0].placePrediction) {
+      console.warn('[geocodeAddress] no suggestions for:', address);
       cache.set(key, null);
       return null;
     }
@@ -33,7 +34,8 @@ export async function geocodeAddress(address: string): Promise<LatLng | null> {
     const pos = { lat: loc.lat(), lng: loc.lng() };
     cache.set(key, pos);
     return pos;
-  } catch {
+  } catch (err) {
+    console.error('[geocodeAddress] failed for:', address, err);
     cache.set(key, null);
     return null;
   }

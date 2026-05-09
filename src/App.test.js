@@ -1,8 +1,12 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import App from './App';
 
-test('renders learn react link', () => {
+// Smoke test — verifies the app mounts without crashing and reaches the login screen
+test('renders login page for unauthenticated users', async () => {
   render(<App />);
-  const linkElement = screen.getByText(/learn react/i);
-  expect(linkElement).toBeInTheDocument();
+  // AuthContext checks /user on mount; the mock returns no user, so the
+  // app should settle on the login page
+  await waitFor(() => {
+    expect(screen.getByText(/log in to your account/i)).toBeInTheDocument();
+  });
 });
