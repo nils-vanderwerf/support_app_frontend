@@ -9,6 +9,7 @@ import axiosInstance from '../api/axiosConfig';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import BookingForm from './BookingForm';
+import { encryptMessage, decryptMessage } from '../utils/encryption';
 
 interface Message {
   id: number;
@@ -51,13 +52,18 @@ const ConversationView = () => {
   const [fetchingSuggestion, setFetchingSuggestion] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  const fetchConversation = () => {
-    axiosInstance.get(`/conversations/${id}`)
-      .then(res => {
-        setConversation(res.data);
-        setMessages(res.data.messages);
-        setPendingAppointments(res.data.appointments.filter((a: PendingAppointment) => a.status === 'pending'));
-      });
+  const fetchConversation = async () => {
+    const res = await axiosInstance.get(`/conversations/${id}`);
+    const convId: number = res.data.id;
+    const decrypted: Message[] = await Promise.all(
+      res.data.messages.map(async (msg: Message) => ({
+        ...msg,
+        content: await decryptMessage(msg.content, convId),
+      }))
+    );
+    setConversation(res.data);
+    setMessages(decrypted);
+    setPendingAppointments(res.data.appointments.filter((a: PendingAppointment) => a.status === 'pending'));
   };
 
   useEffect(() => { fetchConversation(); }, [id]);
@@ -98,8 +104,10 @@ const ConversationView = () => {
     setSending(true);
     setInput('');
     try {
-      const res = await axiosInstance.post(`/conversations/${id}/messages`, { content: text });
-      setMessages(prev => [...prev, res.data]);
+      const encrypted = await encryptMessage(text, parseInt(id!));
+      const res = await axiosInstance.post(`/conversations/${id}/messages`, { content: encrypted });
+      // Store plaintext locally — the server holds only ciphertext
+      setMessages(prev => [...prev, { ...res.data, content: text }]);
       setSending(false);
       await triggerAiResponse();
     } finally {
@@ -283,11 +291,13 @@ const ConversationView = () => {
 
       {/* Input */}
       <Paper sx={{ p: 1.5, borderRadius: 3, display: 'flex', gap: 1, alignItems: 'flex-end' }}>
-        <Button size="small" variant="outlined" startIcon={fetchingSuggestion ? <CircularProgress size={14} sx={{ color: '#7B2FBE' }} /> : <CalendarMonth />} onClick={openInviteForm}
-          disabled={fetchingSuggestion}
-          sx={{ borderColor: '#7B2FBE', color: '#7B2FBE', flexShrink: 0, mb: 0.25 }}>
-          Send Invitation
-        </Button>
+        {client && (
+          <Button size="small" variant="outlined" startIcon={fetchingSuggestion ? <CircularProgress size={14} sx={{ color: '#7B2FBE' }} /> : <CalendarMonth />} onClick={openInviteForm}
+            disabled={fetchingSuggestion}
+            sx={{ borderColor: '#7B2FBE', color: '#7B2FBE', flexShrink: 0, mb: 0.25 }}>
+            Send Invitation
+          </Button>
+        )}
         <TextField
           fullWidth size="small" placeholder="Type a message…"
           value={input} onChange={e => setInput(e.target.value)}

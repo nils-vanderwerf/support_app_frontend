@@ -186,7 +186,6 @@ describe('ConversationView', () => {
       };
       mockedAxios.get
         .mockResolvedValueOnce({ data: conv })
-        .mockResolvedValueOnce({ data: [] })
         .mockResolvedValueOnce({ data: { ...conv, appointments: [] } });
       mockedAxios.patch.mockResolvedValueOnce({ data: {} });
       renderComponent();
