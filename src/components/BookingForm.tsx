@@ -168,8 +168,7 @@ const BookingForm = ({ clientId, supportWorkerId, onClose, onSuccess, appointmen
             onChange={(e) => setNotes(e.target.value)}
           />
 
-          {!isPending && (
-            <>
+          <>
               <Divider />
               <FormControlLabel
                 control={
@@ -217,9 +216,11 @@ const BookingForm = ({ clientId, supportWorkerId, onClose, onSuccess, appointmen
                   {recurringDates.length > 0 && (
                     <Box sx={{ bgcolor: '#f3e8ff', borderRadius: 2, px: 2, py: 1.5 }}>
                       <Typography variant="caption" fontWeight={600} color="#7B2FBE" display="block" mb={0.5}>
-                        {isNew
-                          ? `${recurringDates.length} appointments will be created`
-                          : `This appointment updated + ${recurringDates.length - 1} new session${recurringDates.length - 1 !== 1 ? 's' : ''} added`}
+                        {!isNew
+                          ? `This appointment updated + ${recurringDates.length - 1} new session${recurringDates.length - 1 !== 1 ? 's' : ''} added`
+                          : isPending
+                          ? `${recurringDates.length} invitations will be sent`
+                          : `${recurringDates.length} appointments will be created`}
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
                         {recurringDates.map(formatPreviewDate).join(' · ')}
@@ -228,8 +229,7 @@ const BookingForm = ({ clientId, supportWorkerId, onClose, onSuccess, appointmen
                   )}
                 </Box>
               )}
-            </>
-          )}
+          </>
         </Box>
       </DialogContent>
       <DialogActions sx={{ justifyContent: 'space-between', px: 2, pb: 2 }}>
@@ -247,7 +247,9 @@ const BookingForm = ({ clientId, supportWorkerId, onClose, onSuccess, appointmen
           </Button>
         )}
         <Button onClick={handleSubmit} autoFocus sx={{ ml: 'auto' }}>
-          {isPending ? 'Send Invitation' : recurring ? (isNew ? `Book ${repeatCount} Sessions` : `Save + Add ${repeatCount - 1} More`) : (appointment ? 'Save' : 'Book')}
+          {isPending
+            ? recurring ? `Send ${repeatCount} Invitations` : 'Send Invitation'
+            : recurring ? (isNew ? `Book ${repeatCount} Sessions` : `Save + Add ${repeatCount - 1} More`) : (appointment ? 'Save' : 'Book')}
         </Button>
       </DialogActions>
     </Dialog>
