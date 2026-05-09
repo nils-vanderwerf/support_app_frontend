@@ -31,7 +31,19 @@ export function parseAvail(raw: string | null | undefined): Record<string, boole
   if (!raw) return {};
   try {
     const parsed = JSON.parse(raw);
-    if (parsed && typeof parsed === 'object') return parsed;
+    if (parsed && typeof parsed === 'object') {
+      // AvailabilitySelector format: { days: ["Mon","Tue",...], time_window: "..." }
+      if (Array.isArray(parsed.days)) {
+        const map: Record<string, boolean> = {};
+        parsed.days.forEach((d: string) => {
+          const lower = d.toLowerCase();
+          const full = DAY_ALIASES[lower] ?? (DAYS.includes(lower) ? lower : null);
+          if (full) map[full] = true;
+        });
+        return map;
+      }
+      return parsed;
+    }
   } catch { /* fall through to string parsing */ }
 
   const lower = raw.toLowerCase().trim();

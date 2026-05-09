@@ -18,9 +18,29 @@ describe('parseAvail', () => {
   // JSON inputs
   // -------------------------------------------------------------------------
 
-  it('parses a valid JSON availability object', () => {
+  it('parses a valid JSON availability object (legacy boolean-map format)', () => {
     const json = JSON.stringify({ monday: true, wednesday: true, friday: false });
     expect(parseAvail(json)).toEqual({ monday: true, wednesday: true, friday: false });
+  });
+
+  it('parses AvailabilitySelector JSON format {days:[...], time_window} into a boolean map', () => {
+    const json = JSON.stringify({ days: ['Mon', 'Wed', 'Fri'], time_window: '09:00-17:00' });
+    expect(parseAvail(json)).toEqual({ monday: true, wednesday: true, friday: true });
+  });
+
+  it('parses single-day AvailabilitySelector JSON', () => {
+    expect(parseAvail(JSON.stringify({ days: ['Mon'], time_window: '09:00-17:00' }))).toEqual({ monday: true });
+    expect(parseAvail(JSON.stringify({ days: ['Tue'], time_window: '09:00-17:00' }))).toEqual({ tuesday: true });
+  });
+
+  it('parses weekend-only AvailabilitySelector JSON', () => {
+    const json = JSON.stringify({ days: ['Sat', 'Sun'], time_window: '10:00-18:00' });
+    expect(parseAvail(json)).toEqual({ saturday: true, sunday: true });
+  });
+
+  it('parses full-week AvailabilitySelector JSON', () => {
+    const json = JSON.stringify({ days: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'], time_window: '06:00-22:00' });
+    expect(parseAvail(json)).toEqual(allTrue(ALL_DAYS));
   });
 
   it('treats invalid JSON as a plain string', () => {
