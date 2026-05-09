@@ -11,13 +11,14 @@ jest.mock('../context/AuthContext');
 const mockedAxios = axiosInstance as jest.Mocked<typeof axiosInstance>;
 const mockedUseAuth = useAuth as jest.MockedFunction<typeof useAuth>;
 
-const makeInvitation = (id: number, status = 'pending') => ({
+const makeInvitation = (id: number, status = 'pending', initiated_by = 'client') => ({
   id,
   date: '2026-06-01T10:00:00Z',
   duration: 60,
   location: 'Sydney',
   notes: 'Bring medication list',
   status,
+  initiated_by,
   conversation_id: 5,
   client: { id: 1, first_name: 'Jane', last_name: 'Doe' },
   support_worker: { id: 2, first_name: 'Olivia', last_name: 'Williams' },
@@ -50,12 +51,12 @@ describe('InvitationsPage', () => {
       await waitFor(() => expect(screen.getByText(/No invitations yet/i)).toBeInTheDocument());
     });
 
-    it('shows "Incoming — Awaiting Your Response" label for support workers', async () => {
+    it('shows "Pending — Awaiting Response" label for support workers', async () => {
       mockedAxios.get
         .mockResolvedValueOnce({ data: [makeInvitation(1)] })
         .mockResolvedValueOnce({ data: [] });
       renderComponent();
-      await waitFor(() => expect(screen.getByText(/Incoming — Awaiting Your Response/i)).toBeInTheDocument());
+      await waitFor(() => expect(screen.getByText(/Pending — Awaiting Response/i)).toBeInTheDocument());
     });
 
     it('renders Approve and Decline buttons for pending invitations', async () => {
@@ -99,22 +100,33 @@ describe('InvitationsPage', () => {
       mockedUseAuth.mockReturnValue({ client: { id: 1 }, supportWorker: null } as any);
     });
 
-    it('shows "Outgoing — Awaiting Response" label for clients', async () => {
+    it('shows "Pending — Awaiting Response" label', async () => {
       mockedAxios.get
         .mockResolvedValueOnce({ data: [makeInvitation(1)] })
         .mockResolvedValueOnce({ data: [] });
       renderComponent();
-      await waitFor(() => expect(screen.getByText(/Outgoing — Awaiting Response/i)).toBeInTheDocument());
+      await waitFor(() => expect(screen.getByText(/Pending — Awaiting Response/i)).toBeInTheDocument());
     });
 
-    it('shows "Waiting for response…" text instead of Approve/Decline buttons', async () => {
+    it('shows "Waiting for response…" when invitation was client-initiated', async () => {
       mockedAxios.get
-        .mockResolvedValueOnce({ data: [makeInvitation(1)] })
+        .mockResolvedValueOnce({ data: [makeInvitation(1, 'pending', 'client')] })
         .mockResolvedValueOnce({ data: [] });
       renderComponent();
       await waitFor(() => {
         expect(screen.getByText(/Waiting for response/i)).toBeInTheDocument();
         expect(screen.queryByRole('button', { name: /Approve/i })).not.toBeInTheDocument();
+      });
+    });
+
+    it('shows Approve/Decline when invitation was support_worker-initiated', async () => {
+      mockedAxios.get
+        .mockResolvedValueOnce({ data: [makeInvitation(1, 'pending', 'support_worker')] })
+        .mockResolvedValueOnce({ data: [] });
+      renderComponent();
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /Approve/i })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /Decline/i })).toBeInTheDocument();
       });
     });
 

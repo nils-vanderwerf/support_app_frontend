@@ -25,6 +25,7 @@ interface PendingAppointment {
   location: string;
   notes: string;
   status: string;
+  initiated_by?: string;
 }
 
 interface ConversationDetail {
@@ -175,13 +176,17 @@ const ConversationView = () => {
             {appt.location ? ` · ${appt.location}` : ''}
           </Typography>
           {appt.notes && <Typography variant="caption" color="text.secondary">{appt.notes}</Typography>}
-          {supportWorker && (
-            <Box display="flex" gap={1} mt={1.5}>
-              <Button variant="contained" size="small" startIcon={<Check />} onClick={() => handleApprove(appt.id)} sx={{ bgcolor: '#7B2FBE', '&:hover': { bgcolor: '#6a27a3' } }}>Approve</Button>
-              <Button variant="outlined" size="small" startIcon={<Close />} onClick={() => handleDecline(appt.id)} color="error">Decline</Button>
-            </Box>
-          )}
-          {client && <Typography variant="caption" color="text.secondary" display="block" mt={1}>Waiting for response…</Typography>}
+          {(() => {
+            const canRespond = appt.initiated_by === 'support_worker' ? !!client : !!supportWorker;
+            return canRespond ? (
+              <Box display="flex" gap={1} mt={1.5}>
+                <Button variant="contained" size="small" startIcon={<Check />} onClick={() => handleApprove(appt.id)} sx={{ bgcolor: '#7B2FBE', '&:hover': { bgcolor: '#6a27a3' } }}>Approve</Button>
+                <Button variant="outlined" size="small" startIcon={<Close />} onClick={() => handleDecline(appt.id)} color="error">Decline</Button>
+              </Box>
+            ) : (
+              <Typography variant="caption" color="text.secondary" display="block" mt={1}>Waiting for response…</Typography>
+            );
+          })()}
         </Paper>
       ))}
 

@@ -14,6 +14,7 @@ interface Invitation {
   location: string;
   notes: string;
   status: string;
+  initiated_by?: string;
   conversation_id: number | null;
   client: { id: number; first_name: string; last_name: string };
   support_worker: { id: number; first_name: string; last_name: string };
@@ -59,24 +60,26 @@ const InvitationCard = ({
       )}
 
       <Box display="flex" gap={1} mt={1.5} flexWrap="wrap" alignItems="center">
-        {isSupportWorker && !accepted && onApprove && onDecline && (
-          <>
-            <Button variant="contained" size="small" startIcon={<Check />}
-              onClick={() => onApprove(inv.id)}
-              sx={{ bgcolor: '#7B2FBE', '&:hover': { bgcolor: '#6a27a3' } }}>
-              Approve
-            </Button>
-            <Button variant="outlined" size="small" startIcon={<Close />}
-              onClick={() => onDecline(inv.id)} color="error">
-              Decline
-            </Button>
-          </>
-        )}
-        {isClient && !accepted && (
-          <Typography variant="caption" color="text.secondary" sx={{ alignSelf: 'center' }}>
-            Waiting for response…
-          </Typography>
-        )}
+        {(() => {
+          const canRespond = inv.initiated_by === 'support_worker' ? isClient : isSupportWorker;
+          return !accepted && canRespond && onApprove && onDecline ? (
+            <>
+              <Button variant="contained" size="small" startIcon={<Check />}
+                onClick={() => onApprove(inv.id)}
+                sx={{ bgcolor: '#7B2FBE', '&:hover': { bgcolor: '#6a27a3' } }}>
+                Approve
+              </Button>
+              <Button variant="outlined" size="small" startIcon={<Close />}
+                onClick={() => onDecline(inv.id)} color="error">
+                Decline
+              </Button>
+            </>
+          ) : !accepted ? (
+            <Typography variant="caption" color="text.secondary" sx={{ alignSelf: 'center' }}>
+              Waiting for response…
+            </Typography>
+          ) : null;
+        })()}
         {inv.conversation_id && (
           <Button variant="outlined" size="small" startIcon={<Chat />}
             onClick={() => onChat(inv.conversation_id!)}
@@ -139,7 +142,7 @@ const InvitationsPage = () => {
             <Paper sx={{ borderRadius: 3, overflow: 'hidden', mb: 3 }}>
               <Box sx={{ px: 2.5, pt: 2, pb: 1 }}>
                 <Typography variant="overline" color="text.secondary" fontWeight={600}>
-                  {isSupportWorker ? 'Incoming — Awaiting Your Response' : 'Outgoing — Awaiting Response'}
+                  Pending — Awaiting Response
                 </Typography>
               </Box>
               <Divider />
