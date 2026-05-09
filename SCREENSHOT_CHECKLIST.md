@@ -281,6 +281,8 @@ The conversations in the demo are AI-to-AI — each person in a chat is a Claude
 
 It's still a work in progress — no document uploads, no payment or rate handling, no review system yet. Happy to hear feedback from anyone who knows the space.
 
+It's still a work in progress — no document uploads, no payment or rate handling, no review system yet. Happy to hear feedback from anyone who knows the space.
+
 Swipe to see it →
 
 Link in comments

@@ -162,15 +162,15 @@ const ClientList = () => {
           {filteredClients.length} of {clients.length} clients
         </Typography>
 
-        <TableContainer component={Paper}>
-          <Table>
+        <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
+          <Table sx={{ minWidth: 400 }}>
             <TableHead>
               <TableRow>
                 <TableCell>Avatar</TableCell>
                 <TableCell>Name</TableCell>
-                <TableCell>Location</TableCell>
-                <TableCell>Phone</TableCell>
-                <TableCell>Health Conditions</TableCell>
+                <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>Location</TableCell>
+                <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>Phone</TableCell>
+                <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>Health Conditions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -195,9 +195,9 @@ const ClientList = () => {
                     <TableCell sx={{ color: '#7B2FBE', fontWeight: 600 }}>
                       {c.first_name} {c.last_name}
                     </TableCell>
-                    <TableCell>{c.location}</TableCell>
-                    <TableCell>{c.phone}</TableCell>
-                    <TableCell>{c.health_conditions}</TableCell>
+                    <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>{c.location}</TableCell>
+                    <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>{c.phone}</TableCell>
+                    <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>{c.health_conditions}</TableCell>
                   </TableRow>
                 ))
               )}

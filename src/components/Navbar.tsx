@@ -1,5 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { AppBar, Toolbar, Typography, Button, Box, IconButton, Avatar, Tooltip, Badge } from '@mui/material';
+import {
+  AppBar, Toolbar, Typography, Button, Box, IconButton, Avatar, Tooltip,
+  Badge, Drawer, List, ListItem, ListItemButton, ListItemText, Divider,
+  useMediaQuery, useTheme,
+} from '@mui/material';
+import { Menu as MenuIcon, Close as CloseIcon } from '@mui/icons-material';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import axiosInstance from '../api/axiosConfig';
@@ -7,60 +12,46 @@ import axiosInstance from '../api/axiosConfig';
 const Navbar = () => {
   const auth = useAuth();
   const navigate = useNavigate();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [invitationsBadge, setInvitationsBadge] = useState(0);
-  const [adminUnread, setAdminUnread] = useState(0);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   useEffect(() => {
     if (!auth.client && !auth.supportWorker) return;
-
     const fetchNotifications = () => {
       axiosInstance.get('/notifications')
         .then(res => {
           setUnreadMessages(res.data.unread_messages);
-          setInvitationsBadge(res.data.pending_invitations + (res.data.recently_accepted ?? 0));
+          setInvitationsBadge(res.data.pending_invitations);
         })
         .catch(() => {});
     };
-
     fetchNotifications();
     const interval = setInterval(fetchNotifications, 15000);
     return () => clearInterval(interval);
   }, [auth.client, auth.supportWorker]);
 
-  useEffect(() => {
-    if (auth.user?.role !== 'admin') return;
-    const fetchAdminNotifications = () => {
-      axiosInstance.get('/admin/stats')
-        .then(res => setAdminUnread(res.data.unread_messages ?? 0))
-        .catch(() => {});
-    };
-    fetchAdminNotifications();
-    const interval = setInterval(fetchAdminNotifications, 15000);
-    return () => clearInterval(interval);
-  }, [auth.user?.role]);
-
   const handleLogout = async () => {
     setDrawerOpen(false);
     try { await axiosInstance.delete('/logout'); } catch {}
-    setAuthToken(null);
     auth?.setUser(null);
     navigate('/login');
   };
 
   const isAdmin = auth.user?.role === 'admin';
   const isPendingWorker = auth.supportWorker?.status === 'pending';
+  const showNav = auth.user && !isAdmin && !isPendingWorker;
 
   const navLinks = showNav ? [
     ...(auth.supportWorker ? [{ label: 'Clients', to: '/clients' }] : []),
-    ...(auth.client ? [{ label: 'Support Workers', to: '/support-workers' }] : []),
+    { label: 'Support Workers', to: '/support-workers' },
     { label: 'Appointments', to: '/appointments' },
     ...(auth.client || auth.supportWorker ? [
       { label: 'Messages', to: '/messages', badge: unreadMessages, onNavigate: () => setUnreadMessages(0) },
       { label: 'Invitations', to: '/invitations', badge: invitationsBadge, onNavigate: () => setInvitationsBadge(0) },
     ] : []),
-    ...(auth.supportWorker ? [{ label: 'Reports', to: '/reports' }] : []),
   ] : [];
 
   const profilePath = auth.client
@@ -80,7 +71,7 @@ const Navbar = () => {
       </Box>
       <Divider />
       <List disablePadding>
-        {auth.user && !isAdmin && (
+        {auth.user && (
           <ListItem disablePadding>
             <ListItemButton component={Link} to="/" onClick={() => setDrawerOpen(false)}>
               <ListItemText primary="Home" />
@@ -91,17 +82,6 @@ const Navbar = () => {
           <ListItem disablePadding>
             <ListItemButton component={Link} to="/admin" onClick={() => setDrawerOpen(false)}>
               <ListItemText primary="Admin" />
-            </ListItemButton>
-          </ListItem>
-        )}
-        {isAdmin && (
-          <ListItem disablePadding>
-            <ListItemButton component={Link} to="/admin/messages" onClick={() => { setDrawerOpen(false); setAdminUnread(0); }}>
-              <ListItemText primary={
-                adminUnread > 0
-                  ? <Badge badgeContent={adminUnread} color="error" max={9}>Messages</Badge>
-                  : 'Messages'
-              } />
             </ListItemButton>
           </ListItem>
         )}
@@ -162,17 +142,18 @@ const Navbar = () => {
   return (
     <AppBar sx={{ backgroundColor: '#7B2FBE', boxShadow: 'none' }}>
       <Toolbar>
-        <Button color="inherit" component={Link} to="/">Home</Button>
-        {isAdmin && <Button color="inherit" component={Link} to="/admin">Admin</Button>}
-        {!isAdmin && !isPendingWorker && (
+        {/* Mobile hamburger */}
+        {isMobile && (
+          <IconButton color="inherit" edge="start" onClick={() => setDrawerOpen(true)} sx={{ mr: 1 }}>
+            <MenuIcon />
+          </IconButton>
+        )}
+
+        {/* Desktop nav links */}
+        {!isMobile && (
           <>
-            {auth.user && !isAdmin && <Button color="inherit" component={Link} to="/">Home</Button>}
+            {auth.user && <Button color="inherit" component={Link} to="/">Home</Button>}
             {isAdmin && <Button color="inherit" component={Link} to="/admin">Admin</Button>}
-            {isAdmin && (
-              <Button color="inherit" component={Link} to="/admin/messages" onClick={() => setAdminUnread(0)}>
-                <Badge badgeContent={adminUnread} color="error" max={9}>Messages</Badge>
-              </Button>
-            )}
             {navLinks.map(link => (
               <Button
                 key={link.to}
@@ -185,31 +166,30 @@ const Navbar = () => {
                   {link.label}
                 </Badge>
               </Button>
+            ))}
+            {!auth.user && (
+              <>
+                <Button color="inherit" component={Link} to="/signup">Sign Up</Button>
+                <Button color="inherit" component={Link} to="/login">Login</Button>
+              </>
             )}
           </>
         )}
 
         <Box sx={{ flexGrow: 1 }} />
-        {auth.user ? (
+
+        {/* Right side — desktop only */}
+        {!isMobile && auth.user && (
           <>
             <Typography
-              sx={{ mr: 2, cursor: (auth.client || auth.supportWorker) ? 'pointer' : 'default', '&:hover': { textDecoration: (auth.client || auth.supportWorker) ? 'underline' : 'none' } }}
-              onClick={() => {
-                if (auth.client) navigate(`/clients/${auth.client.id}`);
-                else if (auth.supportWorker) navigate(`/support-workers/${auth.supportWorker!.id}`);
-              }}
+              sx={{ mr: 2, cursor: profilePath ? 'pointer' : 'default', '&:hover': { textDecoration: profilePath ? 'underline' : 'none' } }}
+              onClick={() => profilePath && navigate(profilePath)}
             >
               Welcome, {auth.user.first_name ?? auth.user.email}
             </Typography>
-            {(auth.client || auth.supportWorker) && !isPendingWorker && (
+            {profilePath && !isPendingWorker && (
               <Tooltip title="My Profile">
-                <IconButton
-                  onClick={() => auth.client
-                    ? navigate(`/clients/${auth.client.id}`)
-                    : navigate(`/support-workers/${auth.supportWorker!.id}`)
-                  }
-                  sx={{ mr: 1 }}
-                >
+                <IconButton onClick={() => navigate(profilePath)} sx={{ mr: 1 }}>
                   <Avatar sx={{ width: 32, height: 32, bgcolor: 'white', color: '#7B2FBE', fontSize: 14, fontWeight: 700 }}>
                     {auth.user.first_name?.charAt(0)}{auth.user.last_name?.charAt(0)}
                   </Avatar>
@@ -218,13 +198,21 @@ const Navbar = () => {
             )}
             <Button color="inherit" onClick={handleLogout}>Logout</Button>
           </>
-        ) : (
-          <>
-            <Button color="inherit" component={Link} to="/signup">Sign Up</Button>
-            <Button color="inherit" component={Link} to="/login">Login</Button>
-          </>
+        )}
+
+        {/* Mobile: show avatar if logged in */}
+        {isMobile && auth.user && profilePath && !isPendingWorker && (
+          <IconButton onClick={() => { setDrawerOpen(false); navigate(profilePath); }}>
+            <Avatar sx={{ width: 30, height: 30, bgcolor: 'white', color: '#7B2FBE', fontSize: 13, fontWeight: 700 }}>
+              {auth.user.first_name?.charAt(0)}{auth.user.last_name?.charAt(0)}
+            </Avatar>
+          </IconButton>
         )}
       </Toolbar>
+
+      <Drawer anchor="left" open={drawerOpen} onClose={() => setDrawerOpen(false)}>
+        {drawer}
+      </Drawer>
     </AppBar>
   );
 };

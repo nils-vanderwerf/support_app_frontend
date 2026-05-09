@@ -133,7 +133,7 @@ const SignUp = () => {
 
   return (
     <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
-      <Box sx={{ width: 560 }}>
+      <Box sx={{ width: { xs: '95%', sm: 560 } }}>
         <Typography variant="h4" fontWeight="bold" mb={1} color="#7B2FBE">
           Create account
         </Typography>
