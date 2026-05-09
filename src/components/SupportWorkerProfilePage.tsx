@@ -4,7 +4,7 @@ import {
   Box, Typography, Avatar, Chip, Button, Paper, Grid, Divider,
   CircularProgress, TextField, MenuItem,
 } from '@mui/material';
-import { LocationOn, Phone, Email, Work, Schedule, ArrowBack, Edit, Save, Cancel, Chat } from '@mui/icons-material';
+import { LocationOn, Phone, Email, Work, Schedule, ArrowBack, Edit, Save, Cancel, Chat, VerifiedUser, ChildCare } from '@mui/icons-material';
 import axiosInstance from '../api/axiosConfig';
 import { SupportWorker } from '../context/AuthContext';
 import { useAuth } from '../context/AuthContext';
@@ -79,7 +79,25 @@ const SupportWorkerProfilePage = () => {
                   {worker.first_name} {worker.middle_name ? `${worker.middle_name} ` : ''}{worker.last_name}
                 </Typography>
               )}
-              <Typography variant="body1" color="text.secondary">Support Worker</Typography>
+              <Typography variant="body1" color="text.secondary" mb={1}>Support Worker</Typography>
+              <Box display="flex" gap={1} flexWrap="wrap">
+                {worker.police_check_number && (
+                  <Chip
+                    icon={<VerifiedUser sx={{ fontSize: '16px !important' }} />}
+                    label="Police Check Verified"
+                    size="small"
+                    sx={{ bgcolor: '#e8f5e9', color: '#2e7d32', fontWeight: 600, '& .MuiChip-icon': { color: '#2e7d32' } }}
+                  />
+                )}
+                {worker.wwcc_number && (
+                  <Chip
+                    icon={<ChildCare sx={{ fontSize: '16px !important' }} />}
+                    label="Working with Children Verified"
+                    size="small"
+                    sx={{ bgcolor: '#e8f5e9', color: '#2e7d32', fontWeight: 600, '& .MuiChip-icon': { color: '#2e7d32' } }}
+                  />
+                )}
+              </Box>
             </Box>
             <Box display="flex" gap={1} mt={1} flexWrap="wrap" justifyContent="flex-end">
               <Button variant="outlined" startIcon={<ArrowBack />} onClick={() => navigate(-1)} sx={{ borderColor: '#7B2FBE', color: '#7B2FBE' }}>Back</Button>

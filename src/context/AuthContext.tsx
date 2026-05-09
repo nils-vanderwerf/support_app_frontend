@@ -54,6 +54,8 @@ export interface SupportWorker {
   emergency_contact_phone: string;
   specializations?: Specialization[];
   status?: string;
+  police_check_number?: string | null;
+  wwcc_number?: string | null;
 }
 
 interface AuthProviderProps {
