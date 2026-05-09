@@ -113,14 +113,14 @@ const AppointmentList = () => {
                   <TableCell>{appointment.location}</TableCell>
                   <TableCell>{formatDuration(appointment.duration)}</TableCell>
                   <TableCell>{appointment.notes}</TableCell>
-                  <TableCell>
+                  <TableCell sx={{ whiteSpace: 'nowrap' }}>
                     {new Date(appointment.date) > new Date() ? (
-                      <>
-                        <Button onClick={() => handleEdit(appointment)}>Edit</Button>
-                        <Button onClick={() => { setAppointmentToDelete(appointment); setDeleteDialogueVisible(true); }}>Delete</Button>
-                      </>
+                      <Box display="flex" gap={1} justifyContent="flex-start">
+                        <Button size="small" variant="outlined" onClick={() => handleEdit(appointment)} sx={{ borderColor: '#7B2FBE', color: '#7B2FBE' }}>Edit</Button>
+                        <Button size="small" variant="outlined" onClick={() => { setAppointmentToDelete(appointment); setDeleteDialogueVisible(true); }} color="error">Delete</Button>
+                      </Box>
                     ) : (
-                      <Button onClick={() => setRebookAppointment(appointment)}>Rebook</Button>
+                      <Button size="small" variant="outlined" onClick={() => setRebookAppointment(appointment)} sx={{ borderColor: '#7B2FBE', color: '#7B2FBE' }}>Rebook</Button>
                     )}
                   </TableCell>
                 </TableRow>
