@@ -152,7 +152,13 @@ const ConversationView = () => {
       <Paper sx={{ p: 2, borderRadius: 3, mb: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
         <IconButton onClick={() => navigate('/messages')} sx={{ color: '#7B2FBE' }}><ArrowBack /></IconButton>
         <Avatar sx={{ bgcolor: '#7B2FBE' }}>{initials}</Avatar>
-        <Typography variant="h6" fontWeight={600}>{otherName}</Typography>
+        <Typography
+          variant="h6" fontWeight={600}
+          onClick={() => navigate(client ? `/support-workers/${otherPerson.id}` : `/clients/${otherPerson.id}`)}
+          sx={{ cursor: 'pointer', '&:hover': { textDecoration: 'underline', color: '#7B2FBE' } }}
+        >
+          {otherName}
+        </Typography>
       </Paper>
 
       {/* Pending invitations */}
