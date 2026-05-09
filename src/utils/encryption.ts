@@ -16,20 +16,23 @@ const keyCache = new Map<number, CryptoKey>();
 async function deriveKey(conversationId: number): Promise<CryptoKey> {
   if (keyCache.has(conversationId)) return keyCache.get(conversationId)!;
 
+  // HKDF is appropriate here: the input is already uniform (a fixed context
+  // string, not a low-entropy password), so the iteration-based slowness of
+  // PBKDF2 would add latency without adding security.
   const keyMaterial = await crypto.subtle.importKey(
     'raw',
-    new TextEncoder().encode(`${APP_CONTEXT}:${conversationId}`),
-    { name: 'PBKDF2' },
+    new TextEncoder().encode(APP_CONTEXT),
+    { name: 'HKDF' },
     false,
     ['deriveKey']
   );
 
   const key = await crypto.subtle.deriveKey(
     {
-      name: 'PBKDF2',
-      salt: new TextEncoder().encode(`${APP_CONTEXT}:salt:${conversationId}`),
-      iterations: 100_000,
+      name: 'HKDF',
       hash: 'SHA-256',
+      salt: new TextEncoder().encode(APP_CONTEXT),
+      info: new TextEncoder().encode(`conv-${conversationId}`),
     },
     keyMaterial,
     { name: 'AES-GCM', length: 256 },
