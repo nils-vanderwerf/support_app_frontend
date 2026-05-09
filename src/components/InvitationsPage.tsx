@@ -121,11 +121,26 @@ const InvitationsPage = () => {
     setPending(prev => prev.filter(a => a.id !== id));
   };
 
+  const handleApproveAll = async (invs: Invitation[]) => {
+    await Promise.all(invs.map(a => axiosInstance.patch(`/appointments/${a.id}/approve`, { timezone: tz })));
+    const ids = new Set(invs.map(a => a.id));
+    setPending(prev => prev.filter(a => !ids.has(a.id)));
+  };
+
   if (loading) return <Box display="flex" justifyContent="center" mt={10}><CircularProgress sx={{ color: '#7B2FBE' }} /></Box>;
 
   const isClient = !!client;
   const isSupportWorker = !!supportWorker;
   const isEmpty = pending.length === 0 && accepted.length === 0;
+
+  // Group pending invitations by conversation so we can show "Approve All" per series
+  const pendingGroups: Invitation[][] = Object.values(
+    pending.reduce<Record<string, Invitation[]>>((acc, inv) => {
+      const key = String(inv.conversation_id ?? inv.id);
+      (acc[key] = acc[key] ?? []).push(inv);
+      return acc;
+    }, {})
+  );
 
   return (
     <Box maxWidth={680} mx="auto" mt={5} px={2}>
@@ -146,16 +161,38 @@ const InvitationsPage = () => {
                 </Typography>
               </Box>
               <Divider />
-              {pending.map((inv, i) => (
-                <Box key={inv.id}>
-                  <InvitationCard
-                    inv={inv} isClient={isClient} isSupportWorker={isSupportWorker}
-                    onApprove={handleApprove} onDecline={handleDecline}
-                    onChat={(convId) => navigate(`/messages/${convId}`)}
-                  />
-                  {i < pending.length - 1 && <Divider />}
-                </Box>
-              ))}
+              {pendingGroups.map((group, gi) => {
+                const canRespondGroup = group.filter(inv =>
+                  inv.initiated_by === 'support_worker' ? isClient : isSupportWorker
+                );
+                return (
+                  <Box key={group[0].id}>
+                    {canRespondGroup.length > 1 && (
+                      <Box sx={{ px: 2.5, pt: 1.5, pb: 0.5, display: 'flex', justifyContent: 'flex-end' }}>
+                        <Button
+                          variant="contained"
+                          size="small"
+                          startIcon={<Check />}
+                          onClick={() => handleApproveAll(canRespondGroup)}
+                          sx={{ bgcolor: '#7B2FBE', '&:hover': { bgcolor: '#6a27a3' } }}
+                        >
+                          Approve All ({canRespondGroup.length})
+                        </Button>
+                      </Box>
+                    )}
+                    {group.map((inv, i) => (
+                      <Box key={inv.id}>
+                        <InvitationCard
+                          inv={inv} isClient={isClient} isSupportWorker={isSupportWorker}
+                          onApprove={handleApprove} onDecline={handleDecline}
+                          onChat={(convId) => navigate(`/messages/${convId}`)}
+                        />
+                        {(i < group.length - 1 || gi < pendingGroups.length - 1) && <Divider />}
+                      </Box>
+                    ))}
+                  </Box>
+                );
+              })}
             </Paper>
           )}
 

@@ -121,6 +121,13 @@ const ConversationView = () => {
     fetchConversation();
   };
 
+  const handleApproveAll = async (appts: PendingAppointment[]) => {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    await Promise.all(appts.map(a => axiosInstance.patch(`/appointments/${a.id}/approve`, { timezone: tz })));
+    setPendingAppointments([]);
+    fetchConversation();
+  };
+
   const openInviteForm = async () => {
     setFetchingSuggestion(true);
     try {
@@ -163,32 +170,54 @@ const ConversationView = () => {
       </Paper>
 
       {/* Pending invitations */}
-      {pendingAppointments.map(appt => (
-        <Paper key={appt.id} sx={{ p: 2, borderRadius: 3, border: '2px solid #7B2FBE', mb: 2 }}>
-          <Box display="flex" alignItems="center" gap={1} mb={1}>
-            <CalendarMonth sx={{ color: '#7B2FBE' }} />
-            <Typography fontWeight={600} color="#7B2FBE">Appointment Invitation</Typography>
-            <Chip label="Pending" size="small" sx={{ bgcolor: '#f3e8ff', color: '#7B2FBE' }} />
-          </Box>
-          <Typography variant="body2">
-            {new Date(appt.date).toLocaleString([], { dateStyle: 'full', timeStyle: 'short' })}
-            {appt.duration ? ` · ${appt.duration} min` : ''}
-            {appt.location ? ` · ${appt.location}` : ''}
-          </Typography>
-          {appt.notes && <Typography variant="caption" color="text.secondary">{appt.notes}</Typography>}
-          {(() => {
-            const canRespond = appt.initiated_by === 'support_worker' ? !!client : !!supportWorker;
-            return canRespond ? (
-              <Box display="flex" gap={1} mt={1.5}>
-                <Button variant="contained" size="small" startIcon={<Check />} onClick={() => handleApprove(appt.id)} sx={{ bgcolor: '#7B2FBE', '&:hover': { bgcolor: '#6a27a3' } }}>Approve</Button>
-                <Button variant="outlined" size="small" startIcon={<Close />} onClick={() => handleDecline(appt.id)} color="error">Decline</Button>
+      {(() => {
+        const respondable = pendingAppointments.filter(a =>
+          a.initiated_by === 'support_worker' ? !!client : !!supportWorker
+        );
+        return (
+          <>
+            {respondable.length > 1 && (
+              <Box display="flex" justifyContent="flex-end" mb={1}>
+                <Button
+                  variant="contained"
+                  size="small"
+                  startIcon={<Check />}
+                  onClick={() => handleApproveAll(respondable)}
+                  sx={{ bgcolor: '#7B2FBE', '&:hover': { bgcolor: '#6a27a3' } }}
+                >
+                  Approve All ({respondable.length})
+                </Button>
               </Box>
-            ) : (
-              <Typography variant="caption" color="text.secondary" display="block" mt={1}>Waiting for response…</Typography>
-            );
-          })()}
-        </Paper>
-      ))}
+            )}
+            {pendingAppointments.map(appt => {
+              const canRespond = appt.initiated_by === 'support_worker' ? !!client : !!supportWorker;
+              return (
+                <Paper key={appt.id} sx={{ p: 2, borderRadius: 3, border: '2px solid #7B2FBE', mb: 2 }}>
+                  <Box display="flex" alignItems="center" gap={1} mb={1}>
+                    <CalendarMonth sx={{ color: '#7B2FBE' }} />
+                    <Typography fontWeight={600} color="#7B2FBE">Appointment Invitation</Typography>
+                    <Chip label="Pending" size="small" sx={{ bgcolor: '#f3e8ff', color: '#7B2FBE' }} />
+                  </Box>
+                  <Typography variant="body2">
+                    {new Date(appt.date).toLocaleString([], { dateStyle: 'full', timeStyle: 'short' })}
+                    {appt.duration ? ` · ${appt.duration} min` : ''}
+                    {appt.location ? ` · ${appt.location}` : ''}
+                  </Typography>
+                  {appt.notes && <Typography variant="caption" color="text.secondary">{appt.notes}</Typography>}
+                  {canRespond ? (
+                    <Box display="flex" gap={1} mt={1.5}>
+                      <Button variant="contained" size="small" startIcon={<Check />} onClick={() => handleApprove(appt.id)} sx={{ bgcolor: '#7B2FBE', '&:hover': { bgcolor: '#6a27a3' } }}>Approve</Button>
+                      <Button variant="outlined" size="small" startIcon={<Close />} onClick={() => handleDecline(appt.id)} color="error">Decline</Button>
+                    </Box>
+                  ) : (
+                    <Typography variant="caption" color="text.secondary" display="block" mt={1}>Waiting for response…</Typography>
+                  )}
+                </Paper>
+              );
+            })}
+          </>
+        );
+      })()}
 
       {/* Messages */}
       <Paper sx={{ flex: 1, overflowY: 'auto', p: 2, borderRadius: 3, mb: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
