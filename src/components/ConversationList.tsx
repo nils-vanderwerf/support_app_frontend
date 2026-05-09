@@ -5,12 +5,19 @@ import {
 } from '@mui/material';
 import axiosInstance from '../api/axiosConfig';
 import { useAuth } from '../context/AuthContext';
+import { decryptMessage } from '../utils/encryption';
+
+interface Message {
+  content: string;
+  created_at: string;
+}
 
 interface ConversationSummary {
   id: number;
   client: { id: number; first_name: string; last_name: string };
   support_worker: { id: number; first_name: string; last_name: string };
-  messages: { content: string; created_at: string }[];
+  messages: Message[];
+  lastPreview?: string;
 }
 
 const ConversationList = () => {
@@ -21,7 +28,19 @@ const ConversationList = () => {
 
   useEffect(() => {
     axiosInstance.get('/conversations')
-      .then(res => setConversations(res.data))
+      .then(async res => {
+        const convs: ConversationSummary[] = res.data;
+        const decrypted = await Promise.all(
+          convs.map(async conv => {
+            const last = conv.messages[conv.messages.length - 1];
+            if (!last) return conv;
+            let preview = await decryptMessage(last.content, conv.id);
+            if (preview.startsWith('[SYS]')) preview = preview.replace('[SYS]', '').trim();
+            return { ...conv, lastPreview: preview };
+          })
+        );
+        setConversations(decrypted);
+      })
       .catch(err => console.error('Error fetching conversations:', err))
       .finally(() => setLoading(false));
   }, []);
@@ -34,6 +53,7 @@ const ConversationList = () => {
 
   const initials = (name: string) => name.split(' ').map(n => n[0]).join('').slice(0, 2);
   const lastMessage = (c: ConversationSummary) => c.messages[c.messages.length - 1];
+  const preview = (c: ConversationSummary) => c.lastPreview ?? lastMessage(c)?.content;
 
   return (
     <Box maxWidth={680} mx="auto" mt={5} px={2}>
@@ -55,7 +75,7 @@ const ConversationList = () => {
                   <Box flex={1} minWidth={0}>
                     <Typography fontWeight={600}>{name}</Typography>
                     {last ? (
-                      <Typography variant="body2" color="text.secondary" noWrap>{last.content}</Typography>
+                      <Typography variant="body2" color="text.secondary" noWrap>{preview(conv)}</Typography>
                     ) : (
                       <Typography variant="body2" color="text.secondary" fontStyle="italic">No messages yet</Typography>
                     )}
