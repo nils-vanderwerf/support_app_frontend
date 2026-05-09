@@ -152,7 +152,9 @@ describe('ConversationView', () => {
         ...baseConversation,
         appointments: [{ id: 5, date: '2026-06-01T10:00:00Z', duration: 60, location: 'Sydney', notes: '', status: 'pending' }],
       };
-      mockedAxios.get.mockResolvedValueOnce({ data: conv });
+      mockedAxios.get
+        .mockResolvedValueOnce({ data: conv })
+        .mockResolvedValueOnce({ data: { ...conv, appointments: [] } });
       mockedAxios.patch.mockResolvedValueOnce({ data: {} });
       renderComponent();
       await waitFor(() => screen.getByRole('button', { name: /Approve/i }));

@@ -77,7 +77,7 @@ describe('InvitationsPage', () => {
       renderComponent();
       await waitFor(() => screen.getByRole('button', { name: /Approve/i }));
       await userEvent.click(screen.getByRole('button', { name: /Approve/i }));
-      expect(mockedAxios.patch).toHaveBeenCalledWith('/appointments/1/approve');
+      expect(mockedAxios.patch).toHaveBeenCalledWith('/appointments/1/approve', { timezone: expect.any(String) });
       await waitFor(() => expect(screen.queryByText('Olivia Williams')).not.toBeInTheDocument());
     });
 
@@ -89,7 +89,7 @@ describe('InvitationsPage', () => {
       renderComponent();
       await waitFor(() => screen.getByRole('button', { name: /Decline/i }));
       await userEvent.click(screen.getByRole('button', { name: /Decline/i }));
-      expect(mockedAxios.patch).toHaveBeenCalledWith('/appointments/1/decline');
+      expect(mockedAxios.patch).toHaveBeenCalledWith('/appointments/1/decline', { timezone: expect.any(String) });
       await waitFor(() => expect(screen.queryByText('Jane Doe')).not.toBeInTheDocument());
     });
   });

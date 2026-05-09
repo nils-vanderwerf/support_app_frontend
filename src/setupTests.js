@@ -4,6 +4,16 @@
 // learn more: https://github.com/testing-library/jest-dom
 import '@testing-library/jest-dom';
 
+// Node globals not automatically exposed in jsdom
+const { webcrypto } = require('crypto');
+const { TextEncoder, TextDecoder } = require('util');
+
+if (!global.crypto) {
+  Object.defineProperty(global, 'crypto', { value: webcrypto, writable: true });
+}
+if (!global.TextEncoder) global.TextEncoder = TextEncoder;
+if (!global.TextDecoder) global.TextDecoder = TextDecoder;
+
 // Mock @react-google-maps/api so LoadScript doesn't try to load the real script
 jest.mock('@react-google-maps/api', () => ({
   LoadScript: ({ children }) => children,
