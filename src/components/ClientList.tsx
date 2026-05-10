@@ -63,6 +63,7 @@ const ClientList = () => {
         });
       }
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchPos, clients]);
 
   const filteredClients = useMemo(() => {

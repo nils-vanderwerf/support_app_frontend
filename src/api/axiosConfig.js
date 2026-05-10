@@ -1,8 +1,10 @@
 import axios from 'axios';
 
 const axiosInstance = axios.create({
-  baseURL: 'http://localhost:9292/api', // Set your Rails API base URL here
-  withCredentials: true, // Include cookies
+  baseURL: process.env.NODE_ENV === 'production'
+    ? 'https://api.suppova.com/api'
+    : (process.env.REACT_APP_API_URL || 'http://localhost:9292/api'),
+  withCredentials: true,
 });
 
 // Attach stored auth token to every request

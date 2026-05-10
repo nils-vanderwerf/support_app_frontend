@@ -3,9 +3,9 @@ export const formatDuration = (minutes: number):string => {
   const remainingMinutes = minutes % 60;
   if ( hours > 0 && remainingMinutes > 0 ) 
     return ( `${hours}hr ${remainingMinutes} min` )
-   if ( hours == 0 && remainingMinutes > 0 ) 
+   if ( hours === 0 && remainingMinutes > 0 ) 
      return ( `${remainingMinutes} min` )
-  if ( hours > 0 && remainingMinutes == 0 ) 
+  if ( hours > 0 && remainingMinutes === 0 ) 
      return ( `${hours} hr` )
   else 
     return ( '0 min')

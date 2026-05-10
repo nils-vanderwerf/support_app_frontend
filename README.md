@@ -2,7 +2,7 @@
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
-## Available Scripts
+**Live app:** [https://suppova.com](https://suppova.com)
 
 In the project directory, you can run:
 
@@ -14,7 +14,14 @@ Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
 The page will reload when you make changes.\
 You may also see any lint errors in the console.
 
-### `npm test`
+1. Go to [https://suppova.com](https://suppova.com) and click **Sign Up**
+2. Enter your name, email, and password, then select **Client**
+3. Fill in your profile details (age, location, health conditions, emergency contact)
+4. Once logged in, you land on your **Home dashboard** — upcoming appointments, health summary, and quick actions
+5. Browse **Support Workers** — filter by name, specialization, availability, or location radius
+6. Click a worker's card to view their full profile, then **Book Appointment** or **Message** them
+7. Use **Book with AI** to describe what you need in natural language — the AI finds a suitable worker and proposes appointment times on your behalf
+8. Manage your bookings from the **Appointments** page — view status, cancel, or rebook
 
 Launches the test runner in the interactive watch mode.\
 See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.

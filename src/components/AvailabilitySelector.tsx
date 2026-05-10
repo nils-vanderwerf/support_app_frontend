@@ -86,6 +86,7 @@ const AvailabilitySelector = ({ value, onChange }: Props) => {
   useEffect(() => {
     const timeWindow = preset === 'custom' ? `${customFrom}-${customTo}` : preset;
     onChange(encode(selectedDays, timeWindow));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDays, preset, customFrom, customTo]);
 
   const toggleDay = (day: string) => {

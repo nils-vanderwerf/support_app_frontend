@@ -109,6 +109,7 @@ const SupportWorkerList = () => {
         });
       }
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchPos, workers]);
 
   const allSpecs = useMemo<Specialization[]>(() => {
