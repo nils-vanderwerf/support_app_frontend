@@ -95,6 +95,7 @@ const ConversationView = () => {
   useEffect(() => {
     fetchConversation();
     axiosInstance.get('/appointments').then(r => setExistingAppts(r.data)).catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, aiTyping]);
 

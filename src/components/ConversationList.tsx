@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Box, Typography, Paper, Avatar, Divider, CircularProgress, Chip,
+  Box, Typography, Paper, Avatar, Divider, CircularProgress,
 } from '@mui/material';
 import axiosInstance from '../api/axiosConfig';
 import { useAuth } from '../context/AuthContext';
