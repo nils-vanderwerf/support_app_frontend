@@ -103,7 +103,9 @@ const ConversationView = () => {
     try {
       const aiRes = await axiosInstance.post(`/conversations/${id}/ai_respond`);
       setMessages(prev => [...prev, aiRes.data.message]);
-      if (aiRes.data.appointment) {
+      if (aiRes.data.declined_all) {
+        setPendingAppointments([]);
+      } else if (aiRes.data.appointment) {
         const appt = aiRes.data.appointment;
         if (appt.status === 'pending') {
           setPendingAppointments(prev => [...prev.filter(a => a.id !== appt.id), appt]);
