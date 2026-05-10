@@ -105,6 +105,9 @@ const ConversationView = () => {
       setMessages(prev => [...prev, aiRes.data.message]);
       if (aiRes.data.declined_all) {
         setPendingAppointments([]);
+      } else if (aiRes.data.appointments) {
+        const newAppts: PendingAppointment[] = aiRes.data.appointments.filter((a: PendingAppointment) => a.status === 'pending');
+        setPendingAppointments(prev => [...prev, ...newAppts]);
       } else if (aiRes.data.appointment) {
         const appt = aiRes.data.appointment;
         if (appt.status === 'pending') {
