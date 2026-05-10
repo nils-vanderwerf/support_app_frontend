@@ -59,17 +59,17 @@ const SupportWorkerProfilePage = () => {
   const initials = `${worker.first_name.charAt(0)}${worker.last_name.charAt(0)}`;
 
   return (
-    <Box maxWidth={900} mx="auto">
+    <Box maxWidth={900} mx="auto" px={{ xs: 1, sm: 0 }}>
       <Paper elevation={0} sx={{ borderRadius: 3, overflow: 'hidden', mb: 3 }}>
-        <Box sx={{ height: 200, bgcolor: '#7B2FBE' }} />
-        <Box sx={{ px: 4, pb: 3, position: 'relative' }}>
-          <Avatar sx={{ width: 120, height: 120, fontSize: 40, bgcolor: '#5a1f9b', border: '4px solid white', position: 'absolute', top: -60, left: 32 }}>
+        <Box sx={{ height: { xs: 120, sm: 200 }, bgcolor: '#7B2FBE' }} />
+        <Box sx={{ px: { xs: 2, sm: 4 }, pb: 3, position: 'relative' }}>
+          <Avatar sx={{ width: { xs: 80, sm: 120 }, height: { xs: 80, sm: 120 }, fontSize: { xs: 24, sm: 40 }, bgcolor: '#5a1f9b', border: '4px solid white', position: 'absolute', top: { xs: -40, sm: -60 }, left: { xs: 16, sm: 32 } }}>
             {initials}
           </Avatar>
-          <Box sx={{ ml: '160px', pt: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <Box flex={1} mr={2}>
+          <Box sx={{ ml: { xs: 0, sm: '160px' }, pt: { xs: '52px', sm: 2 }, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexDirection: { xs: 'column', sm: 'row' }, gap: { xs: 1.5, sm: 0 } }}>
+            <Box flex={1} mr={{ xs: 0, sm: 2 }}>
               {editing ? (
-                <Box display="flex" gap={1} mb={0.5}>
+                <Box display="flex" flexWrap="wrap" gap={1} mb={0.5}>
                   <TextField size="small" label="First name" value={form.first_name ?? ''} onChange={e => setForm({ ...form, first_name: e.target.value })} />
                   <TextField size="small" label="Middle name" value={form.middle_name ?? ''} onChange={e => setForm({ ...form, middle_name: e.target.value })} />
                   <TextField size="small" label="Last name" value={form.last_name ?? ''} onChange={e => setForm({ ...form, last_name: e.target.value })} />
@@ -99,7 +99,7 @@ const SupportWorkerProfilePage = () => {
                 )}
               </Box>
             </Box>
-            <Box display="flex" gap={1} mt={1} flexWrap="wrap" justifyContent="flex-end">
+            <Box display="flex" gap={1} mt={{ xs: 0, sm: 1 }} flexWrap="wrap" justifyContent={{ xs: 'flex-start', sm: 'flex-end' }}>
               <Button variant="outlined" startIcon={<ArrowBack />} onClick={() => navigate(-1)} sx={{ borderColor: '#7B2FBE', color: '#7B2FBE' }}>Back</Button>
               {isOwnProfile && !editing && (
                 <Button variant="outlined" startIcon={<Edit />} onClick={() => setEditing(true)} sx={{ borderColor: '#7B2FBE', color: '#7B2FBE' }}>Edit Profile</Button>

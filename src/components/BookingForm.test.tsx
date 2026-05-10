@@ -19,6 +19,7 @@ const renderForm = (props = {}) =>
 
 describe('BookingForm', () => {
   beforeEach(() => {
+    mockedAxios.get.mockResolvedValue({ data: [] });
     mockedAxios.post.mockResolvedValue({ data: {} });
     mockedAxios.patch.mockResolvedValue({ data: {} });
   });
@@ -106,7 +107,7 @@ describe('BookingForm', () => {
   it('calls patch when editing an existing appointment', async () => {
     const appt = { id: 5, date: '2026-06-01T10:00:00Z', duration: 60, location: 'Sydney', notes: '' };
     renderForm({ appointment: appt as any });
-    await userEvent.click(screen.getByRole('button', { name: /^Book$/i }));
+    await userEvent.click(screen.getByRole('button', { name: /^Save$/i }));
     await waitFor(() => {
       expect(mockedAxios.patch).toHaveBeenCalledWith('/appointments/5', expect.any(Object));
     });
@@ -118,6 +119,89 @@ describe('BookingForm', () => {
     await waitFor(() => {
       expect(mockOnClose).toHaveBeenCalled();
       expect(mockOnSuccess).toHaveBeenCalled();
+    });
+  });
+
+  describe('recurring bookings', () => {
+    it('shows the recurring toggle on new bookings', () => {
+      renderForm();
+      expect(screen.getByLabelText(/Recurring booking/i)).toBeInTheDocument();
+    });
+
+    it('shows the recurring toggle on invitation forms', () => {
+      renderForm({ isPending: true });
+      expect(screen.getByLabelText(/Recurring booking/i)).toBeInTheDocument();
+    });
+
+    it('shows the recurring toggle on edit forms', () => {
+      const appt = { id: 5, date: '2026-06-01T10:00:00Z', duration: 60, location: 'Sydney', notes: '' };
+      renderForm({ appointment: appt as any });
+      expect(screen.getByLabelText(/Recurring booking/i)).toBeInTheDocument();
+    });
+
+    it('shows frequency and session count controls after toggling on', async () => {
+      renderForm();
+      await userEvent.click(screen.getByLabelText(/Recurring booking/i));
+      expect(screen.getByRole('button', { name: /weekly/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /fortnightly/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /monthly/i })).toBeInTheDocument();
+      expect(screen.getByLabelText(/Number of sessions/i)).toBeInTheDocument();
+    });
+
+    it('shows a date preview when recurring is on', async () => {
+      renderForm();
+      await userEvent.click(screen.getByLabelText(/Recurring booking/i));
+      expect(screen.getByText(/appointments will be created/i)).toBeInTheDocument();
+    });
+
+    it('updates button label to reflect session count', async () => {
+      renderForm();
+      await userEvent.click(screen.getByLabelText(/Recurring booking/i));
+      expect(screen.getByRole('button', { name: /Book 4 Sessions/i })).toBeInTheDocument();
+    });
+
+    it('updates button label for recurring invitations', async () => {
+      renderForm({ isPending: true });
+      await userEvent.click(screen.getByLabelText(/Recurring booking/i));
+      expect(screen.getByRole('button', { name: /Send 4 Invitations/i })).toBeInTheDocument();
+    });
+
+    it('posts N appointments when recurring new booking is submitted', async () => {
+      renderForm();
+      await userEvent.click(screen.getByLabelText(/Recurring booking/i));
+      await userEvent.click(screen.getByRole('button', { name: /Book 4 Sessions/i }));
+      await waitFor(() => {
+        expect(mockedAxios.post).toHaveBeenCalledTimes(4);
+      });
+    });
+
+    it('posts N pending appointments for recurring invitation', async () => {
+      renderForm({ isPending: true });
+      await userEvent.click(screen.getByLabelText(/Recurring booking/i));
+      await userEvent.click(screen.getByRole('button', { name: /Send 4 Invitations/i }));
+      await waitFor(() => {
+        expect(mockedAxios.post).toHaveBeenCalledTimes(4);
+        mockedAxios.post.mock.calls.forEach(call =>
+          expect((call[1] as any).appointment.status).toBe('pending')
+        );
+      });
+    });
+
+    it('patches existing + posts follow-ons when editing with recurring', async () => {
+      const appt = { id: 5, date: '2026-06-01T10:00:00Z', duration: 60, location: 'Sydney', notes: '' };
+      renderForm({ appointment: appt as any });
+      await userEvent.click(screen.getByLabelText(/Recurring booking/i));
+      await userEvent.click(screen.getByRole('button', { name: /Save \+ Add 3 More/i }));
+      await waitFor(() => {
+        expect(mockedAxios.patch).toHaveBeenCalledWith('/appointments/5', expect.any(Object));
+        expect(mockedAxios.post).toHaveBeenCalledTimes(3);
+      });
+    });
+
+    it('shows "invitations will be sent" preview text for recurring invitations', async () => {
+      renderForm({ isPending: true });
+      await userEvent.click(screen.getByLabelText(/Recurring booking/i));
+      expect(screen.getByText(/invitations will be sent/i)).toBeInTheDocument();
     });
   });
 });

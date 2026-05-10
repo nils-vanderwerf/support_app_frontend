@@ -85,34 +85,34 @@ const AppointmentList = () => {
             Book with AI
           </Button>
         </Box>
-        <TableContainer component={Paper}>
-          <Table>
+        <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
+          <Table sx={{ minWidth: 600 }}>
             <TableHead>
               <TableRow>
                 <TableCell>Date</TableCell>
                 <TableCell>{isClient ? 'Support Worker' : 'Client'}</TableCell>
-                <TableCell>Location</TableCell>
-                <TableCell>Duration</TableCell>
-                <TableCell>Notes</TableCell>
+                <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>Location</TableCell>
+                <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>Duration</TableCell>
+                <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>Notes</TableCell>
                 <TableCell>Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {appointments.map((appointment) => (
                 <TableRow key={appointment.id}>
-                  <TableCell>{new Date(appointment.date).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</TableCell>
+                  <TableCell sx={{ whiteSpace: 'nowrap' }}>{new Date(appointment.date).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</TableCell>
                   <TableCell
                     onClick={() => handleNameClick(appointment)}
-                    sx={{ cursor: 'pointer', color: '#7B2FBE', fontWeight: 600, '&:hover': { textDecoration: 'underline' } }}
+                    sx={{ cursor: 'pointer', color: '#7B2FBE', fontWeight: 600, '&:hover': { textDecoration: 'underline' }, whiteSpace: 'nowrap' }}
                   >
                     {isClient
                       ? `${appointment.support_worker?.first_name ?? ''} ${appointment.support_worker?.last_name ?? ''}`.trim() || '—'
                       : `${appointment.client?.first_name ?? ''} ${appointment.client?.last_name ?? ''}`.trim() || '—'
                     }
                   </TableCell>
-                  <TableCell>{appointment.location}</TableCell>
-                  <TableCell>{formatDuration(appointment.duration)}</TableCell>
-                  <TableCell>{appointment.notes}</TableCell>
+                  <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>{appointment.location}</TableCell>
+                  <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>{formatDuration(appointment.duration)}</TableCell>
+                  <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>{appointment.notes}</TableCell>
                   <TableCell sx={{ whiteSpace: 'nowrap' }}>
                     {new Date(appointment.date) > new Date() ? (
                       <Box display="flex" gap={1} justifyContent="flex-start">

@@ -41,6 +41,7 @@ describe('ConversationView', () => {
   describe('as a client', () => {
     beforeEach(() => {
       mockedUseAuth.mockReturnValue({ client: { id: 1 }, supportWorker: null } as any);
+      mockedAxios.get.mockResolvedValue({ data: [] });
     });
 
     it('shows loading spinner before data loads', () => {
@@ -126,6 +127,7 @@ describe('ConversationView', () => {
   describe('as a support worker', () => {
     beforeEach(() => {
       mockedUseAuth.mockReturnValue({ client: null, supportWorker: { id: 2 } } as any);
+      mockedAxios.get.mockResolvedValue({ data: [] });
     });
 
     it('shows the client name in the header', async () => {
@@ -153,8 +155,9 @@ describe('ConversationView', () => {
         appointments: [{ id: 5, date: '2026-06-01T10:00:00Z', duration: 60, location: 'Sydney', notes: '', status: 'pending' }],
       };
       mockedAxios.get
-        .mockResolvedValueOnce({ data: conv })
-        .mockResolvedValueOnce({ data: { ...conv, appointments: [] } });
+        .mockResolvedValueOnce({ data: conv })      // fetchConversation
+        .mockResolvedValueOnce({ data: [] })         // /appointments (clash check)
+        .mockResolvedValueOnce({ data: { ...conv, appointments: [] } }); // re-fetch after approve
       mockedAxios.patch.mockResolvedValueOnce({ data: {} });
       renderComponent();
       await waitFor(() => screen.getByRole('button', { name: /Approve/i }));
@@ -167,6 +170,61 @@ describe('ConversationView', () => {
       renderComponent();
       await waitFor(() => screen.getByText('Jane Doe'));
       expect(screen.queryByRole('button', { name: /Send Invitation/i })).not.toBeInTheDocument();
+    });
+
+    describe('Approve All', () => {
+      const twoAppointments = [
+        { id: 5, date: '2026-06-01T10:00:00Z', duration: 60, location: 'Sydney', notes: '', status: 'pending', initiated_by: 'client' },
+        { id: 6, date: '2026-06-08T10:00:00Z', duration: 60, location: 'Sydney', notes: '', status: 'pending', initiated_by: 'client' },
+      ];
+
+      it('shows "Approve All" button when multiple pending invitations are respondable', async () => {
+        const conv = { ...baseConversation, appointments: twoAppointments };
+        mockedAxios.get.mockResolvedValueOnce({ data: conv });
+        renderComponent();
+        await waitFor(() => expect(screen.getByRole('button', { name: /Approve All/i })).toBeInTheDocument());
+      });
+
+      it('does not show "Approve All" for a single pending invitation', async () => {
+        const conv = {
+          ...baseConversation,
+          appointments: [{ id: 5, date: '2026-06-01T10:00:00Z', duration: 60, location: 'Sydney', notes: '', status: 'pending', initiated_by: 'client' }],
+        };
+        mockedAxios.get.mockResolvedValueOnce({ data: conv });
+        renderComponent();
+        await waitFor(() => screen.getByRole('button', { name: /^Approve$/i }));
+        expect(screen.queryByRole('button', { name: /Approve All/i })).not.toBeInTheDocument();
+      });
+
+      it('patches all pending appointments when "Approve All" is clicked', async () => {
+        const conv = { ...baseConversation, appointments: twoAppointments };
+        mockedAxios.get
+          .mockResolvedValueOnce({ data: conv })
+          .mockResolvedValueOnce({ data: [] })
+          .mockResolvedValueOnce({ data: { ...conv, appointments: [] } });
+        mockedAxios.patch.mockResolvedValue({ data: {} });
+        renderComponent();
+        await waitFor(() => screen.getByRole('button', { name: /Approve All/i }));
+        await userEvent.click(screen.getByRole('button', { name: /Approve All/i }));
+        await waitFor(() => {
+          expect(mockedAxios.patch).toHaveBeenCalledWith('/appointments/5/approve', { timezone: expect.any(String) });
+          expect(mockedAxios.patch).toHaveBeenCalledWith('/appointments/6/approve', { timezone: expect.any(String) });
+          expect(mockedAxios.patch).toHaveBeenCalledTimes(2);
+        });
+      });
+
+      it('clears pending invitation cards after "Approve All"', async () => {
+        const conv = { ...baseConversation, appointments: twoAppointments };
+        mockedAxios.get
+          .mockResolvedValueOnce({ data: conv })
+          .mockResolvedValueOnce({ data: [] })
+          .mockResolvedValueOnce({ data: { ...conv, appointments: [] } });
+        mockedAxios.patch.mockResolvedValue({ data: {} });
+        renderComponent();
+        await waitFor(() => screen.getByRole('button', { name: /Approve All/i }));
+        await userEvent.click(screen.getByRole('button', { name: /Approve All/i }));
+        await waitFor(() => expect(screen.queryByText('Appointment Invitation')).not.toBeInTheDocument());
+      });
     });
   });
 });

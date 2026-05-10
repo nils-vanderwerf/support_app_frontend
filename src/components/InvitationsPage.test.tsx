@@ -93,6 +93,51 @@ describe('InvitationsPage', () => {
       expect(mockedAxios.patch).toHaveBeenCalledWith('/appointments/1/decline', { timezone: expect.any(String) });
       await waitFor(() => expect(screen.queryByText('Jane Doe')).not.toBeInTheDocument());
     });
+
+    describe('Approve All', () => {
+      it('shows "Approve All" button when multiple respondable invitations share a conversation', async () => {
+        mockedAxios.get
+          .mockResolvedValueOnce({ data: [makeInvitation(1), makeInvitation(2)] })
+          .mockResolvedValueOnce({ data: [] });
+        renderComponent();
+        await waitFor(() => expect(screen.getByRole('button', { name: /Approve All/i })).toBeInTheDocument());
+      });
+
+      it('does not show "Approve All" for a single invitation', async () => {
+        mockedAxios.get
+          .mockResolvedValueOnce({ data: [makeInvitation(1)] })
+          .mockResolvedValueOnce({ data: [] });
+        renderComponent();
+        await waitFor(() => screen.getByRole('button', { name: /^Approve$/i }));
+        expect(screen.queryByRole('button', { name: /Approve All/i })).not.toBeInTheDocument();
+      });
+
+      it('patches all invitations in the group when "Approve All" is clicked', async () => {
+        mockedAxios.get
+          .mockResolvedValueOnce({ data: [makeInvitation(1), makeInvitation(2)] })
+          .mockResolvedValueOnce({ data: [] });
+        mockedAxios.patch.mockResolvedValue({ data: {} });
+        renderComponent();
+        await waitFor(() => screen.getByRole('button', { name: /Approve All/i }));
+        await userEvent.click(screen.getByRole('button', { name: /Approve All/i }));
+        await waitFor(() => {
+          expect(mockedAxios.patch).toHaveBeenCalledWith('/appointments/1/approve', { timezone: expect.any(String) });
+          expect(mockedAxios.patch).toHaveBeenCalledWith('/appointments/2/approve', { timezone: expect.any(String) });
+          expect(mockedAxios.patch).toHaveBeenCalledTimes(2);
+        });
+      });
+
+      it('removes all invitations from the list after "Approve All"', async () => {
+        mockedAxios.get
+          .mockResolvedValueOnce({ data: [makeInvitation(1), makeInvitation(2)] })
+          .mockResolvedValueOnce({ data: [] });
+        mockedAxios.patch.mockResolvedValue({ data: {} });
+        renderComponent();
+        await waitFor(() => screen.getByRole('button', { name: /Approve All/i }));
+        await userEvent.click(screen.getByRole('button', { name: /Approve All/i }));
+        await waitFor(() => expect(screen.queryByText('Olivia Williams')).not.toBeInTheDocument());
+      });
+    });
   });
 
   describe('as a client', () => {

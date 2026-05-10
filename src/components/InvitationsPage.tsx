@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import {
   Box, Typography, Paper, Button, Chip, CircularProgress, Divider,
+  Dialog, DialogTitle, DialogContent, DialogActions,
 } from '@mui/material';
-import { CalendarMonth, Check, Close, Chat, CheckCircle } from '@mui/icons-material';
+import { CalendarMonth, Check, Close, Chat, CheckCircle, Warning } from '@mui/icons-material';
 import axiosInstance from '../api/axiosConfig';
 import { useAuth } from '../context/AuthContext';
 
@@ -18,6 +19,28 @@ interface Invitation {
   conversation_id: number | null;
   client: { id: number; first_name: string; last_name: string };
   support_worker: { id: number; first_name: string; last_name: string };
+}
+
+interface ExistingAppt {
+  id: number;
+  date: string;
+  duration: number;
+  notes?: string;
+  client: { id: number; first_name: string; last_name: string };
+  support_worker: { id: number; first_name: string; last_name: string };
+}
+
+function detectClashes(invitations: Invitation[], existing: ExistingAppt[]) {
+  return invitations.flatMap(inv => {
+    const start = new Date(inv.date).getTime();
+    const end = start + (inv.duration || 60) * 60_000;
+    const clash = existing.find(a => {
+      const as = new Date(a.date).getTime();
+      const ae = as + (a.duration || 60) * 60_000;
+      return start < ae && end > as;
+    });
+    return clash ? [{ inv, clash }] : [];
+  });
 }
 
 const InvitationCard = ({
@@ -98,22 +121,46 @@ const InvitationsPage = () => {
   const [pending, setPending] = useState<Invitation[]>([]);
   const [accepted, setAccepted] = useState<Invitation[]>([]);
   const [loading, setLoading] = useState(true);
+  const [existingAppts, setExistingAppts] = useState<ExistingAppt[]>([]);
+  const [clashDialog, setClashDialog] = useState<{
+    clashes: Array<{ inv: Invitation; clash: ExistingAppt }>;
+    onConfirm: () => void;
+  } | null>(null);
 
   useEffect(() => {
     Promise.all([
       axiosInstance.get('/appointments/pending'),
       axiosInstance.get('/appointments/recently_accepted'),
-    ]).then(([p, a]) => {
+      axiosInstance.get('/appointments'),
+    ]).then(([p, a, appts]) => {
       setPending(p.data);
       setAccepted(a.data);
+      setExistingAppts(appts.data);
     }).catch(() => {}).finally(() => setLoading(false));
   }, []);
 
   const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-  const handleApprove = async (id: number) => {
+  const doApprove = async (id: number) => {
     await axiosInstance.patch(`/appointments/${id}/approve`, { timezone: tz });
     setPending(prev => prev.filter(a => a.id !== id));
+  };
+
+  const doApproveAll = async (invs: Invitation[]) => {
+    await Promise.all(invs.map(a => axiosInstance.patch(`/appointments/${a.id}/approve`, { timezone: tz })));
+    const ids = new Set(invs.map(a => a.id));
+    setPending(prev => prev.filter(a => !ids.has(a.id)));
+  };
+
+  const handleApprove = (id: number) => {
+    const inv = pending.find(a => a.id === id);
+    if (!inv) return;
+    const clashes = detectClashes([inv], existingAppts);
+    if (clashes.length > 0) {
+      setClashDialog({ clashes, onConfirm: () => doApprove(id) });
+    } else {
+      doApprove(id);
+    }
   };
 
   const handleDecline = async (id: number) => {
@@ -121,10 +168,13 @@ const InvitationsPage = () => {
     setPending(prev => prev.filter(a => a.id !== id));
   };
 
-  const handleApproveAll = async (invs: Invitation[]) => {
-    await Promise.all(invs.map(a => axiosInstance.patch(`/appointments/${a.id}/approve`, { timezone: tz })));
-    const ids = new Set(invs.map(a => a.id));
-    setPending(prev => prev.filter(a => !ids.has(a.id)));
+  const handleApproveAll = (invs: Invitation[]) => {
+    const clashes = detectClashes(invs, existingAppts);
+    if (clashes.length > 0) {
+      setClashDialog({ clashes, onConfirm: () => doApproveAll(invs) });
+    } else {
+      doApproveAll(invs);
+    }
   };
 
   if (loading) return <Box display="flex" justifyContent="center" mt={10}><CircularProgress sx={{ color: '#7B2FBE' }} /></Box>;
@@ -133,10 +183,11 @@ const InvitationsPage = () => {
   const isSupportWorker = !!supportWorker;
   const isEmpty = pending.length === 0 && accepted.length === 0;
 
-  // Group pending invitations by conversation so we can show "Approve All" per series
   const pendingGroups: Invitation[][] = Object.values(
     pending.reduce<Record<string, Invitation[]>>((acc, inv) => {
-      const key = String(inv.conversation_id ?? inv.id);
+      const key = inv.conversation_id
+        ? `conv-${inv.conversation_id}`
+        : `pair-${inv.client.id}-${inv.support_worker.id}`;
       (acc[key] = acc[key] ?? []).push(inv);
       return acc;
     }, {})
@@ -214,6 +265,53 @@ const InvitationsPage = () => {
             </Paper>
           )}
         </>
+      )}
+
+      {clashDialog && (
+        <Dialog open onClose={() => setClashDialog(null)} maxWidth="sm" fullWidth>
+          <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Warning sx={{ color: '#e65100' }} />
+            Scheduling Conflict
+          </DialogTitle>
+          <DialogContent>
+            <Typography mb={2}>
+              {clashDialog.clashes.length === 1
+                ? 'This appointment clashes with an existing booking:'
+                : `${clashDialog.clashes.length} appointments clash with existing bookings:`}
+            </Typography>
+            {clashDialog.clashes.map(({ inv, clash }) => (
+              <Box key={inv.id} sx={{ mb: 1.5, p: 1.5, bgcolor: '#fff8f0', borderRadius: 2, border: '1px solid #ffcc80' }}>
+                <Typography variant="body2" fontWeight={600} mb={0.5}>
+                  {new Date(inv.date).toLocaleString([], { dateStyle: 'full', timeStyle: 'short' })}
+                  {inv.duration ? ` · ${inv.duration} min` : ''}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Clashes with{' '}
+                  <Typography
+                    component={RouterLink}
+                    to="/appointments"
+                    onClick={() => setClashDialog(null)}
+                    sx={{ color: '#7B2FBE', textDecoration: 'underline', cursor: 'pointer' }}
+                    variant="body2"
+                  >
+                    {new Date(clash.date).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}
+                    {clash.notes ? ` · ${clash.notes}` : ''}
+                  </Typography>
+                </Typography>
+              </Box>
+            ))}
+          </DialogContent>
+          <DialogActions sx={{ px: 3, pb: 2 }}>
+            <Button onClick={() => setClashDialog(null)}>Cancel</Button>
+            <Button
+              variant="contained"
+              color="warning"
+              onClick={() => { clashDialog.onConfirm(); setClashDialog(null); }}
+            >
+              Approve Anyway
+            </Button>
+          </DialogActions>
+        </Dialog>
       )}
     </Box>
   );

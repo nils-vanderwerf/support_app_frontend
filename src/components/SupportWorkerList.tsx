@@ -268,16 +268,16 @@ const SupportWorkerList = () => {
           {filteredWorkers.length} of {workers.length} workers
         </Typography>
 
-        <TableContainer component={Paper}>
-          <Table>
+        <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
+          <Table sx={{ minWidth: 500 }}>
             <TableHead>
               <TableRow>
                 <TableCell>Avatar</TableCell>
                 <TableCell>Name</TableCell>
-                <TableCell>Location</TableCell>
-                <TableCell>Available Days</TableCell>
-                <TableCell>Specializations</TableCell>
-                <TableCell>Phone</TableCell>
+                <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>Location</TableCell>
+                <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>Available Days</TableCell>
+                <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>Specializations</TableCell>
+                <TableCell sx={{ display: { xs: 'none', lg: 'table-cell' } }}>Phone</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -299,19 +299,19 @@ const SupportWorkerList = () => {
                         {worker.first_name.charAt(0)}{worker.last_name.charAt(0)}
                       </Avatar>
                     </TableCell>
-                    <TableCell sx={{ color: '#7B2FBE', fontWeight: 600 }}>
+                    <TableCell sx={{ color: '#7B2FBE', fontWeight: 600, whiteSpace: 'nowrap' }}>
                       {worker.first_name} {worker.last_name}
                     </TableCell>
-                    <TableCell>{worker.location}</TableCell>
-                    <TableCell>{formatAvailability(worker.availability) || '—'}</TableCell>
-                    <TableCell>
+                    <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>{worker.location}</TableCell>
+                    <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>{formatAvailability(worker.availability) || '—'}</TableCell>
+                    <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
                       <Box display="flex" flexWrap="wrap" gap={0.5}>
                         {worker.specializations?.map(s => (
                           <Chip key={s.id} label={s.name} size="small" sx={{ bgcolor: '#f3e8ff', color: '#7B2FBE', fontSize: 11 }} />
                         )) || '—'}
                       </Box>
                     </TableCell>
-                    <TableCell>{worker.phone}</TableCell>
+                    <TableCell sx={{ display: { xs: 'none', lg: 'table-cell' } }}>{worker.phone}</TableCell>
                   </TableRow>
                 ))
               )}

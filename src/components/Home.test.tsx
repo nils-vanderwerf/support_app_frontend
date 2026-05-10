@@ -90,6 +90,7 @@ describe('Home — client dashboard', () => {
   });
 
   it('opens edit BookingForm when edit icon is clicked', async () => {
+    mockedAxios.get.mockResolvedValue({ data: [] });
     mockedAxios.get.mockResolvedValueOnce({ data: clientDashboard });
     renderComponent();
     await waitFor(() => screen.getByText('Olivia Williams'));
