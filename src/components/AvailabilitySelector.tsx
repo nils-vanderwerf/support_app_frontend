@@ -37,29 +37,36 @@ function encode(days: string[], timeWindow: string): string {
   return JSON.stringify({ days, time_window: timeWindow });
 }
 
-export function formatAvailability(raw: string): string {
+export function formatAvailability(raw: string | null | undefined): string {
+  if (!raw) return '';
   try {
     const parsed = JSON.parse(raw);
-    if (!parsed?.days || !parsed?.time_window) return raw;
-    const days: string[] = parsed.days;
-    const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
-    const weekend = ['Sat', 'Sun'];
-    let dayLabel: string;
-    if (days.length === 7) {
-      dayLabel = 'Every day';
-    } else if (weekdays.every(d => days.includes(d)) && days.length === 5) {
-      dayLabel = 'Weekdays';
-    } else if (weekend.every(d => days.includes(d)) && days.length === 2) {
-      dayLabel = 'Weekends';
-    } else {
-      dayLabel = days.join(', ');
+    if (parsed?.days && parsed?.time_window) {
+      const days: string[] = parsed.days;
+      const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+      const weekend = ['Sat', 'Sun'];
+      let dayLabel: string;
+      if (days.length === 7) {
+        dayLabel = 'Every day';
+      } else if (weekdays.every(d => days.includes(d)) && days.length === 5) {
+        dayLabel = 'Weekdays';
+      } else if (weekend.every(d => days.includes(d)) && days.length === 2) {
+        dayLabel = 'Weekends';
+      } else {
+        dayLabel = days.join(', ');
+      }
+      const preset = PRESETS.find(p => p.value === parsed.time_window);
+      const timeLabel = preset && preset.value !== 'custom' ? `${preset.label} (${parsed.time_window})` : parsed.time_window;
+      return `${dayLabel} · ${timeLabel}`;
     }
-    const preset = PRESETS.find(p => p.value === parsed.time_window);
-    const timeLabel = preset && preset.value !== 'custom' ? `${preset.label} (${parsed.time_window})` : parsed.time_window;
-    return `${dayLabel} · ${timeLabel}`;
-  } catch {
-    return raw;
-  }
+  } catch {}
+
+  const lower = raw.toLowerCase().trim();
+  if (['all', 'all days', 'any', 'anytime', 'flexible', 'now', 'immediately'].includes(lower)) return 'Every day';
+  if (['weekdays', 'weekday', 'mon-fri', 'monday to friday', 'monday - friday'].includes(lower)) return 'Weekdays';
+  if (['weekends', 'weekend', 'sat-sun', 'saturday and sunday'].includes(lower)) return 'Weekends';
+
+  return raw;
 }
 
 const AvailabilitySelector = ({ value, onChange }: Props) => {
