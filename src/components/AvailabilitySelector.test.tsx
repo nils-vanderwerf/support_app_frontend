@@ -8,8 +8,8 @@ describe('formatAvailability', () => {
     expect(formatAvailability('')).toBe('');
   });
 
-  it('returns raw when parsed object is missing fields', () => {
-    expect(formatAvailability(JSON.stringify({ days: ['Mon'] }))).toBe(JSON.stringify({ days: ['Mon'] }));
+  it('formats days-only object with no time window', () => {
+    expect(formatAvailability(JSON.stringify({ days: ['Mon'] }))).toBe('Mon');
   });
 
   it('formats 7 days as "Every day"', () => {

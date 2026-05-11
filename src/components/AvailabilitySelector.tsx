@@ -15,7 +15,7 @@ const PRESETS = [
 
 interface AvailabilityValue {
   days: string[];
-  time_window: string;
+  time_windows: string[];
 }
 
 interface Props {
@@ -26,37 +26,46 @@ interface Props {
 function parse(raw: string): AvailabilityValue {
   try {
     const parsed = JSON.parse(raw);
-    if (parsed && Array.isArray(parsed.days) && typeof parsed.time_window === 'string') {
-      return parsed;
+    if (parsed && Array.isArray(parsed.days)) {
+      if (Array.isArray(parsed.time_windows)) return parsed;
+      if (typeof parsed.time_window === 'string') {
+        return { days: parsed.days, time_windows: parsed.time_window ? [parsed.time_window] : [] };
+      }
     }
   } catch {}
-  return { days: [], time_window: '' };
+  return { days: [], time_windows: [] };
 }
 
-function encode(days: string[], timeWindow: string): string {
-  return JSON.stringify({ days, time_window: timeWindow });
+function encode(days: string[], timeWindows: string[]): string {
+  return JSON.stringify({ days, time_windows: timeWindows });
 }
 
 export function formatAvailability(raw: string | null | undefined): string {
   if (!raw) return '';
   try {
     const parsed = JSON.parse(raw);
-    if (parsed?.days && parsed?.time_window) {
+    if (parsed?.days) {
       const days: string[] = parsed.days;
       const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
       const weekend = ['Sat', 'Sun'];
       let dayLabel: string;
-      if (days.length === 7) {
-        dayLabel = 'Every day';
-      } else if (weekdays.every(d => days.includes(d)) && days.length === 5) {
-        dayLabel = 'Weekdays';
-      } else if (weekend.every(d => days.includes(d)) && days.length === 2) {
-        dayLabel = 'Weekends';
-      } else {
-        dayLabel = days.join(', ');
-      }
-      const preset = PRESETS.find(p => p.value === parsed.time_window);
-      const timeLabel = preset && preset.value !== 'custom' ? `${preset.label} (${parsed.time_window})` : parsed.time_window;
+      if (days.length === 7) dayLabel = 'Every day';
+      else if (weekdays.every(d => days.includes(d)) && days.length === 5) dayLabel = 'Weekdays';
+      else if (weekend.every(d => days.includes(d)) && days.length === 2) dayLabel = 'Weekends';
+      else dayLabel = days.join(', ');
+
+      // Support both time_windows (array) and legacy time_window (string)
+      const windows: string[] = Array.isArray(parsed.time_windows)
+        ? parsed.time_windows
+        : parsed.time_window ? [parsed.time_window] : [];
+
+      if (windows.length === 0) return dayLabel;
+
+      const timeLabel = windows.map(w => {
+        const preset = PRESETS.find(p => p.value === w);
+        return preset && preset.value !== 'custom' ? `${preset.label} (${w})` : w;
+      }).join(', ');
+
       return `${dayLabel} · ${timeLabel}`;
     }
   } catch {}
@@ -72,28 +81,26 @@ export function formatAvailability(raw: string | null | undefined): string {
 const AvailabilitySelector = ({ value, onChange }: Props) => {
   const initial = parse(value);
   const [selectedDays, setSelectedDays] = useState<string[]>(initial.days);
-  const presetMatch = PRESETS.find(p => p.value === initial.time_window);
-  const [preset, setPreset] = useState<string>(presetMatch ? initial.time_window : initial.time_window ? 'custom' : '');
+  const [selectedPresets, setSelectedPresets] = useState<string[]>(initial.time_windows);
   const [customFrom, setCustomFrom] = useState(() => {
-    if (!presetMatch && initial.time_window.includes('-')) return initial.time_window.split('-')[0];
-    return '09:00';
+    const custom = initial.time_windows.find(w => !PRESETS.some(p => p.value === w) && w.includes('-'));
+    return custom ? custom.split('-')[0] : '09:00';
   });
   const [customTo, setCustomTo] = useState(() => {
-    if (!presetMatch && initial.time_window.includes('-')) return initial.time_window.split('-')[1];
-    return '17:00';
+    const custom = initial.time_windows.find(w => !PRESETS.some(p => p.value === w) && w.includes('-'));
+    return custom ? custom.split('-')[1] : '17:00';
   });
 
-  useEffect(() => {
-    const timeWindow = preset === 'custom' ? `${customFrom}-${customTo}` : preset;
-    onChange(encode(selectedDays, timeWindow));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedDays, preset, customFrom, customTo]);
+  const hasCustom = selectedPresets.includes('custom');
 
-  const toggleDay = (day: string) => {
-    setSelectedDays(prev =>
-      prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]
-    );
-  };
+  useEffect(() => {
+    const windows = selectedPresets.map(p => p === 'custom' ? `${customFrom}-${customTo}` : p);
+    onChange(encode(selectedDays, windows));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedDays, selectedPresets, customFrom, customTo]);
+
+  const toggleDay = (day: string) =>
+    setSelectedDays(prev => prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]);
 
   const selectWeekdays = () => setSelectedDays(['Mon', 'Tue', 'Wed', 'Thu', 'Fri']);
   const selectWeekend = () => setSelectedDays(['Sat', 'Sun']);
@@ -143,9 +150,8 @@ const AvailabilitySelector = ({ value, onChange }: Props) => {
 
       <Typography variant="body2" color="text.secondary" mt={2} mb={1}>Time Window</Typography>
       <ToggleButtonGroup
-        value={preset}
-        exclusive
-        onChange={(_, v) => { if (v !== null) setPreset(v); }}
+        value={selectedPresets}
+        onChange={(_, v) => setSelectedPresets(v)}
         size="small"
         sx={{ flexWrap: 'wrap', gap: 0.5 }}
       >
@@ -168,7 +174,7 @@ const AvailabilitySelector = ({ value, onChange }: Props) => {
         ))}
       </ToggleButtonGroup>
 
-      {preset === 'custom' && (
+      {hasCustom && (
         <Box display="flex" gap={2} mt={1.5} alignItems="center">
           <TextField
             label="From"
@@ -189,9 +195,9 @@ const AvailabilitySelector = ({ value, onChange }: Props) => {
           />
         </Box>
       )}
-      {preset && preset !== 'custom' && (
+      {selectedPresets.filter(p => p !== 'custom').length > 0 && (
         <Typography variant="caption" color="text.secondary" display="block" mt={0.5}>
-          {PRESETS.find(p => p.value === preset)?.label}: {preset}
+          {selectedPresets.filter(p => p !== 'custom').join(', ')}
         </Typography>
       )}
     </Box>

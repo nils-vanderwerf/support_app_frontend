@@ -295,7 +295,7 @@ Test at mobile viewport (< 600px)
 
 ## 23 · Deployment Checks
 
-- [ ] https://suppova.com loads (tab title = "Suppova")
+- [ ] https://kindredsupport.vercel.app loads (tab title = "Suppova")
 - [ ] Login works on live app (token-based auth, no cookie dependency)
 - [ ] Google Maps autocomplete works in location fields
 - [ ] Backend API at https://api.suppova.com responds (may take 50 s cold start on free tier)
