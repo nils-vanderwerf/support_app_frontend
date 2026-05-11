@@ -6,7 +6,7 @@ import AvailabilitySelector from './AvailabilitySelector';
 import LocationAutocomplete from './LocationAutocomplete';
 import { MEDICATIONS, ALLERGIES, SPECIALIZATIONS } from '../constants/selectorOptions';
 import { PersonPin, Work } from '@mui/icons-material';
-import axiosInstance from '../api/axiosConfig';
+import axiosInstance, { setAuthToken } from '../api/axiosConfig';
 import { useAuth } from '../context/AuthContext';
 
 const SignUp = () => {
@@ -77,6 +77,7 @@ const SignUp = () => {
         password: userFormData.password,
       }, { withCredentials: true });
 
+      setAuthToken(loginResponse.data.token);
       auth.setUser(loginResponse.data.user);
       auth.setClient(loginResponse.data.client);
       auth.setSupportWorker(loginResponse.data.support_worker);

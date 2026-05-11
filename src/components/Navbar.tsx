@@ -7,7 +7,7 @@ import {
 import { Menu as MenuIcon, Close as CloseIcon } from '@mui/icons-material';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import axiosInstance from '../api/axiosConfig';
+import axiosInstance, { setAuthToken } from '../api/axiosConfig';
 
 const Navbar = () => {
   const auth = useAuth();
@@ -36,6 +36,7 @@ const Navbar = () => {
   const handleLogout = async () => {
     setDrawerOpen(false);
     try { await axiosInstance.delete('/logout'); } catch {}
+    setAuthToken(null);
     auth?.setUser(null);
     navigate('/login');
   };

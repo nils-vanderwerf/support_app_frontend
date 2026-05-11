@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Box, Button, TextField, Typography, Alert } from '@mui/material';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import axiosInstance from '../api/axiosConfig';
+import axiosInstance, { setAuthToken } from '../api/axiosConfig';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -15,6 +15,7 @@ const Login = () => {
     e.preventDefault();
     try {
       const response = await axiosInstance.post('/login', { email, password });
+      setAuthToken(response.data.token);
       auth.setUser(response.data.user);
       auth.setClient(response.data.client);
       auth.setSupportWorker(response.data.support_worker);
