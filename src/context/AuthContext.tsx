@@ -9,7 +9,6 @@ interface User {
   middle_name: string | null;
   email: string;
   role: string | null;
-  is_admin: boolean;
 }
 
 export interface Client {

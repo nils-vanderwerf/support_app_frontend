@@ -41,7 +41,7 @@ const Navbar = () => {
     navigate('/login');
   };
 
-  const isAdmin = auth.user?.is_admin;
+  const isAdmin = auth.user?.role === 'admin';
   const isPendingWorker = auth.supportWorker?.status === 'pending';
   const showNav = auth.user && !isAdmin && !isPendingWorker;
 
