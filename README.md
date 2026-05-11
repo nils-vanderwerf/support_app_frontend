@@ -1,8 +1,51 @@
-# Support App — Frontend
+# Kindred — Frontend
 
 A full-stack portfolio project inspired by [Mable](https://mable.com.au), a platform that connects people living with disability to independent support workers. This project is personally meaningful — built by someone with cerebral palsy who understands the value of accessible, well-designed support services.
 
-The backend Rails API lives in a separate repository: [support_app_backend](https://github.com/nils-vanderwerf/support_app_backend).
+**Live app:** [https://kindredsupport.vercel.app](https://kindredsupport.vercel.app)
+
+The backend Rails API lives in a separate repository: [support_app_backend](https://github.com/nils-vanderwerf/support_app_backend), deployed at [https://kindred-backend-8eu9.onrender.com](https://kindred-backend-8eu9.onrender.com).
+
+---
+
+## Using the app
+
+### As a client
+
+1. Go to [https://kindredsupport.vercel.app](https://kindredsupport.vercel.app) and click **Sign Up**
+2. Enter your name, email, and password, then select **Client**
+3. Fill in your profile details (age, location, health conditions, emergency contact)
+4. Once logged in, you land on your **Home dashboard** — upcoming appointments, health summary, and quick actions
+5. Browse **Support Workers** — filter by name, specialization, availability, or location radius
+6. Click a worker's card to view their full profile, then **Book Appointment** or **Message** them
+7. Use **Book with AI** to describe what you need in natural language — the AI finds a suitable worker and proposes appointment times on your behalf
+8. Manage your bookings from the **Appointments** page — view status, cancel, or rebook
+
+### As a support worker
+
+1. Sign up and select **Support Worker**
+2. Fill in your profile (bio, experience, availability, specializations)
+3. You'll be taken through the **AI Vetting** interview — the AI collects your police check number, Working With Children Check, and qualifications
+4. Once submitted, an admin reviews your application
+5. On approval, you land on your **Home dashboard** — today's schedule, weekly hours, upcoming appointments
+6. Browse **Clients**, view their profiles, and initiate conversations
+7. Respond to appointment invitations from your **Invitations** page — approve or decline bookings
+8. Chat with clients via **Messages** — the AI can simulate client responses so you can test the flow end to end
+
+### Demo accounts
+
+The following seeded accounts are available to try the app without signing up:
+
+| Role | Email | Password |
+|------|-------|----------|
+| Client | elena.martinez@example.com | password123 |
+| Client | raj.patel@example.com | password123 |
+| Support Worker | olivia.williams@example.com | password123 |
+| Support Worker | james.smith@example.com | password123 |
+
+> **Note:** The backend runs on Render's free tier and spins down after inactivity. The first request after a period of inactivity may take up to 50 seconds while the server wakes up.
+
+---
 
 ## What it does
 
@@ -19,15 +62,22 @@ The backend Rails API lives in a separate repository: [support_app_backend](http
 
 ## Tech stack
 
-- **React** with TypeScript
-- **Material UI** for components
-- **Axios** for API requests
-- **React Router** for navigation and protected routes
-- **React Context + hooks** for auth state management
-- **Jest + React Testing Library** for component tests
-- **Claude API (Anthropic)** for AI agents
+**Frontend**
+- React with TypeScript
+- Material UI for components
+- Axios for API requests
+- React Router for navigation and protected routes
+- React Context + hooks for auth state management
+- Jest + React Testing Library for component tests
 
-## Features implemented
+**Backend** (separate repo)
+- Ruby on Rails API
+- SQLite (via Litestream)
+- Devise for authentication
+- Claude API (Anthropic) for AI agents
+- Deployed on Render (Docker)
+
+## Features
 
 ### Authentication & routing
 - Session-based login with persistent auth check on refresh
@@ -39,63 +89,52 @@ The backend Rails API lives in a separate repository: [support_app_backend](http
 - Support worker view: today's appointments, hours this week, total clients, upcoming and recent appointments with rebook shortcut
 
 ### Appointment system
-- `BookingForm` submits dates with the local timezone offset (`+10:00`) so the backend stores and formats times correctly
+- `BookingForm` submits dates with the local timezone offset so the backend stores and formats times correctly
 - Pending invitations page with approve/decline — passes browser timezone so confirmation system messages show the right local time
-- Admin appointment table with status filter (All / Pending / Approved / Declined) using `ToggleButtonGroup`
+- Admin appointment table with status filter (All / Pending / Approved / Declined)
 
 ### Messaging
 - Conversation threads with chat-bubble UI, encrypted end-to-end using AES-256-GCM
 - Messages are encrypted in the browser before leaving the client; the server stores only ciphertext
-- Per-conversation keys derived via HKDF-SHA256 (IKM = fixed context string, info = `conv-{id}`) — cached in memory so repeated sends are fast
-- The backend mirrors the same HKDF + AES-256-GCM derivation in Ruby/OpenSSL to decrypt messages before passing context to the AI, and encrypts AI replies before storing them
-- System messages (appointment confirmations/declines) rendered inline with a distinct style; the `ENC:` prefix distinguishes encrypted messages from plaintext system messages
+- Per-conversation keys derived via HKDF-SHA256 — cached in memory so repeated sends are fast
+- System messages (appointment confirmations/declines) rendered inline with a distinct style
 - Unread message badges in the navbar
-- **AI chat simulation** — support workers can trigger an AI-simulated client reply; clients can trigger an AI-simulated support worker reply, including proactive appointment invitation JSON actions
+- AI chat simulation — support workers can trigger an AI-simulated client reply and vice versa, including proactive appointment invitation actions
+
+### AI booking
+- Clients describe what they need in plain language
+- The AI searches available workers, proposes appointment times, and sends invitations
+- Supports single bookings and recurring appointments ("3 sessions over the next month")
+- Supports bulk actions ("decline the rest for me")
 
 ### Support worker vetting
-- `VettingAgent` component — step-by-step AI conversation that collects police check, WWCC, bio, specializations, and availability
-- On completion, the worker's status moves to `needs_review` and they are redirected out of vetting
+- `VettingAgent` — step-by-step AI conversation that collects police check, WWCC, bio, specializations, and availability
+- On completion, the worker's status moves to `needs_review` and an admin is notified
 
 ### Support worker profiles & list
 - Profile page with editable fields, availability selector, and specialization chips
-- Worker list formats availability from raw JSON into human-readable text (e.g. "Mon, Tue, Thu · Morning (06:00-12:00)")
-- `AvailabilitySelector` component with preset time windows and day toggles; `formatAvailability` exported for reuse
-- **Location filter** — geocodes the search address via Google Places API (New) using `AutocompleteSuggestion.fetchAutocompleteSuggestions` + `toPlace().fetchFields`, then filters workers by Haversine distance with an adjustable radius slider
-- **Availability day filter** — `parseAvail` parses both JSON (`{"days":["Mon","Tue"...]}`) and free-form strings ("Weekdays", "Mon/Wed/Fri") so legacy data still filters correctly
-- `LocationAutocomplete` component with session token management and an `onCoordinates` callback to avoid a redundant geocoding round-trip after the user selects a suggestion
+- **Location filter** — geocodes the search address via Google Places API and filters workers by Haversine distance with an adjustable radius slider
+- **Availability day filter** — parses both JSON and free-form availability strings so legacy data still filters correctly
 
 ### Admin dashboard
-- Stats bar: approved workers, pending review, total clients, appointments this week — all scoped to the logged-in admin's approved workers
-- Pending applications tab with police check, WWCC, agent recommendation chips, and approve/reject buttons
-- Optimistic UI: approving a worker moves them from the applications list to the workers list without a reload
+- Stats bar: approved workers, pending review, total clients, appointments this week
+- Pending applications tab with police check, WWCC, AI recommendation chips, and approve/reject buttons
+- Optimistic UI: approving a worker moves them instantly between lists without a reload
 - Appointments tab with status filter
 - Approved workers tab with avatar, email, location, and specializations
 
-## Frontend concepts practised
+## Running locally
 
-- Component composition and reuse across views
-- React hooks (`useState`, `useEffect`, `useContext`)
-- TypeScript interfaces and typing
-- React Context for global auth state
-- Session persistence across refresh
-- Protected and role-gated routes
-- Multi-step forms with conditional rendering
-- Optimistic UI updates (approve/decline without full reload)
-- Timezone-aware date handling — `localOffsetStr()` appends the browser offset to ISO strings; `Intl.DateTimeFormat().resolvedOptions().timeZone` passed to the backend for message formatting
-- MUI component patterns: `ToggleButtonGroup`, `Chip`, `Avatar`, `Table`, `Drawer`, `Dialog`
-- Mocking with Jest (`jest.mock`, `mockResolvedValueOnce`, `jest.MockedFunction`)
-- Testing context with `renderHook` from `@testing-library/react`
-- Agentic AI conversational UI — chat bubbles, loading state, auto-scroll, streaming-style UX
-- Web Crypto API — AES-256-GCM encryption, HKDF key derivation, key caching
-- Geospatial filtering — Haversine distance, async geocoding with debounce, Places API (New)
-- **237 passing tests** across 22 test suites — components, hooks, context, and utility functions
-
-## Running the app
-
-The frontend requires the backend to be running first.
+The frontend requires the backend to be running first. Clone both repos and follow the backend setup instructions, then:
 
 ```bash
+# Install dependencies
 npm install
+
+# Create a .env file with:
+# REACT_APP_API_URL=http://localhost:9292/api
+# REACT_APP_GOOGLE_MAPS_API_KEY=your_key
+
 npm start
 ```
 
@@ -106,3 +145,5 @@ Runs on [http://localhost:3000](http://localhost:3000).
 ```bash
 npm test
 ```
+
+237 passing tests across 22 test suites — components, hooks, context, and utility functions.
