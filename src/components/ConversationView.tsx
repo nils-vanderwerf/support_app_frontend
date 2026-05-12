@@ -103,7 +103,7 @@ const ConversationView = () => {
     if (isTopLevel) setAiTyping(true);
     try {
       const aiRes = await axiosInstance.post(`/conversations/${id}/ai_respond`);
-      setMessages(prev => [...prev, aiRes.data.message]);
+      if (aiRes.data.message) setMessages(prev => [...prev, aiRes.data.message]);
       if (aiRes.data.declined_all) {
         setPendingAppointments([]);
       } else if (aiRes.data.appointments) {
@@ -121,6 +121,8 @@ const ConversationView = () => {
         await new Promise(r => setTimeout(r, 1200));
         await triggerAiResponse(followUpsLeft - 1, false);
       }
+    } catch {
+      // AI response failed silently — user can try sending again
     } finally {
       if (isTopLevel) setAiTyping(false);
     }
