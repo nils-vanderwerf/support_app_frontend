@@ -170,7 +170,6 @@ const ClientList = () => {
                 <TableCell>Avatar</TableCell>
                 <TableCell>Name</TableCell>
                 <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>Location</TableCell>
-                <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>Phone</TableCell>
                 <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>Health Conditions</TableCell>
               </TableRow>
             </TableHead>
@@ -197,7 +196,6 @@ const ClientList = () => {
                       {c.first_name} {c.last_name}
                     </TableCell>
                     <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>{c.location}</TableCell>
-                    <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>{c.phone}</TableCell>
                     <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>{c.health_conditions}</TableCell>
                   </TableRow>
                 ))

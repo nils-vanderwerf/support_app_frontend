@@ -124,17 +124,21 @@ const ClientProfilePage = () => {
                 : <Typography variant="body2">{client.location || '—'}</Typography>
               }
             </Box>
-            <Box display="flex" alignItems="center" gap={1} mb={1.5}>
-              <Phone sx={{ color: '#7B2FBE', fontSize: 20, flexShrink: 0 }} />
-              {editing
-                ? <TextField size="small" fullWidth value={form.phone ?? ''} onChange={e => setForm({ ...form, phone: e.target.value })} />
-                : <Typography variant="body2">{client.phone || '—'}</Typography>
-              }
-            </Box>
-            <Box display="flex" alignItems="center" gap={1}>
-              <Email sx={{ color: '#7B2FBE', fontSize: 20, flexShrink: 0 }} />
-              <Typography variant="body2">{client.email}</Typography>
-            </Box>
+            {(editing || client.phone) && (
+              <Box display="flex" alignItems="center" gap={1} mb={1.5}>
+                <Phone sx={{ color: '#7B2FBE', fontSize: 20, flexShrink: 0 }} />
+                {editing
+                  ? <TextField size="small" fullWidth value={form.phone ?? ''} onChange={e => setForm({ ...form, phone: e.target.value })} />
+                  : <Typography variant="body2">{client.phone}</Typography>
+                }
+              </Box>
+            )}
+            {(editing || client.email) && (
+              <Box display="flex" alignItems="center" gap={1}>
+                <Email sx={{ color: '#7B2FBE', fontSize: 20, flexShrink: 0 }} />
+                <Typography variant="body2">{client.email}</Typography>
+              </Box>
+            )}
             {editing && (
               <Box mt={2} display="flex" flexDirection="column" gap={1.5}>
                 <TextField select size="small" fullWidth label="Gender" value={form.gender ?? ''} onChange={e => setForm({ ...form, gender: e.target.value })}>
@@ -145,21 +149,23 @@ const ClientProfilePage = () => {
             )}
           </Paper>
 
-          <Paper sx={{ p: 3, borderRadius: 3, mt: 3 }}>
-            <Typography variant="h6" fontWeight={600} mb={2}>Emergency Contact</Typography>
-            {editing ? (
-              <Box display="flex" flexDirection="column" gap={1.5}>
-                <TextField size="small" fullWidth label="First name" value={form.emergency_contact_first_name ?? ''} onChange={e => setForm({ ...form, emergency_contact_first_name: e.target.value })} />
-                <TextField size="small" fullWidth label="Last name" value={form.emergency_contact_last_name ?? ''} onChange={e => setForm({ ...form, emergency_contact_last_name: e.target.value })} />
-                <TextField size="small" fullWidth label="Phone" value={form.emergency_contact_phone ?? ''} onChange={e => setForm({ ...form, emergency_contact_phone: e.target.value })} />
-              </Box>
-            ) : (
-              <>
-                <Typography variant="body2" fontWeight={500}>{client.emergency_contact_first_name} {client.emergency_contact_last_name}</Typography>
-                <Typography variant="body2" color="text.secondary">{client.emergency_contact_phone}</Typography>
-              </>
-            )}
-          </Paper>
+          {(editing || client.emergency_contact_first_name) && (
+            <Paper sx={{ p: 3, borderRadius: 3, mt: 3 }}>
+              <Typography variant="h6" fontWeight={600} mb={2}>Emergency Contact</Typography>
+              {editing ? (
+                <Box display="flex" flexDirection="column" gap={1.5}>
+                  <TextField size="small" fullWidth label="First name" value={form.emergency_contact_first_name ?? ''} onChange={e => setForm({ ...form, emergency_contact_first_name: e.target.value })} />
+                  <TextField size="small" fullWidth label="Last name" value={form.emergency_contact_last_name ?? ''} onChange={e => setForm({ ...form, emergency_contact_last_name: e.target.value })} />
+                  <TextField size="small" fullWidth label="Phone" value={form.emergency_contact_phone ?? ''} onChange={e => setForm({ ...form, emergency_contact_phone: e.target.value })} />
+                </Box>
+              ) : (
+                <>
+                  <Typography variant="body2" fontWeight={500}>{client.emergency_contact_first_name} {client.emergency_contact_last_name}</Typography>
+                  <Typography variant="body2" color="text.secondary">{client.emergency_contact_phone}</Typography>
+                </>
+              )}
+            </Paper>
+          )}
         </Grid>
 
         <Grid item xs={12} md={8}>
@@ -189,23 +195,27 @@ const ClientProfilePage = () => {
                 }
               </Box>
             )}
-            <Box mb={2}>
-              <Typography variant="body2" fontWeight={600} mb={1}>Medications</Typography>
-              {editing
-                ? <TextField size="small" fullWidth value={form.medication ?? ''} onChange={e => setForm({ ...form, medication: e.target.value })} helperText="Separate with commas" />
-                : <Box display="flex" flexWrap="wrap" gap={0.5}>{medications.map(m => <Chip key={m} label={m} size="small" sx={{ bgcolor: '#7B2FBE', color: 'white' }} />)}</Box>
-              }
-            </Box>
-            <Box>
-              <Box display="flex" alignItems="center" gap={0.5} mb={1}>
-                <Warning sx={{ color: '#e65100', fontSize: 18 }} />
-                <Typography variant="body2" fontWeight={600}>Allergies</Typography>
+            {(editing || client.medication) && (
+              <Box mb={2}>
+                <Typography variant="body2" fontWeight={600} mb={1}>Medications</Typography>
+                {editing
+                  ? <TextField size="small" fullWidth value={form.medication ?? ''} onChange={e => setForm({ ...form, medication: e.target.value })} helperText="Separate with commas" />
+                  : <Box display="flex" flexWrap="wrap" gap={0.5}>{medications.map(m => <Chip key={m} label={m} size="small" sx={{ bgcolor: '#7B2FBE', color: 'white' }} />)}</Box>
+                }
               </Box>
-              {editing
-                ? <TextField size="small" fullWidth value={form.allergies ?? ''} onChange={e => setForm({ ...form, allergies: e.target.value })} helperText="Separate with commas" />
-                : <Box display="flex" flexWrap="wrap" gap={0.5}>{allergies.map(a => <Chip key={a} label={a} size="small" sx={{ bgcolor: '#e65100', color: 'white' }} />)}</Box>
-              }
-            </Box>
+            )}
+            {(editing || client.allergies) && (
+              <Box>
+                <Box display="flex" alignItems="center" gap={0.5} mb={1}>
+                  <Warning sx={{ color: '#e65100', fontSize: 18 }} />
+                  <Typography variant="body2" fontWeight={600}>Allergies</Typography>
+                </Box>
+                {editing
+                  ? <TextField size="small" fullWidth value={form.allergies ?? ''} onChange={e => setForm({ ...form, allergies: e.target.value })} helperText="Separate with commas" />
+                  : <Box display="flex" flexWrap="wrap" gap={0.5}>{allergies.map(a => <Chip key={a} label={a} size="small" sx={{ bgcolor: '#e65100', color: 'white' }} />)}</Box>
+                }
+              </Box>
+            )}
           </Paper>
         </Grid>
       </Grid>
