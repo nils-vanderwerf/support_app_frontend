@@ -72,7 +72,7 @@ const Navbar = () => {
       </Box>
       <Divider />
       <List disablePadding>
-        {auth.user && (
+        {auth.user && !isAdmin && (
           <ListItem disablePadding>
             <ListItemButton component={Link} to="/" onClick={() => setDrawerOpen(false)}>
               <ListItemText primary="Home" />
@@ -153,7 +153,7 @@ const Navbar = () => {
         {/* Desktop nav links */}
         {!isMobile && (
           <>
-            {auth.user && <Button color="inherit" component={Link} to="/">Home</Button>}
+            {auth.user && !isAdmin && <Button color="inherit" component={Link} to="/">Home</Button>}
             {isAdmin && <Button color="inherit" component={Link} to="/admin">Admin</Button>}
             {navLinks.map(link => (
               <Button

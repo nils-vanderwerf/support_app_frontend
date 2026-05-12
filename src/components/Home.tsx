@@ -229,7 +229,7 @@ const Home = () => {
   if (loading) return <Box display="flex" justifyContent="center" mt={10}><CircularProgress sx={{ color: '#7B2FBE' }} /></Box>;
 
 
-  const firstName = supportWorker?.first_name ?? client?.first_name ?? '';
+  const firstName = supportWorker?.first_name ?? client?.first_name ?? user?.first_name ?? user?.email ?? '';
 
   if (!data) return (
     <Box mt={8} textAlign="center">
