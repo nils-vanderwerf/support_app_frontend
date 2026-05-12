@@ -4,7 +4,7 @@ import axiosInstance from '../api/axiosConfig';
 import {
   Dialog, DialogTitle, DialogActions, DialogContent, TextField, Box, Button,
   Switch, FormControlLabel, ToggleButton, ToggleButtonGroup, Typography, Divider,
-  useMediaQuery, useTheme,
+  useMediaQuery, useTheme, InputAdornment,
 } from '@mui/material';
 import LocationAutocomplete from './LocationAutocomplete';
 import { CloseOutlined, Chat, Warning } from '@mui/icons-material';
@@ -207,12 +207,35 @@ const BookingForm = ({ clientId, supportWorkerId, onClose, onSuccess, appointmen
             value={time}
             onChange={(e) => setTime(e.target.value)}
           />
-          <TextField
-            label="Duration"
-            type="number"
-            value={duration}
-            onChange={(e) => setDuration(parseInt(e.target.value))}
-          />
+          <Box>
+            <Typography variant="caption" color="text.secondary" display="block" mb={0.5} ml={0.25}>Duration</Typography>
+            <Box display="flex" gap={1}>
+              <TextField
+                type="number"
+                value={Math.floor(duration / 60)}
+                onChange={e => {
+                  const h = Math.max(0, parseInt(e.target.value) || 0);
+                  setDuration(h * 60 + (duration % 60));
+                }}
+                size="small"
+                sx={{ width: 100 }}
+                inputProps={{ min: 0, max: 23 }}
+                InputProps={{ endAdornment: <InputAdornment position="end">h</InputAdornment> }}
+              />
+              <TextField
+                type="number"
+                value={duration % 60}
+                onChange={e => {
+                  const m = Math.max(0, Math.min(59, parseInt(e.target.value) || 0));
+                  setDuration(Math.floor(duration / 60) * 60 + m);
+                }}
+                size="small"
+                sx={{ width: 110 }}
+                inputProps={{ min: 0, max: 59, step: 15 }}
+                InputProps={{ endAdornment: <InputAdornment position="end">min</InputAdornment> }}
+              />
+            </Box>
+          </Box>
           <LocationAutocomplete value={location} onChange={setLocation} />
           <TextField
             label="Notes"
