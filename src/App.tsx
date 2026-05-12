@@ -17,6 +17,8 @@ import SignUp from './components/SignUp';
 import Login from './components/Login';
 import VettingAgent from './components/VettingAgent';
 import AdminDashboard from './components/AdminDashboard';
+import ForgotPassword from './components/ForgotPassword';
+import ResetPassword from './components/ResetPassword';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
 const ClientsRoute = () => {
@@ -73,6 +75,8 @@ const App = () => {
             <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
             <Route path="/signup" element={<SignUp />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
           </Routes>
         </Box>
       </AuthProvider>
