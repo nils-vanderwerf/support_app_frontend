@@ -47,7 +47,7 @@ const Navbar = () => {
 
   const navLinks = showNav ? [
     ...(auth.supportWorker ? [{ label: 'Clients', to: '/clients' }] : []),
-    { label: 'Support Workers', to: '/support-workers' },
+    ...(auth.client ? [{ label: 'Support Workers', to: '/support-workers' }] : []),
     { label: 'Appointments', to: '/appointments' },
     ...(auth.client || auth.supportWorker ? [
       { label: 'Messages', to: '/messages', badge: unreadMessages, onNavigate: () => setUnreadMessages(0) },

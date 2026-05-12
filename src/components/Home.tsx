@@ -200,7 +200,7 @@ const Home = () => {
   const [rebookTarget, setRebookTarget] = useState<RebookTarget | null>(null);
   const [reportTarget, setReportTarget] = useState<Appointment | null>(null);
   const [snackMessage, setSnackMessage] = useState('');
-  const { user } = useAuth();
+  const { user, client, supportWorker } = useAuth();
   const navigate = useNavigate();
 
   const fetchDashboard = useCallback(() => {
@@ -228,7 +228,8 @@ const Home = () => {
 
   if (loading) return <Box display="flex" justifyContent="center" mt={10}><CircularProgress sx={{ color: '#7B2FBE' }} /></Box>;
 
-  const firstName = user?.first_name ?? '';
+
+  const firstName = supportWorker?.first_name ?? client?.first_name ?? '';
 
   if (!data) return (
     <Box mt={8} textAlign="center">

@@ -25,6 +25,12 @@ const ClientsRoute = () => {
   return <ClientList />;
 };
 
+const SupportWorkerRoute = () => {
+  const { supportWorker } = useAuth();
+  if (supportWorker) return <Navigate to="/" replace />;
+  return <SupportWorkerList />;
+};
+
 const AdminRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
   if (loading) return null;
@@ -57,7 +63,7 @@ const App = () => {
             <Route path="/" element={<SecureRoute><Home /></SecureRoute>} />
             <Route path="/clients" element={<SecureRoute><ClientsRoute /></SecureRoute>} />
             <Route path="/clients/:id" element={<SecureRoute><ClientProfilePage /></SecureRoute>} />
-            <Route path='/support-workers' element={<SecureRoute><SupportWorkerList /></SecureRoute>} />
+            <Route path='/support-workers' element={<SecureRoute><SupportWorkerRoute /></SecureRoute>} />
             <Route path='/support-workers/:id' element={<SecureRoute><SupportWorkerProfilePage /></SecureRoute>} />
             <Route path='/appointments' element={<SecureRoute><AppointmentList /></SecureRoute>} />
             <Route path='/invitations' element={<SecureRoute><InvitationsPage /></SecureRoute>} />
