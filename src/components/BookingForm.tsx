@@ -176,7 +176,8 @@ const BookingForm = ({ clientId, supportWorkerId, onClose, onSuccess, appointmen
     const datesToCheck = recurring && recurringDates.length > 0
       ? recurringDates
       : [date];
-    const clashes = detectClashesForDates(datesToCheck, time, duration, offset, existingAppts);
+    const appts = appointment ? existingAppts.filter(a => a.id !== appointment.id) : existingAppts;
+    const clashes = detectClashesForDates(datesToCheck, time, duration, offset, appts);
     if (clashes.length > 0) {
       setClashDialog({ clashes, onConfirm: doSubmit });
     } else {
