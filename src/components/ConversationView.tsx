@@ -7,6 +7,7 @@ import {
 import { Send, ArrowBack, CalendarMonth, Check, Close, Warning } from '@mui/icons-material';
 import axiosInstance from '../api/axiosConfig';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import BookingForm from './BookingForm';
 import { encryptMessage, decryptMessage } from '../utils/encryption';
 
@@ -62,6 +63,7 @@ const ConversationView = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { client, supportWorker } = useAuth();
+  const { showToast } = useToast();
   const [conversation, setConversation] = useState<ConversationDetail | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [pendingAppointments, setPendingAppointments] = useState<PendingAppointment[]>([]);
@@ -150,12 +152,17 @@ const ConversationView = () => {
   const doApprove = async (apptId: number) => {
     await axiosInstance.patch(`/appointments/${apptId}/approve`, { timezone: tz });
     setPendingAppointments(prev => prev.filter(a => a.id !== apptId));
+    showToast('Appointment confirmed');
     fetchConversation();
   };
 
   const doApproveAll = async (appts: PendingAppointment[]) => {
-    await Promise.all(appts.map(a => axiosInstance.patch(`/appointments/${a.id}/approve`, { timezone: tz })));
+    await axiosInstance.patch('/appointments/bulk_approve', {
+      appointment_ids: appts.map(a => a.id),
+      timezone: tz,
+    });
     setPendingAppointments([]);
+    showToast(`${appts.length} appointment${appts.length !== 1 ? 's' : ''} confirmed`);
     fetchConversation();
   };
 
@@ -173,6 +180,7 @@ const ConversationView = () => {
   const handleDecline = async (apptId: number) => {
     await axiosInstance.patch(`/appointments/${apptId}/decline`, { timezone: tz });
     setPendingAppointments(prev => prev.filter(a => a.id !== apptId));
+    showToast('Appointment declined', 'info');
     fetchConversation();
   };
 
@@ -200,6 +208,7 @@ const ConversationView = () => {
 
   const handleInviteSent = async () => {
     setShowInviteForm(false);
+    showToast('Invitation sent');
     fetchConversation();
     await triggerAiResponse();
   };

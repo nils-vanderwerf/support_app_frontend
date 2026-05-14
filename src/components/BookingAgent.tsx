@@ -29,7 +29,7 @@ const BookingAgent = ({ open, onClose, onBooked, isClient = true }: BookingAgent
     role: 'assistant',
     content: isClient
       ? "Hi! I'm your AI booking assistant. Tell me what kind of support you're looking for and I'll find the right worker and send them an invitation on your behalf."
-      : "Hi! I'm your AI booking assistant. Tell me which client you'd like to book with and I'll send them an appointment invitation.",
+      : "Hi! I'm your AI booking assistant. Tell me what kind of client you'd like to work with — whether that's a particular health condition, specific needs, or tasks you'd like to help with — and I'll find the right match.",
   };
   const [messages, setMessages] = useState<Message[]>([welcome]);
   const [input, setInput] = useState('');

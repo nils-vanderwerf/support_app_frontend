@@ -20,6 +20,7 @@ import AdminDashboard from './components/AdminDashboard';
 import ForgotPassword from './components/ForgotPassword';
 import ResetPassword from './components/ResetPassword';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ToastProvider } from './context/ToastContext';
 
 const ClientsRoute = () => {
   const { client } = useAuth();
@@ -58,6 +59,7 @@ const App = () => {
     >
     <Router>
       <AuthProvider>
+        <ToastProvider>
         <CssBaseline />
         <Navbar />
         <Box component="main" sx={{ p: 3, mt: 8 }}>
@@ -79,6 +81,7 @@ const App = () => {
             <Route path="/reset-password" element={<ResetPassword />} />
           </Routes>
         </Box>
+        </ToastProvider>
       </AuthProvider>
     </Router>
     </LoadScript>

@@ -16,7 +16,8 @@ export interface Client {
   first_name: string;
   last_name: string;
   middle_name: string | null;
-  age: number;
+  age?: number;
+  date_of_birth?: string | null;
   gender: string;
   phone: string;
   location: string;
@@ -40,11 +41,12 @@ export interface SupportWorker {
   first_name: string;
   middle_name: string | null;
   last_name: string;
-  age: number;
+  age?: number;
+  date_of_birth?: string | null;
   availability: string;
   bio: string;
   email: string;
-  experience: string;
+  experience?: number | null;
   location: string;
   gender: string;
   phone: string;
@@ -55,6 +57,9 @@ export interface SupportWorker {
   status?: string;
   police_check_number?: string | null;
   wwcc_number?: string | null;
+  qualification?: string | null;
+  field_of_study?: string | null;
+  institution?: string | null;
 }
 
 interface AuthProviderProps {

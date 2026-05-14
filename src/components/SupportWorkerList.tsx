@@ -13,6 +13,7 @@ import BookingAgent from './BookingAgent';
 import { formatAvailability } from './AvailabilitySelector';
 import { geocodeAddress, haversineDistance, LatLng } from '../utils/geoDistance';
 import LocationAutocomplete from './LocationAutocomplete';
+import { QUALIFICATIONS } from '../constants/selectorOptions';
 
 const DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 const DAY_LABELS: Record<string, string> = {
@@ -77,6 +78,9 @@ const SupportWorkerList = () => {
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
   const [locationInput, setLocationInput] = useState('');
   const [radius, setRadius] = useState(25);
+  const [experienceRange, setExperienceRange] = useState<[number, number]>([0, 20]);
+  const experienceFilterActive = experienceRange[0] > 0 || experienceRange[1] < 20;
+  const [selectedQualifications, setSelectedQualifications] = useState<string[]>([]);
   const [searchPos, setSearchPos] = useState<LatLng | null>(null);
   const [geocoding, setGeocoding] = useState(false);
   const [geocodeFailed, setGeocodeFailed] = useState(false);
@@ -145,6 +149,17 @@ const SupportWorkerList = () => {
         if (hasAvailData && !selectedDays.some(d => avail[d])) return false;
       }
 
+      if (selectedQualifications.length > 0) {
+        if (!w.qualification || !selectedQualifications.includes(w.qualification)) return false;
+      }
+
+      if (experienceFilterActive) {
+        if (w.experience == null) return false;
+        const exp = w.experience;
+        const max = experienceRange[1] >= 20 ? Infinity : experienceRange[1];
+        if (exp < experienceRange[0] || exp > max) return false;
+      }
+
       if (searchPos) {
         const wPos = workerPositions.get(w.id);
         if (wPos === undefined) return true; // not yet geocoded — show optimistically
@@ -154,13 +169,13 @@ const SupportWorkerList = () => {
 
       return true;
     });
-  }, [workers, nameFilter, selectedSpecs, selectedDays, searchPos, radius, workerPositions]);
+  }, [workers, nameFilter, selectedSpecs, selectedDays, searchPos, radius, workerPositions, experienceRange, experienceFilterActive, selectedQualifications]);
 
   const toggleSpec = (id: number) =>
     setSelectedSpecs(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
 
   const activeFilterCount = [
-    nameFilter, selectedSpecs.length > 0, selectedDays.length > 0 && selectedDays.length < DAYS.length, searchPos,
+    nameFilter, selectedSpecs.length > 0, selectedDays.length > 0 && selectedDays.length < DAYS.length, searchPos, experienceFilterActive, selectedQualifications.length > 0,
   ].filter(Boolean).length;
 
   return (
@@ -182,7 +197,7 @@ const SupportWorkerList = () => {
               Filters {activeFilterCount > 0 && <Chip label={activeFilterCount} size="small" sx={{ ml: 1, bgcolor: '#7B2FBE', color: 'white', height: 20, fontSize: 11 }} />}
             </Typography>
             {activeFilterCount > 0 && (
-              <Button size="small" sx={{ color: '#7B2FBE' }} onClick={() => { setNameFilter(''); setSelectedSpecs([]); setSelectedDays([]); setLocationInput(''); setSearchPos(null); setRadius(25); }}>
+              <Button size="small" sx={{ color: '#7B2FBE' }} onClick={() => { setNameFilter(''); setSelectedSpecs([]); setSelectedDays([]); setLocationInput(''); setSearchPos(null); setRadius(25); setExperienceRange([0, 20]); setSelectedQualifications([]); }}>
                 Clear all
               </Button>
             )}
@@ -251,6 +266,29 @@ const SupportWorkerList = () => {
               </Box>
             )}
 
+            {/* Qualifications */}
+            <Box>
+              <Typography variant="caption" color="text.secondary" mb={0.5} display="block">Qualification</Typography>
+              <Box display="flex" flexWrap="wrap" gap={0.75}>
+                {QUALIFICATIONS.filter(q => q !== 'Other').map(q => (
+                  <Chip
+                    key={q}
+                    label={q}
+                    size="small"
+                    onClick={() => setSelectedQualifications(prev =>
+                      prev.includes(q) ? prev.filter(x => x !== q) : [...prev, q]
+                    )}
+                    sx={{
+                      cursor: 'pointer',
+                      bgcolor: selectedQualifications.includes(q) ? '#7B2FBE' : '#f3e8ff',
+                      color: selectedQualifications.includes(q) ? 'white' : '#7B2FBE',
+                      '&:hover': { bgcolor: selectedQualifications.includes(q) ? '#6a27a3' : '#e8d5ff' },
+                    }}
+                  />
+                ))}
+              </Box>
+            </Box>
+
             {/* Availability */}
             <Box>
               <Typography variant="caption" color="text.secondary" mb={0.5} display="block">Available on</Typography>
@@ -261,6 +299,32 @@ const SupportWorkerList = () => {
                   </ToggleButton>
                 ))}
               </ToggleButtonGroup>
+            </Box>
+
+            {/* Experience */}
+            <Box px={1}>
+              <Typography variant="caption" color="text.secondary" display="block" mb={0.5}>
+                Years of experience:{' '}
+                <strong>
+                  {experienceRange[0]}–{experienceRange[1] >= 20 ? '20+' : experienceRange[1]}
+                </strong>
+                {!experienceFilterActive && <span style={{ fontWeight: 400, color: '#aaa' }}> (any)</span>}
+              </Typography>
+              <Slider
+                value={experienceRange}
+                onChange={(_, v) => setExperienceRange(v as [number, number])}
+                min={0}
+                max={20}
+                step={1}
+                marks={[
+                  { value: 0, label: '0' },
+                  { value: 5, label: '5' },
+                  { value: 10, label: '10' },
+                  { value: 15, label: '15' },
+                  { value: 20, label: '20+' },
+                ]}
+                sx={{ color: '#7B2FBE', maxWidth: 400 }}
+              />
             </Box>
           </Box>
         </Paper>
@@ -278,13 +342,15 @@ const SupportWorkerList = () => {
                 <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>Location</TableCell>
                 <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>Available Days</TableCell>
                 <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>Specializations</TableCell>
+                <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>Experience</TableCell>
+                <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>Qualifications</TableCell>
                 <TableCell sx={{ display: { xs: 'none', lg: 'table-cell' } }}>Phone</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {filteredWorkers.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} align="center" sx={{ py: 4, color: 'text.secondary', fontStyle: 'italic' }}>
+                  <TableCell colSpan={8} align="center" sx={{ py: 4, color: 'text.secondary', fontStyle: 'italic' }}>
                     No support workers match your filters
                   </TableCell>
                 </TableRow>
@@ -311,6 +377,12 @@ const SupportWorkerList = () => {
                           <Chip key={s.id} label={s.name} size="small" sx={{ bgcolor: '#f3e8ff', color: '#7B2FBE', fontSize: 11 }} />
                         )) || '—'}
                       </Box>
+                    </TableCell>
+                    <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
+                      {worker.experience != null ? `${worker.experience} yr${worker.experience === 1 ? '' : 's'}` : '—'}
+                    </TableCell>
+                    <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
+                      {worker.qualification != null ? `${worker.qualification}` : '-'} {worker.field_of_study != null ? `in ${worker.field_of_study}` : ''}
                     </TableCell>
                     <TableCell sx={{ display: { xs: 'none', lg: 'table-cell' } }}>{worker.phone}</TableCell>
                   </TableRow>

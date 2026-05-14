@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box, Typography, Paper, Grid, Chip, CircularProgress, Divider, Avatar,
-  IconButton, Button, Dialog, DialogTitle, DialogContent, DialogActions, Snackbar,
+  IconButton, Button, Dialog, DialogTitle, DialogContent, DialogActions,
 } from '@mui/material';
 import {
   CalendarToday, AccessTime, People, LocalHospital, MedicalServices, Warning,
@@ -10,6 +10,7 @@ import {
 } from '@mui/icons-material';
 import axiosInstance from '../api/axiosConfig';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import { formatDuration } from '../utils/formatDuration';
 import { SupportWorker, Client } from '../context/AuthContext';
 import BookingForm from './BookingForm';
@@ -199,7 +200,7 @@ const Home = () => {
   const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
   const [rebookTarget, setRebookTarget] = useState<RebookTarget | null>(null);
   const [reportTarget, setReportTarget] = useState<Appointment | null>(null);
-  const [snackMessage, setSnackMessage] = useState('');
+  const { showToast } = useToast();
   const { user, client, supportWorker } = useAuth();
   const navigate = useNavigate();
 
@@ -217,10 +218,10 @@ const Home = () => {
     if (!deleteTarget) return;
     try {
       await axiosInstance.delete(`/appointments/${deleteTarget.id}`);
-      setSnackMessage('Appointment deleted');
+      showToast('Appointment deleted');
       fetchDashboard();
     } catch {
-      setSnackMessage('Could not delete appointment');
+      showToast('Could not delete appointment', 'error');
     } finally {
       setDeleteTarget(null);
     }
@@ -259,7 +260,7 @@ const Home = () => {
           clientId={editTarget.client_id}
           supportWorkerId={editTarget.support_worker_id}
           onClose={() => setEditTarget(null)}
-          onSuccess={() => { setSnackMessage('Appointment updated'); fetchDashboard(); }}
+          onSuccess={() => { showToast('Appointment updated'); fetchDashboard(); }}
         />
       )}
       {rebookTarget && (
@@ -267,11 +268,10 @@ const Home = () => {
           clientId={rebookTarget.clientId}
           supportWorkerId={rebookTarget.supportWorkerId}
           onClose={() => setRebookTarget(null)}
-          onSuccess={() => { setSnackMessage('Appointment booked'); fetchDashboard(); }}
+          onSuccess={() => { showToast('Appointment booked'); fetchDashboard(); }}
         />
       )}
       <DeleteDialog open={!!deleteTarget} onConfirm={handleDelete} onCancel={() => setDeleteTarget(null)} />
-      <Snackbar open={!!snackMessage} message={snackMessage} autoHideDuration={4000} onClose={() => setSnackMessage('')} />
     </>
   );
 
