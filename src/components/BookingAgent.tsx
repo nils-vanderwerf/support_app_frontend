@@ -78,7 +78,7 @@ const BookingAgent = ({ open, onClose, onBooked, isClient = true }: BookingAgent
           <Box>
             <Typography variant="h6">AI Booking Assistant</Typography>
             <Typography variant="caption" sx={{ opacity: 0.85 }}>
-              Describe what you need and I'll find the right support worker
+              {isClient ? "Describe what you need and I'll find the right support worker" : "Tell me what kind of client you're looking for and I'll find the right match"}
             </Typography>
           </Box>
           <IconButton onClick={onClose} sx={{ color: 'white', mt: -0.5, mr: -1 }}>
