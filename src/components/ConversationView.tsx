@@ -333,13 +333,11 @@ const ConversationView = () => {
 
       {/* Input */}
       <Paper sx={{ p: 1.5, borderRadius: 3, display: 'flex', gap: 1, alignItems: 'flex-end' }}>
-        {client && (
-          <Button size="small" variant="outlined" startIcon={fetchingSuggestion ? <CircularProgress size={14} sx={{ color: '#7B2FBE' }} /> : <CalendarMonth />} onClick={openInviteForm}
-            disabled={fetchingSuggestion}
-            sx={{ borderColor: '#7B2FBE', color: '#7B2FBE', flexShrink: 0, mb: 0.25 }}>
-            Send Invitation
-          </Button>
-        )}
+        <Button size="small" variant="outlined" startIcon={fetchingSuggestion ? <CircularProgress size={14} sx={{ color: '#7B2FBE' }} /> : <CalendarMonth />} onClick={openInviteForm}
+          disabled={fetchingSuggestion}
+          sx={{ borderColor: '#7B2FBE', color: '#7B2FBE', flexShrink: 0, mb: 0.25 }}>
+          Send Invitation
+        </Button>
         <TextField
           fullWidth size="small" placeholder="Type a message…"
           value={input} onChange={e => setInput(e.target.value)}
