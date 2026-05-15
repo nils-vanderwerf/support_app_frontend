@@ -331,15 +331,20 @@ const ConversationView = () => {
         <div ref={bottomRef} />
       </Paper>
 
-      {/* Conversation starters for support workers on new conversations */}
-      {supportWorker && messages.length === 0 && (
+      {/* Conversation starters on new conversations */}
+      {messages.length === 0 && (supportWorker || client) && (
         <Box display="flex" flexWrap="wrap" gap={0.75} mb={1}>
-          {[
+          {(supportWorker ? [
             `Hey ${otherPerson.first_name}, I'm ${supportWorker.first_name} — what kind of support are you after?`,
             `Hi ${otherPerson.first_name}, what does your week usually look like?`,
             `Hey, what kinds of things do you need a hand with day to day?`,
             `Hi ${otherPerson.first_name} — what would make the biggest difference for you right now?`,
-          ].map(starter => (
+          ] : [
+            `Hi ${otherPerson.first_name}, I came across your profile and thought we might be a good match — happy to tell you more about what I need.`,
+            `Hey ${otherPerson.first_name}, I'm looking for some regular support — can we chat about what that might look like?`,
+            `Hi ${otherPerson.first_name}, saw your profile and wanted to reach out. What do you generally help people with?`,
+            `Hey, just wanted to say hi and see if we're a good fit before going into detail.`,
+          ]).map(starter => (
             <Chip
               key={starter}
               label={starter}
