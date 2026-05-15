@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
 import {
   Box, Typography, Paper, Grid, Chip, CircularProgress, Divider, Avatar,
   IconButton, Button, Dialog, DialogTitle, DialogContent, DialogActions,
@@ -229,6 +229,7 @@ const Home = () => {
 
   if (loading) return <Box display="flex" justifyContent="center" mt={10}><CircularProgress sx={{ color: '#7B2FBE' }} /></Box>;
 
+  if (user?.role === 'admin') return <Navigate to="/admin" replace />;
 
   const firstName = supportWorker?.first_name ?? client?.first_name ?? user?.first_name ?? user?.email ?? '';
 
