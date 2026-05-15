@@ -339,7 +339,7 @@ const ConversationView = () => {
           Send Invitation
         </Button>
         <TextField
-          fullWidth size="small" placeholder="Type a message…"
+          fullWidth size="small" placeholder={supportWorker && messages.length === 0 ? "Introduce yourself and ask what kind of support they're looking for…" : "Type a message…"}
           value={input} onChange={e => setInput(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
           multiline maxRows={3} disabled={sending || aiTyping}
