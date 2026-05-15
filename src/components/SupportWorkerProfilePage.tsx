@@ -86,22 +86,52 @@ const SupportWorkerProfilePage = () => {
               )}
               <Typography variant="body1" color="text.secondary" mb={1}>Support Worker</Typography>
               <Box display="flex" gap={1} flexWrap="wrap">
-                {worker.police_check_number && (
-                  <Chip
-                    icon={<VerifiedUser sx={{ fontSize: '16px !important' }} />}
-                    label="Police Check Verified"
-                    size="small"
-                    sx={{ bgcolor: '#e8f5e9', color: '#2e7d32', fontWeight: 600, '& .MuiChip-icon': { color: '#2e7d32' } }}
-                  />
-                )}
-                {worker.wwcc_number && (
-                  <Chip
-                    icon={<ChildCare sx={{ fontSize: '16px !important' }} />}
-                    label="Working with Children Verified"
-                    size="small"
-                    sx={{ bgcolor: '#e8f5e9', color: '#2e7d32', fontWeight: 600, '& .MuiChip-icon': { color: '#2e7d32' } }}
-                  />
-                )}
+                {worker.police_check_number && (() => {
+                  const expiry = worker.police_check_expiry ? new Date(worker.police_check_expiry) : null;
+                  const daysLeft = expiry ? Math.ceil((expiry.getTime() - Date.now()) / 86400000) : null;
+                  const expired = daysLeft !== null && daysLeft < 0;
+                  const expiringSoon = daysLeft !== null && daysLeft >= 0 && daysLeft <= 30;
+                  const label = expired
+                    ? `Police Check Expired`
+                    : expiringSoon
+                    ? `Police Check — Expires ${expiry!.toLocaleDateString('en-AU', { month: 'short', year: 'numeric' })}`
+                    : expiry
+                    ? `Police Check — Exp. ${expiry.toLocaleDateString('en-AU', { month: 'short', year: 'numeric' })}`
+                    : 'Police Check Verified';
+                  const color = expired ? '#c62828' : expiringSoon ? '#e65100' : '#2e7d32';
+                  const bg = expired ? '#ffebee' : expiringSoon ? '#fff3e0' : '#e8f5e9';
+                  return (
+                    <Chip
+                      icon={<VerifiedUser sx={{ fontSize: '16px !important' }} />}
+                      label={label}
+                      size="small"
+                      sx={{ bgcolor: bg, color, fontWeight: 600, '& .MuiChip-icon': { color } }}
+                    />
+                  );
+                })()}
+                {worker.wwcc_number && (() => {
+                  const expiry = worker.wwcc_expiry ? new Date(worker.wwcc_expiry) : null;
+                  const daysLeft = expiry ? Math.ceil((expiry.getTime() - Date.now()) / 86400000) : null;
+                  const expired = daysLeft !== null && daysLeft < 0;
+                  const expiringSoon = daysLeft !== null && daysLeft >= 0 && daysLeft <= 30;
+                  const label = expired
+                    ? `WWCC Expired`
+                    : expiringSoon
+                    ? `WWCC — Expires ${expiry!.toLocaleDateString('en-AU', { month: 'short', year: 'numeric' })}`
+                    : expiry
+                    ? `WWCC — Exp. ${expiry.toLocaleDateString('en-AU', { month: 'short', year: 'numeric' })}`
+                    : 'Working with Children Verified';
+                  const color = expired ? '#c62828' : expiringSoon ? '#e65100' : '#2e7d32';
+                  const bg = expired ? '#ffebee' : expiringSoon ? '#fff3e0' : '#e8f5e9';
+                  return (
+                    <Chip
+                      icon={<ChildCare sx={{ fontSize: '16px !important' }} />}
+                      label={label}
+                      size="small"
+                      sx={{ bgcolor: bg, color, fontWeight: 600, '& .MuiChip-icon': { color } }}
+                    />
+                  );
+                })()}
               </Box>
             </Box>
             <Box display="flex" gap={1} mt={{ xs: 0, sm: 1 }} flexWrap="wrap" justifyContent={{ xs: 'flex-start', sm: 'flex-end' }}>
