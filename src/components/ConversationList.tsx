@@ -36,7 +36,7 @@ const ConversationList = () => {
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
   const [starting, setStarting] = useState(false);
-  const { client, supportWorker } = useAuth();
+  const { client } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
