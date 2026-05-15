@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box, Typography, Paper, Avatar, Divider, CircularProgress,
-  TextField, InputAdornment,
+  TextField, InputAdornment, Badge,
 } from '@mui/material';
-import { Search, ChatBubbleOutline } from '@mui/icons-material';
+import { Search, ChatBubbleOutline, AdminPanelSettings } from '@mui/icons-material';
 import axiosInstance from '../api/axiosConfig';
 import { useAuth } from '../context/AuthContext';
 import { decryptMessage } from '../utils/encryption';
@@ -36,8 +36,20 @@ const ConversationList = () => {
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
   const [starting, setStarting] = useState(false);
-  const { client } = useAuth();
+  const [adminUnread, setAdminUnread] = useState(0);
+  const { client, supportWorker } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (supportWorker) {
+      axiosInstance.get('/admin_messages').then(res => {
+        const unread = res.data.filter((m: { sender: string; read_at: string | null }) =>
+          m.sender === 'admin' && !m.read_at
+        ).length;
+        setAdminUnread(unread);
+      }).catch(() => {});
+    }
+  }, [supportWorker]);
 
   useEffect(() => {
     axiosInstance.get('/conversations')
@@ -177,6 +189,28 @@ const ConversationList = () => {
           </Paper>
         )}
       </Box>
+
+      {/* Suppova Support thread — pinned at top for support workers */}
+      {supportWorker && (
+        <Paper sx={{ borderRadius: 3, overflow: 'hidden', mb: 2 }}>
+          <Box
+            sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 2, cursor: 'pointer', '&:hover': { bgcolor: '#f3e8ff' } }}
+            onClick={() => navigate('/messages/admin')}
+          >
+            <Badge badgeContent={adminUnread} color="error" overlap="circular">
+              <Avatar sx={{ bgcolor: '#7B2FBE', width: 48, height: 48 }}>
+                <AdminPanelSettings />
+              </Avatar>
+            </Badge>
+            <Box flex={1} minWidth={0}>
+              <Typography fontWeight={700}>Suppova Support</Typography>
+              <Typography variant="body2" color="text.secondary" noWrap>
+                Application updates and messages from the team
+              </Typography>
+            </Box>
+          </Box>
+        </Paper>
+      )}
 
       {conversations.length === 0 ? (
         <Typography color="text.secondary" fontStyle="italic">

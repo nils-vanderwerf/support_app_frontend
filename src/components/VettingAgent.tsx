@@ -4,7 +4,7 @@ import {
   Box, Typography, Paper, TextField, IconButton, CircularProgress,
   Alert, Button,
 } from '@mui/material';
-import { Send, CheckCircle, AdminPanelSettings } from '@mui/icons-material';
+import { Send, CheckCircle, AdminPanelSettings, HourglassTop } from '@mui/icons-material';
 import axiosInstance from '../api/axiosConfig';
 import { useAuth } from '../context/AuthContext';
 
@@ -12,6 +12,18 @@ interface Message {
   role: 'user' | 'assistant';
   content: string;
 }
+
+const countdownText = (reapplyAt: Date): string => {
+  const msLeft = reapplyAt.getTime() - Date.now();
+  if (msLeft <= 0) return '';
+  const hoursLeft = msLeft / 3600000;
+  if (hoursLeft < 24) {
+    const h = Math.ceil(hoursLeft);
+    return `${h} ${h === 1 ? 'hour' : 'hours'}`;
+  }
+  const d = Math.ceil(hoursLeft / 24);
+  return `${d} ${d === 1 ? 'day' : 'days'}`;
+};
 
 const VettingAgent = () => {
   const { supportWorker } = useAuth();
@@ -26,7 +38,17 @@ const VettingAgent = () => {
   const [loading, setLoading] = useState(false);
   const [complete, setComplete] = useState(false);
   const [recommendation, setRecommendation] = useState<string | null>(null);
+  const [waitingPeriod, setWaitingPeriod] = useState<{ reapplyAt: Date } | null>(null);
+  const [checkingStatus, setCheckingStatus] = useState(true);
   const bottomRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    axiosInstance.get('/vetting/status').then(res => {
+      if (res.data.waiting_period) {
+        setWaitingPeriod({ reapplyAt: new Date(res.data.reapply_at) });
+      }
+    }).catch(() => {}).finally(() => setCheckingStatus(false));
+  }, []);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -49,12 +71,75 @@ const VettingAgent = () => {
         setComplete(true);
         setRecommendation(data.recommendation);
       }
-    } catch {
-      setMessages([...next, { role: 'assistant', content: 'Sorry, something went wrong. Please try again.' }]);
+    } catch (err: any) {
+      if (err.response?.status === 403 && err.response?.data?.error === 'waiting_period') {
+        setWaitingPeriod({ reapplyAt: new Date(err.response.data.reapply_at) });
+      } else {
+        setMessages([...next, { role: 'assistant', content: 'Sorry, something went wrong. Please try again.' }]);
+      }
     } finally {
       setLoading(false);
     }
   };
+
+  if (checkingStatus) {
+    return (
+      <Box display="flex" justifyContent="center" mt={10}>
+        <CircularProgress sx={{ color: '#7B2FBE' }} />
+      </Box>
+    );
+  }
+
+  if (waitingPeriod) {
+    const timeLeft = countdownText(waitingPeriod.reapplyAt);
+    const canReapply = !timeLeft;
+    return (
+      <Box maxWidth={520} mx="auto" mt={8} px={2}>
+        <Paper sx={{ p: 4, borderRadius: 3, textAlign: 'center' }}>
+          <HourglassTop sx={{ fontSize: 56, color: canReapply ? '#7B2FBE' : '#e65100', mb: 2 }} />
+          <Typography variant="h6" fontWeight={700} mb={1}>
+            {canReapply ? 'Ready to Reapply' : 'Application Under Review Period'}
+          </Typography>
+          {canReapply ? (
+            <>
+              <Typography color="text.secondary" mb={3}>
+                The waiting period has ended. You can now reapply.
+              </Typography>
+              <Button
+                variant="contained"
+                onClick={() => setWaitingPeriod(null)}
+                sx={{ bgcolor: '#7B2FBE', '&:hover': { bgcolor: '#6a27a3' } }}
+              >
+                Start Vetting
+              </Button>
+            </>
+          ) : (
+            <>
+              <Typography color="text.secondary" mb={1}>
+                Your previous application was not approved. You can reapply in:
+              </Typography>
+              <Typography variant="h4" fontWeight={700} color="#e65100" mb={2}>
+                {timeLeft}
+              </Typography>
+              <Typography variant="body2" color="text.secondary" mb={3}>
+                In the meantime, you can message the Suppova team if you have questions.
+              </Typography>
+              <Button
+                variant="outlined"
+                onClick={() => navigate('/messages/admin')}
+                sx={{ borderColor: '#7B2FBE', color: '#7B2FBE', mr: 1 }}
+              >
+                Message Suppova
+              </Button>
+              <Button variant="text" onClick={() => navigate('/')} sx={{ color: 'text.secondary' }}>
+                Go Home
+              </Button>
+            </>
+          )}
+        </Paper>
+      </Box>
+    );
+  }
 
   return (
     <Box maxWidth={680} mx="auto" mt={5} px={2} display="flex" flexDirection="column" height="calc(100vh - 140px)">
@@ -111,8 +196,15 @@ const VettingAgent = () => {
           </Typography>
           <Button
             variant="outlined"
+            onClick={() => navigate('/messages/admin')}
+            sx={{ borderColor: '#7B2FBE', color: '#7B2FBE', mr: 1 }}
+          >
+            Message Suppova
+          </Button>
+          <Button
+            variant="text"
             onClick={() => navigate('/')}
-            sx={{ borderColor: '#7B2FBE', color: '#7B2FBE' }}
+            sx={{ color: 'text.secondary' }}
           >
             Go to Dashboard
           </Button>

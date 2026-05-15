@@ -17,6 +17,7 @@ import SignUp from './components/SignUp';
 import Login from './components/Login';
 import VettingAgent from './components/VettingAgent';
 import AdminDashboard from './components/AdminDashboard';
+import SupportWorkerAdminThread from './components/SupportWorkerAdminThread';
 import ForgotPassword from './components/ForgotPassword';
 import ResetPassword from './components/ResetPassword';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -45,7 +46,14 @@ const VettingRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, supportWorker, loading } = useAuth();
   if (loading) return null;
   if (!user) return <Navigate to="/login" replace />;
-  if (supportWorker?.status !== 'pending') return <Navigate to="/" replace />;
+  if (supportWorker?.status === 'approved') return <Navigate to="/" replace />;
+  return <>{children}</>;
+};
+
+const RequireSupportWorker = ({ children }: { children: React.ReactNode }) => {
+  const { user, supportWorker, loading } = useAuth();
+  if (loading) return null;
+  if (!user || !supportWorker) return <Navigate to="/login" replace />;
   return <>{children}</>;
 };
 
@@ -72,6 +80,7 @@ const App = () => {
             <Route path='/appointments' element={<SecureRoute><AppointmentList /></SecureRoute>} />
             <Route path='/invitations' element={<SecureRoute><InvitationsPage /></SecureRoute>} />
             <Route path='/messages' element={<SecureRoute><ConversationList /></SecureRoute>} />
+            <Route path='/messages/admin' element={<RequireSupportWorker><SupportWorkerAdminThread /></RequireSupportWorker>} />
             <Route path='/messages/:id' element={<SecureRoute><ConversationView /></SecureRoute>} />
             <Route path="/vetting" element={<VettingRoute><VettingAgent /></VettingRoute>} />
             <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
