@@ -331,6 +331,26 @@ const ConversationView = () => {
         <div ref={bottomRef} />
       </Paper>
 
+      {/* Conversation starters for support workers on new conversations */}
+      {supportWorker && messages.length === 0 && (
+        <Box display="flex" flexWrap="wrap" gap={0.75} mb={1}>
+          {[
+            `Hey ${otherPerson.first_name}, I'm ${supportWorker.first_name} — what kind of support are you after?`,
+            `Hi ${otherPerson.first_name}, what does your week usually look like?`,
+            `Hey, what kinds of things do you need a hand with day to day?`,
+            `Hi ${otherPerson.first_name} — what would make the biggest difference for you right now?`,
+          ].map(starter => (
+            <Chip
+              key={starter}
+              label={starter}
+              size="small"
+              onClick={() => setInput(starter)}
+              sx={{ cursor: 'pointer', bgcolor: '#f3e8ff', color: '#7B2FBE', '&:hover': { bgcolor: '#e8d5ff' }, height: 'auto', '& .MuiChip-label': { whiteSpace: 'normal', py: 0.5 } }}
+            />
+          ))}
+        </Box>
+      )}
+
       {/* Input */}
       <Paper sx={{ p: 1.5, borderRadius: 3, display: 'flex', gap: 1, alignItems: 'flex-end' }}>
         <Button size="small" variant="outlined" startIcon={fetchingSuggestion ? <CircularProgress size={14} sx={{ color: '#7B2FBE' }} /> : <CalendarMonth />} onClick={openInviteForm}
@@ -339,7 +359,7 @@ const ConversationView = () => {
           Send Invitation
         </Button>
         <TextField
-          fullWidth size="small" placeholder={supportWorker && messages.length === 0 ? "Introduce yourself and ask what kind of support they're looking for…" : "Type a message…"}
+          fullWidth size="small" placeholder="Type a message…"
           value={input} onChange={e => setInput(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
           multiline maxRows={3} disabled={sending || aiTyping}
