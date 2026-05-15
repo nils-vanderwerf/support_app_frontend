@@ -1,9 +1,10 @@
-import { render, screen, waitFor, act } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import ConversationView from './ConversationView';
 import axiosInstance from '../api/axiosConfig';
 import { useAuth } from '../context/AuthContext';
+import { ToastProvider } from '../context/ToastContext';
 
 jest.mock('../api/axiosConfig');
 jest.mock('../context/AuthContext');
@@ -26,13 +27,17 @@ const baseConversation = {
   appointments: [],
 };
 
+const emptyConversation = { ...baseConversation, messages: [] };
+
 const renderComponent = () =>
   render(
-    <MemoryRouter initialEntries={['/messages/1']}>
-      <Routes>
-        <Route path="/messages/:id" element={<ConversationView />} />
-      </Routes>
-    </MemoryRouter>
+    <ToastProvider>
+      <MemoryRouter initialEntries={['/messages/1']}>
+        <Routes>
+          <Route path="/messages/:id" element={<ConversationView />} />
+        </Routes>
+      </MemoryRouter>
+    </ToastProvider>
   );
 
 describe('ConversationView', () => {
@@ -40,7 +45,7 @@ describe('ConversationView', () => {
 
   describe('as a client', () => {
     beforeEach(() => {
-      mockedUseAuth.mockReturnValue({ client: { id: 1 }, supportWorker: null } as any);
+      mockedUseAuth.mockReturnValue({ client: { id: 1, first_name: 'Jane' }, supportWorker: null } as any);
       mockedAxios.get.mockResolvedValue({ data: [] });
     });
 
@@ -88,7 +93,6 @@ describe('ConversationView', () => {
       await waitFor(() => screen.getByText('Hello there!'));
       const input = screen.getByPlaceholderText(/Type a message/i);
       await userEvent.type(input, 'Hi!');
-      // Submit via Enter key since the send IconButton has no accessible name
       await userEvent.keyboard('{Enter}');
       await waitFor(() => expect(screen.getByText('Hello!')).toBeInTheDocument());
     });
@@ -103,10 +107,10 @@ describe('ConversationView', () => {
       await waitFor(() => expect(screen.getByText('Appointment Invitation')).toBeInTheDocument());
     });
 
-    it('shows "Waiting for response…" text for clients on pending invitation', async () => {
+    it('shows "Waiting for response…" text for clients on pending invitation initiated by client', async () => {
       const conv = {
         ...baseConversation,
-        appointments: [{ id: 5, date: '2026-06-01T10:00:00Z', duration: 60, location: 'Sydney', notes: '', status: 'pending' }],
+        appointments: [{ id: 5, date: '2026-06-01T10:00:00Z', duration: 60, location: 'Sydney', notes: '', status: 'pending', initiated_by: 'client' }],
       };
       mockedAxios.get.mockResolvedValueOnce({ data: conv });
       renderComponent();
@@ -122,11 +126,37 @@ describe('ConversationView', () => {
       await userEvent.click(screen.getByRole('button', { name: /Send Invitation/i }));
       await waitFor(() => expect(screen.getByTestId('booking-form')).toBeInTheDocument());
     });
+
+    describe('conversation starters (client)', () => {
+      it('shows client starter chips when there are no messages', async () => {
+        mockedAxios.get.mockResolvedValueOnce({ data: emptyConversation });
+        renderComponent();
+        await waitFor(() =>
+          expect(screen.getByText(/I came across your profile/i)).toBeInTheDocument()
+        );
+      });
+
+      it('does not show starter chips when messages exist', async () => {
+        mockedAxios.get.mockResolvedValueOnce({ data: baseConversation });
+        renderComponent();
+        await waitFor(() => screen.getByText('Hello there!'));
+        expect(screen.queryByText(/I came across your profile/i)).not.toBeInTheDocument();
+      });
+
+      it('clicking a client starter populates the input', async () => {
+        mockedAxios.get.mockResolvedValueOnce({ data: emptyConversation });
+        renderComponent();
+        await waitFor(() => screen.getByText(/I came across your profile/i));
+        await userEvent.click(screen.getByText(/I came across your profile/i));
+        const input = screen.getByPlaceholderText(/Type a message/i);
+        expect((input as HTMLTextAreaElement).value).toMatch(/I came across your profile/i);
+      });
+    });
   });
 
   describe('as a support worker', () => {
     beforeEach(() => {
-      mockedUseAuth.mockReturnValue({ client: null, supportWorker: { id: 2 } } as any);
+      mockedUseAuth.mockReturnValue({ client: null, supportWorker: { id: 2, first_name: 'Olivia' } } as any);
       mockedAxios.get.mockResolvedValue({ data: [] });
     });
 
@@ -136,10 +166,10 @@ describe('ConversationView', () => {
       await waitFor(() => expect(screen.getByText('Jane Doe')).toBeInTheDocument());
     });
 
-    it('shows Approve and Decline buttons for support workers on pending invitations', async () => {
+    it('shows Approve and Decline buttons for support workers on client-initiated pending invitations', async () => {
       const conv = {
         ...baseConversation,
-        appointments: [{ id: 5, date: '2026-06-01T10:00:00Z', duration: 60, location: 'Sydney', notes: '', status: 'pending' }],
+        appointments: [{ id: 5, date: '2026-06-01T10:00:00Z', duration: 60, location: 'Sydney', notes: '', status: 'pending', initiated_by: 'client' }],
       };
       mockedAxios.get.mockResolvedValueOnce({ data: conv });
       renderComponent();
@@ -152,12 +182,12 @@ describe('ConversationView', () => {
     it('removes invitation card after approval', async () => {
       const conv = {
         ...baseConversation,
-        appointments: [{ id: 5, date: '2026-06-01T10:00:00Z', duration: 60, location: 'Sydney', notes: '', status: 'pending' }],
+        appointments: [{ id: 5, date: '2026-06-01T10:00:00Z', duration: 60, location: 'Sydney', notes: '', status: 'pending', initiated_by: 'client' }],
       };
       mockedAxios.get
-        .mockResolvedValueOnce({ data: conv })      // fetchConversation
-        .mockResolvedValueOnce({ data: [] })         // /appointments (clash check)
-        .mockResolvedValueOnce({ data: { ...conv, appointments: [] } }); // re-fetch after approve
+        .mockResolvedValueOnce({ data: conv })
+        .mockResolvedValueOnce({ data: [] })
+        .mockResolvedValueOnce({ data: { ...conv, appointments: [] } });
       mockedAxios.patch.mockResolvedValueOnce({ data: {} });
       renderComponent();
       await waitFor(() => screen.getByRole('button', { name: /Approve/i }));
@@ -165,11 +195,45 @@ describe('ConversationView', () => {
       await waitFor(() => expect(screen.queryByText('Appointment Invitation')).not.toBeInTheDocument());
     });
 
-    it('hides "Send Invitation" button for support workers', async () => {
+    it('shows "Send Invitation" button for support workers', async () => {
       mockedAxios.get.mockResolvedValueOnce({ data: baseConversation });
       renderComponent();
       await waitFor(() => screen.getByText('Jane Doe'));
-      expect(screen.queryByRole('button', { name: /Send Invitation/i })).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Send Invitation/i })).toBeInTheDocument();
+    });
+
+    describe('conversation starters (support worker)', () => {
+      it('shows support worker starter chips when there are no messages', async () => {
+        mockedAxios.get.mockResolvedValueOnce({ data: emptyConversation });
+        renderComponent();
+        await waitFor(() =>
+          expect(screen.getByText(/what kind of support are you after/i)).toBeInTheDocument()
+        );
+      });
+
+      it('does not show starter chips when messages exist', async () => {
+        mockedAxios.get.mockResolvedValueOnce({ data: baseConversation });
+        renderComponent();
+        await waitFor(() => screen.getByText('Hello there!'));
+        expect(screen.queryByText(/what kind of support are you after/i)).not.toBeInTheDocument();
+      });
+
+      it('clicking a support worker starter populates the input', async () => {
+        mockedAxios.get.mockResolvedValueOnce({ data: emptyConversation });
+        renderComponent();
+        await waitFor(() => screen.getByText(/what kind of support are you after/i));
+        await userEvent.click(screen.getByText(/what kind of support are you after/i));
+        const input = screen.getByPlaceholderText(/Type a message/i);
+        expect((input as HTMLTextAreaElement).value).toMatch(/what kind of support are you after/i);
+      });
+
+      it('support worker starters mention the support worker name', async () => {
+        mockedAxios.get.mockResolvedValueOnce({ data: emptyConversation });
+        renderComponent();
+        await waitFor(() =>
+          expect(screen.getByText(/I'm Olivia/i)).toBeInTheDocument()
+        );
+      });
     });
 
     describe('Approve All', () => {
@@ -196,7 +260,7 @@ describe('ConversationView', () => {
         expect(screen.queryByRole('button', { name: /Approve All/i })).not.toBeInTheDocument();
       });
 
-      it('patches all pending appointments when "Approve All" is clicked', async () => {
+      it('calls bulk_approve with all appointment IDs when "Approve All" is clicked', async () => {
         const conv = { ...baseConversation, appointments: twoAppointments };
         mockedAxios.get
           .mockResolvedValueOnce({ data: conv })
@@ -207,9 +271,10 @@ describe('ConversationView', () => {
         await waitFor(() => screen.getByRole('button', { name: /Approve All/i }));
         await userEvent.click(screen.getByRole('button', { name: /Approve All/i }));
         await waitFor(() => {
-          expect(mockedAxios.patch).toHaveBeenCalledWith('/appointments/5/approve', { timezone: expect.any(String) });
-          expect(mockedAxios.patch).toHaveBeenCalledWith('/appointments/6/approve', { timezone: expect.any(String) });
-          expect(mockedAxios.patch).toHaveBeenCalledTimes(2);
+          expect(mockedAxios.patch).toHaveBeenCalledWith('/appointments/bulk_approve', {
+            appointment_ids: [5, 6],
+            timezone: expect.any(String),
+          });
         });
       });
 
