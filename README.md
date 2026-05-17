@@ -2,7 +2,7 @@
 
 A full-stack portfolio project inspired by [Mable](https://mable.com.au), a platform that connects people living with disability to independent support workers. This project is personally meaningful — built by someone with cerebral palsy who understands the value of accessible, well-designed support services.
 
-**Live app:** [https://kindredsupport.vercel.app](https://kindredsupport.vercel.app)
+**Live app:** [https://suppova.com](https://suppova.com)
 
 The backend Rails API lives in a separate repository: [support_app_backend](https://github.com/nils-vanderwerf/support_app_backend), deployed at [https://kindred-backend-8eu9.onrender.com](https://kindred-backend-8eu9.onrender.com).
 
@@ -12,7 +12,7 @@ The backend Rails API lives in a separate repository: [support_app_backend](http
 
 ### As a client
 
-1. Go to [https://kindredsupport.vercel.app](https://kindredsupport.vercel.app) and click **Sign Up**
+1. Go to [https://suppova.com](https://suppova.com) and click **Sign Up**
 2. Enter your name, email, and password, then select **Client**
 3. Fill in your profile details (age, location, health conditions, emergency contact)
 4. Once logged in, you land on your **Home dashboard** — upcoming appointments, health summary, and quick actions
