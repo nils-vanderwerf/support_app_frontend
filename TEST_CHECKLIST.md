@@ -1,4 +1,4 @@
-# Manual Test Checklist — Kindred
+# Manual Test Checklist — Suppova
 
 Test against the **live app** at https://kindredsupport.vercel.app
 or locally:
@@ -292,7 +292,7 @@ Test at mobile viewport (< 600px)
 
 ## 23 · Deployment Checks
 
-- [ ] https://kindredsupport.vercel.app loads (tab title = "Kindred")
+- [ ] https://kindredsupport.vercel.app loads (tab title = "Suppova")
 - [ ] Login works on live app (token-based auth, no cookie dependency)
 - [ ] Google Maps autocomplete works in location fields
 - [ ] Backend API at https://kindred-backend-8eu9.onrender.com responds (may take 50 s cold start)

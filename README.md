@@ -1,4 +1,4 @@
-# Kindred — Frontend
+# Suppova — Frontend
 
 A full-stack portfolio project inspired by [Mable](https://mable.com.au), a platform that connects people living with disability to independent support workers. This project is personally meaningful — built by someone with cerebral palsy who understands the value of accessible, well-designed support services.
 
