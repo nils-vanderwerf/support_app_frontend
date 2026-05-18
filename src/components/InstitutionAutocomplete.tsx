@@ -1,5 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Autocomplete, TextField, CircularProgress } from '@mui/material';
+import { useJsApiLoader } from '@react-google-maps/api';
+
+const MAPS_LIBRARIES: ('places')[] = ['places'];
 
 interface Props {
   value: string;
@@ -9,6 +12,10 @@ interface Props {
 }
 
 const InstitutionAutocomplete = ({ value, onChange, size, fullWidth = true }: Props) => {
+  const { isLoaded } = useJsApiLoader({
+    googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY!,
+    libraries: MAPS_LIBRARIES,
+  });
   const [inputValue, setInputValue] = useState(value);
   const [options, setOptions] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
@@ -18,7 +25,7 @@ const InstitutionAutocomplete = ({ value, onChange, size, fullWidth = true }: Pr
   useEffect(() => { setInputValue(value); }, [value]);
 
   const fetchSuggestions = useCallback(async (input: string) => {
-    if (!input || input.length < 2) { setOptions([]); return; }
+    if (!input || input.length < 2 || !isLoaded) { setOptions([]); return; }
     setLoading(true);
     try {
       if (!sessionTokenRef.current) {

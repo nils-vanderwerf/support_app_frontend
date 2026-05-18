@@ -142,7 +142,7 @@ const ReportsPage = () => {
     }).catch(() => {});
   };
 
-  const reportedIds = new Set(reports.map(r => r.appointment?.id));
+  const reportByApptId = new Map(reports.filter(r => r.appointment?.id).map(r => [r.appointment.id, r]));
 
   const pickerClients = Array.from(
     new Set(
@@ -297,28 +297,34 @@ const ReportsPage = () => {
                   ? `${appt.client.first_name} ${appt.client.last_name}`
                   : 'Unknown client';
                 const apptDate = new Date(appt.date).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
-                const hasReport = reportedIds.has(appt.id);
+                const existingReport = reportByApptId.get(appt.id);
                 return (
                   <Box key={appt.id}>
                     {i > 0 && <Divider />}
                     <ListItemButton
-                      onClick={() => { setPickerOpen(false); setReportTarget(appt); }}
-                      disabled={hasReport}
+                      onClick={() => {
+                        setPickerOpen(false);
+                        if (existingReport) {
+                          setEditTarget(existingReport);
+                        } else {
+                          setReportTarget(appt);
+                        }
+                      }}
                       sx={{ borderRadius: 1, py: 1.5 }}
                     >
                       <ListItemAvatar>
-                        <Avatar sx={{ bgcolor: hasReport ? 'grey.300' : '#ede7f6', color: '#7B2FBE' }}>
+                        <Avatar sx={{ bgcolor: '#ede7f6', color: '#7B2FBE' }}>
                           <AssignmentOutlined />
                         </Avatar>
                       </ListItemAvatar>
                       <ListItemText
                         primary={
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <Typography fontWeight={700} variant="body2" color={hasReport ? 'text.disabled' : '#7B2FBE'}>
+                            <Typography fontWeight={700} variant="body2" color="#7B2FBE">
                               {clientName}
                             </Typography>
-                            {hasReport && (
-                              <Chip label="Report submitted" size="small" sx={{ fontSize: 11, height: 20 }} />
+                            {existingReport && (
+                              <Chip label="Edit report" size="small" sx={{ fontSize: 11, height: 20, bgcolor: '#ede7f6', color: '#7B2FBE' }} />
                             )}
                           </Box>
                         }
