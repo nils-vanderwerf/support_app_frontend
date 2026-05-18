@@ -13,10 +13,18 @@ interface Appointment {
   client?: { first_name: string; last_name: string };
 }
 
+interface ExistingReport {
+  id: number;
+  activities: string;
+  observations: string;
+  follow_up_actions: string;
+}
+
 interface Props {
   appointment: Appointment;
   open: boolean;
   onClose: () => void;
+  existingReport?: ExistingReport;
 }
 
 interface ReportFields {
@@ -27,8 +35,12 @@ interface ReportFields {
 
 const EMPTY: ReportFields = { activities: '', observations: '', follow_up_actions: '' };
 
-const VisitReportDrawer = ({ appointment, open, onClose }: Props) => {
-  const [fields, setFields] = useState<ReportFields>(EMPTY);
+const VisitReportDrawer = ({ appointment, open, onClose, existingReport }: Props) => {
+  const [fields, setFields] = useState<ReportFields>(
+    existingReport
+      ? { activities: existingReport.activities, observations: existingReport.observations, follow_up_actions: existingReport.follow_up_actions }
+      : EMPTY
+  );
   const [drafting, setDrafting] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -68,12 +80,16 @@ const VisitReportDrawer = ({ appointment, open, onClose }: Props) => {
     setSaving(true);
     setError('');
     try {
-      await axiosInstance.post('/visit_reports', {
-        appointment_id: appointment.id,
-        client_id: appointment.client_id,
-        date: appointment.date,
-        ...fields,
-      });
+      if (existingReport) {
+        await axiosInstance.put(`/visit_reports/${existingReport.id}`, fields);
+      } else {
+        await axiosInstance.post('/visit_reports', {
+          appointment_id: appointment.id,
+          client_id: appointment.client_id,
+          date: appointment.date,
+          ...fields,
+        });
+      }
       setSaved(true);
     } catch {
       setError('Could not save report. Try again.');
@@ -83,7 +99,9 @@ const VisitReportDrawer = ({ appointment, open, onClose }: Props) => {
   };
 
   const handleClose = () => {
-    setFields(EMPTY);
+    setFields(existingReport
+      ? { activities: existingReport.activities, observations: existingReport.observations, follow_up_actions: existingReport.follow_up_actions }
+      : EMPTY);
     setSaved(false);
     setError('');
     onClose();
@@ -98,7 +116,7 @@ const VisitReportDrawer = ({ appointment, open, onClose }: Props) => {
     <Drawer anchor="right" open={open} onClose={handleClose} PaperProps={{ sx: { width: { xs: '100%', sm: 480 }, p: 3 } }}>
       <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
         <Box>
-          <Typography variant="h6" fontWeight={700}>Visit Report</Typography>
+          <Typography variant="h6" fontWeight={700}>{existingReport ? 'Edit Report' : 'Visit Report'}</Typography>
           <Typography variant="caption" color="text.secondary">{clientName} · {apptDate}</Typography>
         </Box>
         <IconButton onClick={handleClose}><Close /></IconButton>

@@ -5,7 +5,7 @@ import {
   Button, Dialog, DialogTitle, DialogContent, List, ListItemButton, ListItemText,
   ListItemAvatar, Avatar, Divider,
 } from '@mui/material';
-import { KeyboardArrowDown, KeyboardArrowUp, AddCircleOutline, AssignmentOutlined } from '@mui/icons-material';
+import { KeyboardArrowDown, KeyboardArrowUp, AddCircleOutline, AssignmentOutlined, EditOutlined } from '@mui/icons-material';
 import axiosInstance from '../api/axiosConfig';
 import VisitReportDrawer from './VisitReportDrawer';
 
@@ -35,7 +35,7 @@ interface PastAppointment {
   client?: { id: number; first_name: string; last_name: string };
 }
 
-const Row = ({ report }: { report: Report }) => {
+const Row = ({ report, onEdit }: { report: Report; onEdit: (r: Report) => void }) => {
   const [open, setOpen] = useState(false);
   const appt = report.appointment;
   const clientName = appt?.client
@@ -92,6 +92,17 @@ const Row = ({ report }: { report: Report }) => {
                   <Typography variant="body2">{value}</Typography>
                 </Box>
               ) : null)}
+              <Box>
+                <Button
+                  size="small"
+                  startIcon={<EditOutlined />}
+                  onClick={() => onEdit(report)}
+                  sx={{ color: '#7B2FBE', borderColor: '#7B2FBE', mt: 0.5 }}
+                  variant="outlined"
+                >
+                  Edit report
+                </Button>
+              </Box>
             </Box>
           </Collapse>
         </TableCell>
@@ -103,6 +114,8 @@ const Row = ({ report }: { report: Report }) => {
 const ReportsPage = () => {
   const [reports, setReports] = useState<Report[]>([]);
   const [clientFilter, setClientFilter] = useState('');
+
+  const [editTarget, setEditTarget] = useState<Report | null>(null);
 
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pastAppointments, setPastAppointments] = useState<PastAppointment[]>([]);
@@ -226,7 +239,7 @@ const ReportsPage = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {filtered.map(r => <Row key={r.id} report={r} />)}
+                {filtered.map(r => <Row key={r.id} report={r} onEdit={setEditTarget} />)}
               </TableBody>
             </Table>
           </TableContainer>
@@ -324,6 +337,15 @@ const ReportsPage = () => {
           appointment={reportTarget}
           open={!!reportTarget}
           onClose={() => { setReportTarget(null); loadReports(); }}
+        />
+      )}
+
+      {editTarget && (
+        <VisitReportDrawer
+          appointment={editTarget.appointment}
+          open={!!editTarget}
+          onClose={() => { setEditTarget(null); loadReports(); }}
+          existingReport={editTarget}
         />
       )}
     </Container>
