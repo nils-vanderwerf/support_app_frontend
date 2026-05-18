@@ -22,6 +22,7 @@ const ClientProfilePage = React.lazy(() => import('./components/ClientProfilePag
 const SignUp = React.lazy(() => import('./components/SignUp'));
 const VettingAgent = React.lazy(() => import('./components/VettingAgent'));
 const AdminDashboard = React.lazy(() => import('./components/AdminDashboard'));
+const AdminMessagesPage = React.lazy(() => import('./components/AdminMessagesPage'));
 const SupportWorkerAdminThread = React.lazy(() => import('./components/SupportWorkerAdminThread'));
 
 const PageLoader = () => (
@@ -87,6 +88,8 @@ const App = () => {
                 <Route path='/messages/:id' element={<SecureRoute><ConversationView /></SecureRoute>} />
                 <Route path="/vetting" element={<VettingRoute><VettingAgent /></VettingRoute>} />
                 <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+                <Route path="/admin/messages" element={<AdminRoute><AdminMessagesPage /></AdminRoute>} />
+                <Route path="/admin/messages/:workerId" element={<AdminRoute><AdminMessagesPage /></AdminRoute>} />
                 <Route path="/signup" element={<SignUp />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />

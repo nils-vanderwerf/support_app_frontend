@@ -16,6 +16,7 @@ const Navbar = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [invitationsBadge, setInvitationsBadge] = useState(0);
+  const [adminUnread, setAdminUnread] = useState(0);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   useEffect(() => {
@@ -32,6 +33,18 @@ const Navbar = () => {
     const interval = setInterval(fetchNotifications, 15000);
     return () => clearInterval(interval);
   }, [auth.client, auth.supportWorker]);
+
+  useEffect(() => {
+    if (auth.user?.role !== 'admin') return;
+    const fetchAdminNotifications = () => {
+      axiosInstance.get('/admin/stats')
+        .then(res => setAdminUnread(res.data.unread_messages ?? 0))
+        .catch(() => {});
+    };
+    fetchAdminNotifications();
+    const interval = setInterval(fetchAdminNotifications, 15000);
+    return () => clearInterval(interval);
+  }, [auth.user?.role]);
 
   const handleLogout = async () => {
     setDrawerOpen(false);
@@ -84,6 +97,17 @@ const Navbar = () => {
           <ListItem disablePadding>
             <ListItemButton component={Link} to="/admin" onClick={() => setDrawerOpen(false)}>
               <ListItemText primary="Admin" />
+            </ListItemButton>
+          </ListItem>
+        )}
+        {isAdmin && (
+          <ListItem disablePadding>
+            <ListItemButton component={Link} to="/admin/messages" onClick={() => { setDrawerOpen(false); setAdminUnread(0); }}>
+              <ListItemText primary={
+                adminUnread > 0
+                  ? <Badge badgeContent={adminUnread} color="error" max={9}>Messages</Badge>
+                  : 'Messages'
+              } />
             </ListItemButton>
           </ListItem>
         )}
@@ -156,6 +180,11 @@ const Navbar = () => {
           <>
             {auth.user && !isAdmin && <Button color="inherit" component={Link} to="/">Home</Button>}
             {isAdmin && <Button color="inherit" component={Link} to="/admin">Admin</Button>}
+            {isAdmin && (
+              <Button color="inherit" component={Link} to="/admin/messages" onClick={() => setAdminUnread(0)}>
+                <Badge badgeContent={adminUnread} color="error" max={9}>Messages</Badge>
+              </Button>
+            )}
             {navLinks.map(link => (
               <Button
                 key={link.to}
