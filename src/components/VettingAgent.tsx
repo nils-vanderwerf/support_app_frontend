@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { renderMarkdown } from '../utils/renderMarkdown';
 import { useNavigate } from 'react-router-dom';
 import {
   Box, Typography, Paper, TextField, IconButton, CircularProgress,
@@ -175,7 +176,7 @@ const VettingAgent = () => {
               bgcolor: msg.role === 'user' ? '#7B2FBE' : '#f3e8ff',
               color: msg.role === 'user' ? 'white' : 'text.primary',
             }}>
-              <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>{msg.content}</Typography>
+              <Typography variant="body2">{renderMarkdown(msg.content)}</Typography>
             </Box>
           </Box>
         ))}

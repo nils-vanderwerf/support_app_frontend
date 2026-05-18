@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { renderMarkdown } from '../utils/renderMarkdown';
 import {
   Drawer,
   Box,
@@ -99,8 +100,8 @@ const BookingAgent = ({ open, onClose, onBooked, isClient = true }: BookingAgent
                   borderRadius: msg.role === 'user' ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
                 }}
               >
-                <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
-                  {msg.content}
+                <Typography variant="body2">
+                  {renderMarkdown(msg.content)}
                 </Typography>
               </Paper>
             </Box>
