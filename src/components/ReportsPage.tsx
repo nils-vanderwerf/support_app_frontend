@@ -52,6 +52,22 @@ const Row = ({ report }: { report: Report }) => {
         <TableCell colSpan={5} sx={{ py: 0, bgcolor: '#faf8ff' }}>
           <Collapse in={open} timeout="auto" unmountOnExit>
             <Box sx={{ py: 2, px: 1, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+              {appt?.client && (
+                <Box sx={{ display: 'flex', gap: 3, pb: 1, borderBottom: '1px solid #ede7f6' }}>
+                  <Box>
+                    <Typography variant="caption" fontWeight={700} color="text.secondary" display="block" mb={0.25}>Client</Typography>
+                    <Typography variant="body2" fontWeight={700} color="#7B2FBE">{clientName}</Typography>
+                  </Box>
+                  {appt.client.date_of_birth && (
+                    <Box>
+                      <Typography variant="caption" fontWeight={700} color="text.secondary" display="block" mb={0.25}>Date of Birth</Typography>
+                      <Typography variant="body2">
+                        {new Date(appt.client.date_of_birth).toLocaleDateString([], { day: 'numeric', month: 'long', year: 'numeric' })}
+                      </Typography>
+                    </Box>
+                  )}
+                </Box>
+              )}
               {[
                 { label: 'Activities', value: report.activities },
                 { label: 'Observations', value: report.observations },
@@ -87,10 +103,10 @@ const ReportsPage = () => {
         .map(r => {
           const c = r.appointment.client;
           const name = `${c.first_name} ${c.last_name}`;
-          return [name, { name, dob: c.date_of_birth }] as [string, { name: string; dob?: string }];
+          return [name, name] as [string, string];
         })
     ).entries()
-  ).map(([, v]) => v).sort((a, b) => a.name.localeCompare(b.name));
+  ).map(([name]) => name).sort();
 
   const filtered = clientFilter
     ? reports.filter(r => {
@@ -125,17 +141,8 @@ const ReportsPage = () => {
           size="small"
         >
           <MenuItem value="">All clients</MenuItem>
-          {clients.map(({ name, dob }) => (
-            <MenuItem key={name} value={name}>
-              <Box>
-                <Typography fontWeight={700} variant="body2">{name}</Typography>
-                {dob && (
-                  <Typography variant="caption" color="text.secondary">
-                    DOB: {new Date(dob).toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' })}
-                  </Typography>
-                )}
-              </Box>
-            </MenuItem>
+          {clients.map(name => (
+            <MenuItem key={name} value={name}>{name}</MenuItem>
           ))}
         </TextField>
 
