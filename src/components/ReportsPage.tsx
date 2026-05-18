@@ -11,7 +11,7 @@ interface ReportAppointment {
   date: string;
   location: string;
   duration: number;
-  client: { id: number; first_name: string; last_name: string };
+  client: { id: number; first_name: string; last_name: string; date_of_birth?: string };
 }
 
 interface Report {
@@ -86,10 +86,11 @@ const ReportsPage = () => {
         .filter(r => r.appointment?.client)
         .map(r => {
           const c = r.appointment.client;
-          return [`${c.first_name} ${c.last_name}`, `${c.first_name} ${c.last_name}`];
+          const name = `${c.first_name} ${c.last_name}`;
+          return [name, { name, dob: c.date_of_birth }] as [string, { name: string; dob?: string }];
         })
     ).entries()
-  ).map(([name]) => name).sort();
+  ).map(([, v]) => v).sort((a, b) => a.name.localeCompare(b.name));
 
   const filtered = clientFilter
     ? reports.filter(r => {
@@ -124,8 +125,17 @@ const ReportsPage = () => {
           size="small"
         >
           <MenuItem value="">All clients</MenuItem>
-          {clients.map(name => (
-            <MenuItem key={name} value={name}>{name}</MenuItem>
+          {clients.map(({ name, dob }) => (
+            <MenuItem key={name} value={name}>
+              <Box>
+                <Typography fontWeight={700} variant="body2">{name}</Typography>
+                {dob && (
+                  <Typography variant="caption" color="text.secondary">
+                    DOB: {new Date(dob).toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' })}
+                  </Typography>
+                )}
+              </Box>
+            </MenuItem>
           ))}
         </TextField>
 
