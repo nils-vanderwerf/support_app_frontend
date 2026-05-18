@@ -107,6 +107,7 @@ const ReportsPage = () => {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pastAppointments, setPastAppointments] = useState<PastAppointment[]>([]);
   const [pickerClientFilter, setPickerClientFilter] = useState('');
+  const [pickerDateRange, setPickerDateRange] = useState('90');
   const [reportTarget, setReportTarget] = useState<PastAppointment | null>(null);
 
   const loadReports = () => {
@@ -122,6 +123,7 @@ const ReportsPage = () => {
       past.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
       setPastAppointments(past);
       setPickerClientFilter('');
+      setPickerDateRange('90');
       setPickerOpen(true);
     }).catch(() => {});
   };
@@ -136,12 +138,18 @@ const ReportsPage = () => {
     )
   ).sort();
 
-  const filteredPast = pickerClientFilter
-    ? pastAppointments.filter(a => {
-        const c = a.client;
-        return c && `${c.first_name} ${c.last_name}` === pickerClientFilter;
-      })
-    : pastAppointments;
+  const filteredPast = pastAppointments.filter(a => {
+    if (pickerClientFilter) {
+      const c = a.client;
+      if (!c || `${c.first_name} ${c.last_name}` !== pickerClientFilter) return false;
+    }
+    if (pickerDateRange !== 'all') {
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - Number(pickerDateRange));
+      if (new Date(a.date) < cutoff) return false;
+    }
+    return true;
+  });
 
   const clients = Array.from(
     new Set(
@@ -233,22 +241,36 @@ const ReportsPage = () => {
             Select a past appointment to write a report for.
           </Typography>
 
-          {pickerClients.length > 1 && (
+          <Box sx={{ display: 'flex', gap: 1.5, mb: 2, flexWrap: 'wrap' }}>
+            {pickerClients.length > 1 && (
+              <TextField
+                select
+                label="Client"
+                value={pickerClientFilter}
+                onChange={e => setPickerClientFilter(e.target.value)}
+                size="small"
+                sx={{ minWidth: 180 }}
+              >
+                <MenuItem value="">All clients</MenuItem>
+                {pickerClients.map(name => (
+                  <MenuItem key={name} value={name}>{name}</MenuItem>
+                ))}
+              </TextField>
+            )}
             <TextField
               select
-              label="Filter by client"
-              value={pickerClientFilter}
-              onChange={e => setPickerClientFilter(e.target.value)}
+              label="Date range"
+              value={pickerDateRange}
+              onChange={e => setPickerDateRange(e.target.value)}
               size="small"
-              fullWidth
-              sx={{ mb: 2 }}
+              sx={{ minWidth: 160 }}
             >
-              <MenuItem value="">All clients</MenuItem>
-              {pickerClients.map(name => (
-                <MenuItem key={name} value={name}>{name}</MenuItem>
-              ))}
+              <MenuItem value="30">Last 30 days</MenuItem>
+              <MenuItem value="90">Last 3 months</MenuItem>
+              <MenuItem value="180">Last 6 months</MenuItem>
+              <MenuItem value="all">All time</MenuItem>
             </TextField>
-          )}
+          </Box>
 
           {filteredPast.length === 0 ? (
             <Typography fontStyle="italic" color="text.secondary" py={2}>
