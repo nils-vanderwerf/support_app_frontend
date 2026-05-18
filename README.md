@@ -1,6 +1,6 @@
 # Suppova — Frontend
 
-A full-stack portfolio project inspired by [Mable](https://mable.com.au), a platform that connects people living with disability to independent support workers. This project is personally meaningful — built by someone with cerebral palsy who understands the value of accessible, well-designed support services.
+A full-stack portfolio project built by someone with cerebral palsy who is on the NDIS — and wanted a platform that actually works for people navigating disability support.
 
 **Live app:** [https://suppova.com](https://suppova.com)
 
@@ -16,7 +16,7 @@ The backend Rails API lives in a separate repository: [support_app_backend](http
 2. Enter your name, email, and password, then select **Client**
 3. Fill in your profile details (age, location, health conditions, emergency contact)
 4. Once logged in, you land on your **Home dashboard** — upcoming appointments, health summary, and quick actions
-5. Browse **Support Workers** — filter by name, specialization, availability, or location radius
+5. Browse **Support Workers** — filter by name, specialisation, availability, or location radius
 6. Click a worker's card to view their full profile, then **Book Appointment** or **Message** them
 7. Use **Book with AI** to describe what you need in natural language — the AI finds a suitable worker and proposes appointment times on your behalf
 8. Manage your bookings from the **Appointments** page — view status, cancel, or rebook
@@ -24,7 +24,7 @@ The backend Rails API lives in a separate repository: [support_app_backend](http
 ### As a support worker
 
 1. Sign up and select **Support Worker**
-2. Fill in your profile (bio, experience, availability, specializations)
+2. Fill in your profile (bio, experience, availability, specialisations)
 3. You'll be taken through the **AI Vetting** interview — the AI collects your police check number, Working With Children Check, and qualifications
 4. Once submitted, an admin reviews your application
 5. On approval, you land on your **Home dashboard** — today's schedule, weekly hours, upcoming appointments
@@ -116,7 +116,7 @@ The following seeded accounts are available to try the app without signing up:
 - On completion, worker status moves to `pending` and admin is notified
 
 ### Support worker profiles & list
-- Profile page with editable fields, multi-select availability selector, and specialization chips
+- Profile page with editable fields, multi-select availability selector, and specialisation chips
 - **Location filter** — geocodes the search address via Google Places API and filters workers by Haversine distance with an adjustable radius slider
 - **Availability day filter** — parses both JSON and free-form availability strings so legacy data still filters correctly
 
@@ -125,8 +125,8 @@ The following seeded accounts are available to try the app without signing up:
 - Pending applications tab with police check, WWCC, AI recommendation chips, and approve/reject buttons
 - Optimistic UI: approving a worker moves them instantly between lists without a reload
 - Appointments tab with status filter
-- Approved workers tab with avatar, email, location, and specializations
-- Messages tab — admin can view and reply to support worker threads
+- Approved workers tab with avatar, email, location, and specialisations
+- Messages page — admin can view and reply to support worker threads (linked from the navbar)
 
 ## Running locally
 

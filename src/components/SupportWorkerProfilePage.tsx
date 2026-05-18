@@ -217,11 +217,11 @@ const SupportWorkerProfilePage = () => {
             )}
           </Paper>
 
-          {worker.specializations && worker.specializations.length > 0 && (
+          {worker.specialisations && worker.specialisations.length > 0 && (
             <Paper sx={{ p: 3, borderRadius: 3, mt: 3 }}>
-              <Typography variant="h6" fontWeight={600} mb={2}>Specializations</Typography>
+              <Typography variant="h6" fontWeight={600} mb={2}>Specialisations</Typography>
               <Box display="flex" flexWrap="wrap" gap={1}>
-                {worker.specializations.map(s => (
+                {worker.specialisations.map(s => (
                   <Chip key={s.id} label={s.name} sx={{ bgcolor: '#7B2FBE', color: 'white' }} />
                 ))}
               </Box>

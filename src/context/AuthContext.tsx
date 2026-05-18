@@ -31,7 +31,7 @@ export interface Client {
   email: string;
 }
 
-export interface Specialization {
+export interface Specialisation {
   id: number;
   name: string;
 }
@@ -53,7 +53,7 @@ export interface SupportWorker {
   emergency_contact_first_name: string;
   emergency_contact_last_name: string;
   emergency_contact_phone: string;
-  specializations?: Specialization[];
+  specialisations?: Specialisation[];
   status?: string;
   police_check_number?: string | null;
   police_check_expiry?: string | null;
