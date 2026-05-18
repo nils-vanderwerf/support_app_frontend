@@ -5,6 +5,11 @@ import ReportsPage from './ReportsPage';
 import axiosInstance from '../api/axiosConfig';
 
 jest.mock('../api/axiosConfig');
+jest.mock('./VisitReportDrawer', () => ({
+  __esModule: true,
+  default: ({ open, existingReport }: { open: boolean; existingReport?: { id: number } }) =>
+    open ? <div data-testid="visit-report-drawer">{existingReport ? `edit-${existingReport.id}` : 'new'}</div> : null,
+}));
 const mockedAxios = axiosInstance as jest.Mocked<typeof axiosInstance>;
 
 const makeReport = (overrides: Record<string, any> = {}) => ({
@@ -91,6 +96,87 @@ describe('ReportsPage', () => {
     await userEvent.click(btn);
     await waitFor(() => {
       expect(screen.queryByText('Observations')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('New Report button', () => {
+    const pastAppointment = {
+      id: 20,
+      date: new Date(Date.now() - 7 * 86400000).toISOString(),
+      location: 'Bondi Health Centre',
+      duration: 60,
+      client_id: 1,
+      client: { id: 1, first_name: 'Elena', last_name: 'Martinez' },
+    };
+
+    it('renders the New Report button', async () => {
+      mockedAxios.get.mockResolvedValue({ data: [] });
+      renderPage();
+      await waitFor(() => screen.getByText(/No reports submitted yet/i));
+      expect(screen.getByRole('button', { name: /New Report/i })).toBeInTheDocument();
+    });
+
+    it('opens the appointment picker dialog on click', async () => {
+      mockedAxios.get
+        .mockResolvedValueOnce({ data: [] })          // visit_reports
+        .mockResolvedValueOnce({ data: [pastAppointment] }); // appointments
+      renderPage();
+      await waitFor(() => screen.getByText(/No reports submitted yet/i));
+      await userEvent.click(screen.getByRole('button', { name: /New Report/i }));
+      await waitFor(() => expect(screen.getByText(/Select a past appointment/i)).toBeInTheDocument());
+    });
+
+    it('lists past appointments in the picker', async () => {
+      mockedAxios.get
+        .mockResolvedValueOnce({ data: [] })
+        .mockResolvedValueOnce({ data: [pastAppointment] });
+      renderPage();
+      await waitFor(() => screen.getByText(/No reports submitted yet/i));
+      await userEvent.click(screen.getByRole('button', { name: /New Report/i }));
+      await waitFor(() => expect(screen.getByText('Elena Martinez')).toBeInTheDocument());
+      expect(screen.getByText(/Bondi Health Centre/i)).toBeInTheDocument();
+    });
+
+    it('disables picker rows that already have a report', async () => {
+      const reportWithAppt = makeReport({ appointment: { ...makeReport().appointment, id: 20 } });
+      mockedAxios.get
+        .mockResolvedValueOnce({ data: [reportWithAppt] })
+        .mockResolvedValueOnce({ data: [pastAppointment] });
+      renderPage();
+      await waitFor(() => screen.getByText('Elena Martinez'));
+      await userEvent.click(screen.getByRole('button', { name: /New Report/i }));
+      await waitFor(() => screen.getByText(/Report submitted/i));
+    });
+
+    it('opens VisitReportDrawer after selecting an appointment', async () => {
+      mockedAxios.get
+        .mockResolvedValueOnce({ data: [] })
+        .mockResolvedValueOnce({ data: [pastAppointment] });
+      renderPage();
+      await waitFor(() => screen.getByText(/No reports submitted yet/i));
+      await userEvent.click(screen.getByRole('button', { name: /New Report/i }));
+      await waitFor(() => screen.getByText('Elena Martinez'));
+      await userEvent.click(screen.getByText('Elena Martinez'));
+      expect(screen.getByTestId('visit-report-drawer')).toHaveTextContent('new');
+    });
+  });
+
+  describe('edit report', () => {
+    it('shows Edit report button in expanded row', async () => {
+      mockedAxios.get.mockResolvedValue({ data: [makeReport()] });
+      renderPage();
+      await waitFor(() => screen.getByText('Elena Martinez'));
+      await userEvent.click(screen.getByRole('button', { name: '' }));
+      expect(screen.getByRole('button', { name: /Edit report/i })).toBeInTheDocument();
+    });
+
+    it('opens VisitReportDrawer in edit mode when Edit report is clicked', async () => {
+      mockedAxios.get.mockResolvedValue({ data: [makeReport()] });
+      renderPage();
+      await waitFor(() => screen.getByText('Elena Martinez'));
+      await userEvent.click(screen.getByRole('button', { name: '' }));
+      await userEvent.click(screen.getByRole('button', { name: /Edit report/i }));
+      expect(screen.getByTestId('visit-report-drawer')).toHaveTextContent('edit-1');
     });
   });
 

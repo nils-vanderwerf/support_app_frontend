@@ -96,3 +96,63 @@ it('does not render content when closed', () => {
   renderDrawer(false);
   expect(screen.queryByText('Activities')).not.toBeInTheDocument();
 });
+
+describe('edit mode (existingReport prop)', () => {
+  const existingReport = {
+    id: 99,
+    activities: 'Helped with physio exercises',
+    observations: 'Client was tired but cooperative',
+    follow_up_actions: 'Book follow-up in two weeks',
+  };
+
+  const renderEditDrawer = () =>
+    render(
+      <VisitReportDrawer
+        appointment={appointment}
+        open={true}
+        onClose={jest.fn()}
+        existingReport={existingReport}
+      />
+    );
+
+  it('shows "Edit Report" as the drawer title', () => {
+    renderEditDrawer();
+    expect(screen.getByText('Edit Report')).toBeInTheDocument();
+  });
+
+  it('pre-fills all three fields with the existing report values', () => {
+    renderEditDrawer();
+    expect(screen.getByLabelText('Activities')).toHaveValue('Helped with physio exercises');
+    expect(screen.getByLabelText('Observations')).toHaveValue('Client was tired but cooperative');
+    expect(screen.getByLabelText('Follow-up actions')).toHaveValue('Book follow-up in two weeks');
+  });
+
+  it('save button is enabled because fields are pre-filled', () => {
+    renderEditDrawer();
+    expect(screen.getByRole('button', { name: /Save Report/i })).toBeEnabled();
+  });
+
+  it('calls PUT /visit_reports/:id on save', async () => {
+    mockedAxios.put.mockResolvedValueOnce({ data: {} });
+    renderEditDrawer();
+    await userEvent.click(screen.getByRole('button', { name: /Save Report/i }));
+    await waitFor(() => expect(screen.getByText(/Report saved successfully/i)).toBeInTheDocument());
+    expect(mockedAxios.put).toHaveBeenCalledWith(
+      '/visit_reports/99',
+      expect.objectContaining({
+        activities: 'Helped with physio exercises',
+        observations: 'Client was tired but cooperative',
+        follow_up_actions: 'Book follow-up in two weeks',
+      }),
+    );
+    expect(mockedAxios.post).not.toHaveBeenCalled();
+  });
+
+  it('does not call POST when editing', async () => {
+    mockedAxios.put.mockResolvedValueOnce({ data: {} });
+    renderEditDrawer();
+    await userEvent.click(screen.getByRole('button', { name: /Save Report/i }));
+    await waitFor(() => screen.getByText(/Report saved successfully/i));
+    expect(mockedAxios.post).not.toHaveBeenCalled();
+  });
+});
