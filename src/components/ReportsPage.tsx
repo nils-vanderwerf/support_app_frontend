@@ -2,9 +2,12 @@ import { useState, useEffect } from 'react';
 import {
   Container, Box, Typography, Table, TableBody, TableCell, TableContainer,
   TableHead, TableRow, Paper, TextField, MenuItem, Chip, Collapse, IconButton,
+  Button, Dialog, DialogTitle, DialogContent, List, ListItemButton, ListItemText,
+  ListItemAvatar, Avatar, Divider,
 } from '@mui/material';
-import { KeyboardArrowDown, KeyboardArrowUp } from '@mui/icons-material';
+import { KeyboardArrowDown, KeyboardArrowUp, AddCircleOutline, AssignmentOutlined } from '@mui/icons-material';
 import axiosInstance from '../api/axiosConfig';
+import VisitReportDrawer from './VisitReportDrawer';
 
 interface ReportAppointment {
   id: number;
@@ -21,6 +24,15 @@ interface Report {
   observations: string;
   follow_up_actions: string;
   appointment: ReportAppointment;
+}
+
+interface PastAppointment {
+  id: number;
+  date: string;
+  location: string;
+  duration: number;
+  client_id: number;
+  client?: { id: number; first_name: string; last_name: string };
 }
 
 const Row = ({ report }: { report: Report }) => {
@@ -92,21 +104,52 @@ const ReportsPage = () => {
   const [reports, setReports] = useState<Report[]>([]);
   const [clientFilter, setClientFilter] = useState('');
 
-  useEffect(() => {
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [pastAppointments, setPastAppointments] = useState<PastAppointment[]>([]);
+  const [pickerClientFilter, setPickerClientFilter] = useState('');
+  const [reportTarget, setReportTarget] = useState<PastAppointment | null>(null);
+
+  const loadReports = () => {
     axiosInstance.get('/visit_reports').then(r => setReports(r.data)).catch(() => {});
-  }, []);
+  };
+
+  useEffect(() => { loadReports(); }, []);
+
+  const openPicker = () => {
+    axiosInstance.get('/appointments').then(r => {
+      const now = new Date();
+      const past = (r.data as PastAppointment[]).filter(a => new Date(a.date) < now);
+      past.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      setPastAppointments(past);
+      setPickerClientFilter('');
+      setPickerOpen(true);
+    }).catch(() => {});
+  };
+
+  const reportedIds = new Set(reports.map(r => r.appointment?.id));
+
+  const pickerClients = Array.from(
+    new Set(
+      pastAppointments
+        .filter(a => a.client)
+        .map(a => `${a.client!.first_name} ${a.client!.last_name}`)
+    )
+  ).sort();
+
+  const filteredPast = pickerClientFilter
+    ? pastAppointments.filter(a => {
+        const c = a.client;
+        return c && `${c.first_name} ${c.last_name}` === pickerClientFilter;
+      })
+    : pastAppointments;
 
   const clients = Array.from(
-    new Map(
+    new Set(
       reports
         .filter(r => r.appointment?.client)
-        .map(r => {
-          const c = r.appointment.client;
-          const name = `${c.first_name} ${c.last_name}`;
-          return [name, name] as [string, string];
-        })
-    ).entries()
-  ).map(([name]) => name).sort();
+        .map(r => `${r.appointment.client.first_name} ${r.appointment.client.last_name}`)
+    )
+  ).sort();
 
   const filtered = clientFilter
     ? reports.filter(r => {
@@ -125,11 +168,21 @@ const ReportsPage = () => {
               {reports.length} report{reports.length !== 1 ? 's' : ''} submitted
             </Typography>
           </Box>
-          <Chip
-            label={filtered.length}
-            size="small"
-            sx={{ bgcolor: '#ede7f6', color: '#7B2FBE', fontWeight: 700 }}
-          />
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Chip
+              label={filtered.length}
+              size="small"
+              sx={{ bgcolor: '#ede7f6', color: '#7B2FBE', fontWeight: 700 }}
+            />
+            <Button
+              variant="contained"
+              startIcon={<AddCircleOutline />}
+              onClick={openPicker}
+              sx={{ bgcolor: '#7B2FBE', '&:hover': { bgcolor: '#6a27a3' }, borderRadius: 2 }}
+            >
+              New Report
+            </Button>
+          </Box>
         </Box>
 
         <TextField
@@ -169,6 +222,86 @@ const ReportsPage = () => {
           </TableContainer>
         )}
       </Box>
+
+      {/* Appointment picker dialog */}
+      <Dialog open={pickerOpen} onClose={() => setPickerOpen(false)} fullWidth maxWidth="sm">
+        <DialogTitle sx={{ fontWeight: 700 }}>New Visit Report</DialogTitle>
+        <DialogContent sx={{ pt: 1 }}>
+          <Typography variant="body2" color="text.secondary" mb={2}>
+            Select a past appointment to write a report for.
+          </Typography>
+
+          {pickerClients.length > 1 && (
+            <TextField
+              select
+              label="Filter by client"
+              value={pickerClientFilter}
+              onChange={e => setPickerClientFilter(e.target.value)}
+              size="small"
+              fullWidth
+              sx={{ mb: 2 }}
+            >
+              <MenuItem value="">All clients</MenuItem>
+              {pickerClients.map(name => (
+                <MenuItem key={name} value={name}>{name}</MenuItem>
+              ))}
+            </TextField>
+          )}
+
+          {filteredPast.length === 0 ? (
+            <Typography fontStyle="italic" color="text.secondary" py={2}>
+              No past appointments found.
+            </Typography>
+          ) : (
+            <List disablePadding>
+              {filteredPast.map((appt, i) => {
+                const clientName = appt.client
+                  ? `${appt.client.first_name} ${appt.client.last_name}`
+                  : 'Unknown client';
+                const apptDate = new Date(appt.date).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
+                const hasReport = reportedIds.has(appt.id);
+                return (
+                  <Box key={appt.id}>
+                    {i > 0 && <Divider />}
+                    <ListItemButton
+                      onClick={() => { setPickerOpen(false); setReportTarget(appt); }}
+                      disabled={hasReport}
+                      sx={{ borderRadius: 1, py: 1.5 }}
+                    >
+                      <ListItemAvatar>
+                        <Avatar sx={{ bgcolor: hasReport ? 'grey.300' : '#ede7f6', color: '#7B2FBE' }}>
+                          <AssignmentOutlined />
+                        </Avatar>
+                      </ListItemAvatar>
+                      <ListItemText
+                        primary={
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Typography fontWeight={700} variant="body2" color={hasReport ? 'text.disabled' : '#7B2FBE'}>
+                              {clientName}
+                            </Typography>
+                            {hasReport && (
+                              <Chip label="Report submitted" size="small" sx={{ fontSize: 11, height: 20 }} />
+                            )}
+                          </Box>
+                        }
+                        secondary={`${apptDate} · ${appt.location || 'No location'} · ${appt.duration ?? '?'} min`}
+                      />
+                    </ListItemButton>
+                  </Box>
+                );
+              })}
+            </List>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {reportTarget && (
+        <VisitReportDrawer
+          appointment={reportTarget}
+          open={!!reportTarget}
+          onClose={() => { setReportTarget(null); loadReports(); }}
+        />
+      )}
     </Container>
   );
 };
