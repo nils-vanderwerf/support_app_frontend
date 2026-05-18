@@ -10,6 +10,7 @@ import AppointmentList from './components/AppointmentList';
 import ConversationList from './components/ConversationList';
 import ConversationView from './components/ConversationView';
 import InvitationsPage from './components/InvitationsPage';
+import ReportsPage from './components/ReportsPage';
 import SupportWorkerProfilePage from './components/SupportWorkerProfilePage';
 import ClientProfilePage from './components/ClientProfilePage';
 import Navbar from './components/Navbar';
@@ -79,6 +80,7 @@ const App = () => {
             <Route path='/support-workers/:id' element={<SecureRoute><SupportWorkerProfilePage /></SecureRoute>} />
             <Route path='/appointments' element={<SecureRoute><AppointmentList /></SecureRoute>} />
             <Route path='/invitations' element={<SecureRoute><InvitationsPage /></SecureRoute>} />
+            <Route path='/reports' element={<RequireSupportWorker><ReportsPage /></RequireSupportWorker>} />
             <Route path='/messages' element={<SecureRoute><ConversationList /></SecureRoute>} />
             <Route path='/messages/admin' element={<RequireSupportWorker><SupportWorkerAdminThread /></RequireSupportWorker>} />
             <Route path='/messages/:id' element={<SecureRoute><ConversationView /></SecureRoute>} />
