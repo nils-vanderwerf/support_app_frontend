@@ -1,13 +1,14 @@
 # Screenshot Checklist — Suppova LinkedIn Post
 
 Live app: https://suppova.com  
-Target: **12 slides** for a LinkedIn carousel PDF
+Target: **13 slides** for a LinkedIn carousel PDF
 
 ---
 
 ## Before You Start
 
 - [ ] Run `bundle exec rails db:seed` in Render shell (wipes old data, loads clean seed data)
+- [ ] Then run the extra data script below (Slide 13 needs multiple pending appointments)
 - [ ] Open app in **Chrome**, logged out, incognito window
 - [ ] Set browser zoom to **90%** so more content fits without scrolling
 - [ ] Hide bookmarks bar (`Cmd+Shift+B`)
@@ -198,6 +199,42 @@ Headline: *"Admin oversight — AI vetting recommendations for every applicant"*
 
 ---
 
+## Slide 13 — Approve All (Recurring Invitations)
+
+**Requires extra seed data — run this in the Render Rails console AFTER `db:seed`:**
+
+```ruby
+elena = Client.find_by!(first_name: 'Elena')
+olivia = SupportWorker.find_by!(first_name: 'Olivia')
+conv = Conversation.find_by!(client: elena, support_worker: olivia)
+
+[
+  { date: 3.weeks.from_now, notes: 'Weekly session — skills practice' },
+  { date: 4.weeks.from_now, notes: 'Weekly session — community access' },
+  { date: 5.weeks.from_now, notes: 'Weekly session — monthly review' },
+].each do |d|
+  Appointment.create!(
+    client: elena, support_worker: olivia,
+    date: d[:date], duration: 60,
+    location: 'Surry Hills Community Centre',
+    notes: d[:notes], status: 'pending',
+    conversation_id: conv.id, initiated_by: 'support_worker'
+  )
+end
+puts "Done — #{Appointment.where(status: 'pending', conversation_id: conv.id).count} pending in Elena/Olivia conv"
+```
+
+**Login as:** Elena (`elena.martinez@example.com`)  
+**URL:** `/messages` → open **Olivia Williams** thread
+
+- [ ] **Approve All (3)** purple button visible above the message window
+- [ ] 3 individual Appointment Invitation cards below it, each with Approve / Decline buttons
+- [ ] Message thread visible below the cards
+
+Headline: *"One tap to confirm recurring sessions — approve all at once"*
+
+---
+
 ## Bonus Shots (use if you have space)
 
 | Shot | Login | URL / Action |
@@ -227,7 +264,9 @@ Headline: *"Admin oversight — AI vetting recommendations for every applicant"*
 ## LinkedIn Post Copy
 
 ```
-I started this project in 2024, took a break, and shipped it properly in 8 weeks.
+I'm on the NDIS. I know this problem from the inside.
+
+So I built the platform I wished existed — and shipped it in 8 weeks.
 
 It's a full-stack NDIS support platform — clients find and book verified support workers, workers manage their schedule and document visits.
 
@@ -238,14 +277,18 @@ Under the hood:
 → AI-generated visit reports — draft, edit, and track from one page
 → Location-aware matching — workers push back if they're too far
 
+It's still a work in progress — no document uploads, no payment or rate handling, no review system yet. Happy to hear feedback from anyone who knows the space.
+
 Swipe to see it →
 
 Link in comments
 
+I'm based in Sydney and actively looking for a junior/mid software developer role. If you're hiring or know someone who is, I'd love to connect.
+
 Tech: Rails API · React · Claude AI · PostgreSQL
 Deployed: Render (API) · Vercel (frontend) · Resend (email) · suppova.com
 
-#buildinpublic #rails #react #ndis #ai #softwaredevelopment
+#buildinpublic #rails #react #ndis #ai #softwaredevelopment #disability #sydneyjobs #hiring
 ```
 
 *(Drop the live link in first comment — LinkedIn suppresses reach on posts with external URLs in the body, add both Github URLs too)*
