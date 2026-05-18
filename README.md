@@ -40,8 +40,10 @@ The following seeded accounts are available to try the app without signing up:
 |------|-------|----------|
 | Client | elena.martinez@example.com | password123 |
 | Client | raj.patel@example.com | password123 |
+| Client | sophie.chen@example.com | password123 |
 | Support Worker | olivia.williams@example.com | password123 |
 | Support Worker | james.smith@example.com | password123 |
+| Admin | admin@example.com | password123 |
 
 > **Note:** The backend runs on Render's free tier and may take up to 50 seconds to respond after a period of inactivity while the server wakes up.
 
@@ -56,9 +58,11 @@ The following seeded accounts are available to try the app without signing up:
 - Pending invitations page where support workers approve or decline bookings
 - Token-based auth stored in localStorage with protected routes that persist across page refresh
 - Role-aware and status-aware UI — pending workers are redirected to vetting; approved workers see their full dashboard
+- **AI conversation simulation** — every message thread is populated by a Claude persona built from real profile data; no real users needed to test the end-to-end flow
 - **AI Booking Assistant** — conversational agent that finds and connects users in natural language
 - **AI Vetting Agent** — guided interview that collects and validates support worker credentials
-- **Admin Dashboard** — stats bar, pending applications, appointment management, and approved workers list
+- **AI Visit Reports** — generates a structured draft from appointment context; workers edit and submit from the same page
+- **Admin Dashboard** — stats bar, pending applications with AI vetting recommendations, appointment management, and approved workers list
 - **Forgot password** — email-based reset flow via Resend
 
 ## Tech stack
@@ -102,7 +106,7 @@ The following seeded accounts are available to try the app without signing up:
 - Per-conversation keys derived via HKDF-SHA256 — cached in memory so repeated sends are fast
 - System messages (appointment confirmations/declines) rendered inline with a distinct style
 - Unread message badges in the navbar
-- AI chat simulation — support workers can trigger an AI-simulated client reply and vice versa, including proactive appointment invitation actions
+- AI conversation simulation — each participant in a thread is played by a Claude persona built from their real profile data (name, bio, location, specialisations, health conditions); workers can trigger a simulated client reply and vice versa, including proactive appointment invitation actions
 
 ### AI booking
 - Clients describe what they need in plain language
@@ -120,9 +124,15 @@ The following seeded accounts are available to try the app without signing up:
 - **Location filter** — geocodes the search address via Google Places API and filters workers by Haversine distance with an adjustable radius slider
 - **Availability day filter** — parses both JSON and free-form availability strings so legacy data still filters correctly
 
+### Visit reports
+- Support workers can create a visit report for any completed appointment
+- **AI draft generation** — one click populates Activities, Observations, and Follow-up Actions from appointment context
+- Expandable report rows with full detail panel; reports are editable after submission
+- Appointments that already have a report are disabled in the picker to prevent duplicates
+
 ### Admin dashboard
 - Stats bar: approved workers, pending review, total clients, appointments this week
-- Pending applications tab with police check, WWCC, AI recommendation chips, and approve/reject buttons
+- Pending applications tab with police check, WWCC, AI vetting recommendation chips, and approve/reject buttons
 - Optimistic UI: approving a worker moves them instantly between lists without a reload
 - Appointments tab with status filter
 - Approved workers tab with avatar, email, location, and specialisations

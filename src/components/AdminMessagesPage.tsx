@@ -32,22 +32,23 @@ const AdminMessagesPage = () => {
 
   useEffect(() => {
     axiosInstance.get('/admin/messages')
-      .then(r => {
-        setThreads(r.data);
-        if (!workerId && r.data.length > 0) {
-          navigate(`/admin/messages/${r.data[0].support_worker.id}`, { replace: true });
-        }
-      })
+      .then(r => setThreads(r.data))
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
 
+  useEffect(() => {
+    if (!loading && !workerId && threads.length > 0) {
+      navigate(`/admin/messages/${threads[0].support_worker.id}`, { replace: true });
+    }
+  }, [loading, workerId, threads, navigate]);
+
   const selectedThread = threads.find(t => String(t.support_worker.id) === workerId) ?? null;
 
   useEffect(() => {
-    if (!selectedThread) return;
+    if (!workerId) return;
     setThreads(prev => prev.map(t =>
-      t.support_worker.id === selectedThread.support_worker.id ? { ...t, unread_count: 0 } : t
+      String(t.support_worker.id) === workerId ? { ...t, unread_count: 0 } : t
     ));
   }, [workerId]);
 
