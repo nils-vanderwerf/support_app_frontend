@@ -56,7 +56,7 @@ const ConversationList = () => {
       .then(async res => {
         const convs: ConversationSummary[] = res.data;
         const decrypted = await Promise.all(
-          convs.map(async conv => {
+          convs.filter(conv => conv.messages.length > 0).map(async conv => {
             const last = conv.messages[conv.messages.length - 1];
             if (!last) return conv;
             let preview = await decryptMessage(last.content, conv.id);

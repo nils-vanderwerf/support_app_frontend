@@ -29,6 +29,14 @@ const renderComponent = () =>
     </MemoryRouter>
   );
 
+// Each render triggers two GET calls: /conversations then /support_workers (or /clients).
+// mockConversations mocks both in order so tests don't crash on the second call.
+const mockConversations = (conversations: ReturnType<typeof makeConversation>[]) => {
+  mockedAxios.get
+    .mockResolvedValueOnce({ data: conversations } as any)
+    .mockResolvedValueOnce({ data: [] } as any);
+};
+
 describe('ConversationList', () => {
   beforeEach(() => {
     mockedUseAuth.mockReturnValue({ client: mockClient, supportWorker: null } as any);
@@ -42,33 +50,32 @@ describe('ConversationList', () => {
   });
 
   it('shows empty state when there are no conversations', async () => {
-    mockedAxios.get.mockResolvedValueOnce({ data: [] });
+    mockConversations([]);
     renderComponent();
     await waitFor(() => expect(screen.getByText(/No conversations yet/i)).toBeInTheDocument());
   });
 
   it('renders a conversation with the other party name', async () => {
-    mockedAxios.get.mockResolvedValueOnce({ data: [makeConversation(1, 'Hello!')] });
+    mockConversations([makeConversation(1, 'Hello!')]);
     renderComponent();
     await waitFor(() => expect(screen.getByText('Olivia Williams')).toBeInTheDocument());
   });
 
   it('shows last message preview', async () => {
-    mockedAxios.get.mockResolvedValueOnce({ data: [makeConversation(1, 'See you tomorrow')] });
+    mockConversations([makeConversation(1, 'See you tomorrow')]);
     renderComponent();
     await waitFor(() => expect(screen.getByText('See you tomorrow')).toBeInTheDocument());
   });
 
-  it('shows "No messages yet" when conversation has no messages', async () => {
-    mockedAxios.get.mockResolvedValueOnce({ data: [makeConversation(1)] });
+  it('does not render empty conversations returned from the API', async () => {
+    mockConversations([makeConversation(1)]);
     renderComponent();
-    await waitFor(() => expect(screen.getByText(/No messages yet/i)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/No conversations yet/i)).toBeInTheDocument());
+    expect(screen.queryByText('Olivia Williams')).not.toBeInTheDocument();
   });
 
   it('renders multiple conversations', async () => {
-    mockedAxios.get.mockResolvedValueOnce({
-      data: [makeConversation(1, 'Hi'), makeConversation(2, 'Hey')],
-    });
+    mockConversations([makeConversation(1, 'Hi'), makeConversation(2, 'Hey')]);
     renderComponent();
     await waitFor(() => {
       // Both show same worker name (same mock data) — just check count
@@ -78,7 +85,10 @@ describe('ConversationList', () => {
 
   it('shows client name when user is a support worker', async () => {
     mockedUseAuth.mockReturnValue({ client: null, supportWorker: { id: 2 } } as any);
-    mockedAxios.get.mockResolvedValueOnce({ data: [makeConversation(1, 'Hello')] });
+    mockedAxios.get
+      .mockResolvedValueOnce({ data: [] } as any) // admin_messages
+      .mockResolvedValueOnce({ data: [makeConversation(1, 'Hello')] } as any) // conversations
+      .mockResolvedValueOnce({ data: [] } as any); // clients
     renderComponent();
     await waitFor(() => expect(screen.getByText('Jane Doe')).toBeInTheDocument());
   });
