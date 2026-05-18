@@ -47,7 +47,7 @@ const InstitutionAutocomplete = ({ value, onChange, size, fullWidth = true }: Pr
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [isLoaded]);
 
   const handleInputChange = (_: unknown, newInput: string, reason: string) => {
     setInputValue(newInput);

@@ -54,7 +54,7 @@ const LocationAutocomplete = ({ value, onChange, onCoordinates, label = 'Locatio
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [isLoaded]);
 
   const handleInputChange = (_: unknown, newInput: string, reason: string) => {
     setInputValue(newInput);
