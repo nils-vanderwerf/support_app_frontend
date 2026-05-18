@@ -4,7 +4,7 @@ A full-stack portfolio project inspired by [Mable](https://mable.com.au), a plat
 
 **Live app:** [https://suppova.com](https://suppova.com)
 
-The backend Rails API lives in a separate repository: [support_app_backend](https://github.com/nils-vanderwerf/support_app_backend), deployed at [https://kindred-backend-8eu9.onrender.com](https://kindred-backend-8eu9.onrender.com).
+The backend Rails API lives in a separate repository: [support_app_backend](https://github.com/nils-vanderwerf/support_app_backend), deployed at [https://api.suppova.com](https://api.suppova.com).
 
 ---
 
@@ -43,7 +43,7 @@ The following seeded accounts are available to try the app without signing up:
 | Support Worker | olivia.williams@example.com | password123 |
 | Support Worker | james.smith@example.com | password123 |
 
-> **Note:** The backend runs on Render's free tier and spins down after inactivity. The first request after a period of inactivity may take up to 50 seconds while the server wakes up.
+> **Note:** The backend runs on Render's free tier and may take up to 50 seconds to respond after a period of inactivity while the server wakes up.
 
 ---
 
@@ -54,35 +54,38 @@ The following seeded accounts are available to try the app without signing up:
 - Multi-step sign-up flow with role selection (client or support worker)
 - Messaging between clients and support workers with in-thread appointment invitations
 - Pending invitations page where support workers approve or decline bookings
-- Session-based auth with protected routes that persist across page refresh
+- Token-based auth stored in localStorage with protected routes that persist across page refresh
 - Role-aware and status-aware UI — pending workers are redirected to vetting; approved workers see their full dashboard
 - **AI Booking Assistant** — conversational agent that finds and connects users in natural language
 - **AI Vetting Agent** — guided interview that collects and validates support worker credentials
 - **Admin Dashboard** — stats bar, pending applications, appointment management, and approved workers list
+- **Forgot password** — email-based reset flow via Resend
 
 ## Tech stack
 
 **Frontend**
 - React with TypeScript
 - Material UI for components
-- Axios for API requests
+- Axios for API requests with Bearer token auth
 - React Router for navigation and protected routes
 - React Context + hooks for auth state management
 - Jest + React Testing Library for component tests
 
 **Backend** (separate repo)
 - Ruby on Rails API
-- SQLite (via Litestream)
-- Devise for authentication
+- PostgreSQL via Neon (persistent, serverless)
+- Token-based authentication (signed tokens via `Rails.application.message_verifier`)
 - Claude API (Anthropic) for AI agents
+- Resend for transactional email
 - Deployed on Render (Docker)
 
 ## Features
 
 ### Authentication & routing
-- Session-based login with persistent auth check on refresh
+- Token-based login — signed token returned on login/signup, stored in localStorage, sent as `Authorization: Bearer` header on every request
 - `SecureRoute` wrapper redirects unauthenticated users to `/login`, pending workers to `/vetting`, and serves role-appropriate content
 - Navbar adapts per role — admin link, worker-only links, and client-only links all conditionally rendered
+- Forgot password — email reset link sent via Resend, token validated on the backend
 
 ### Home dashboard
 - Client view: upcoming appointments, days since last visit, total appointments, health info summary, edit/delete actions
@@ -108,11 +111,12 @@ The following seeded accounts are available to try the app without signing up:
 - Supports bulk actions ("decline the rest for me")
 
 ### Support worker vetting
-- `VettingAgent` — step-by-step AI conversation that collects police check, WWCC, bio, specializations, and availability
-- On completion, the worker's status moves to `needs_review` and an admin is notified
+- `VettingAgent` — step-by-step AI conversation that collects police check number, WWCC number, and expiry dates
+- Validates reference numbers (minimum 6 characters, must contain a digit)
+- On completion, worker status moves to `pending` and admin is notified
 
 ### Support worker profiles & list
-- Profile page with editable fields, availability selector, and specialization chips
+- Profile page with editable fields, multi-select availability selector, and specialization chips
 - **Location filter** — geocodes the search address via Google Places API and filters workers by Haversine distance with an adjustable radius slider
 - **Availability day filter** — parses both JSON and free-form availability strings so legacy data still filters correctly
 
@@ -122,6 +126,7 @@ The following seeded accounts are available to try the app without signing up:
 - Optimistic UI: approving a worker moves them instantly between lists without a reload
 - Appointments tab with status filter
 - Approved workers tab with avatar, email, location, and specializations
+- Messages tab — admin can view and reply to support worker threads
 
 ## Running locally
 
