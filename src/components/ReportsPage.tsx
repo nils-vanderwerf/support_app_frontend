@@ -14,6 +14,7 @@ interface ReportAppointment {
   date: string;
   location: string;
   duration: number;
+  client_id: number;
   client: { id: number; first_name: string; last_name: string; date_of_birth?: string };
 }
 
