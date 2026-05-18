@@ -11,6 +11,14 @@ interface ChipSelectorProps {
 const ChipSelector = ({ label, options, value, onChange }: ChipSelectorProps) => {
   const [inputValue, setInputValue] = useState('');
 
+  const commitInput = (raw: string) => {
+    const trimmed = raw.replace(/,/g, '').trim();
+    if (trimmed && !value.includes(trimmed)) {
+      onChange([...value, trimmed]);
+    }
+    setInputValue('');
+  };
+
   return (
     <Autocomplete
       multiple
@@ -18,8 +26,14 @@ const ChipSelector = ({ label, options, value, onChange }: ChipSelectorProps) =>
       options={options}
       value={value}
       inputValue={inputValue}
-      open={inputValue.length > 0}
-      onInputChange={(_, newInputValue) => setInputValue(newInputValue)}
+      open={inputValue.replace(/,/g, '').trim().length > 0}
+      onInputChange={(_, newInputValue) => {
+        if (newInputValue.includes(',')) {
+          commitInput(newInputValue);
+        } else {
+          setInputValue(newInputValue);
+        }
+      }}
       onChange={(_, newValue) => onChange(newValue as string[])}
       renderTags={(tagValue, getTagProps) =>
         tagValue.map((option, index) => (
@@ -31,7 +45,11 @@ const ChipSelector = ({ label, options, value, onChange }: ChipSelectorProps) =>
         ))
       }
       renderInput={(params) => (
-        <TextField {...params} label={label} placeholder={`Search ${label.toLowerCase()}…`} />
+        <TextField
+          {...params}
+          label={label}
+          placeholder={value.length === 0 ? `Search or type, then press comma…` : undefined}
+        />
       )}
     />
   );
