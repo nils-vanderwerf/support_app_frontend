@@ -227,22 +227,25 @@ Headline: *"Admin oversight — AI vetting recommendations for every applicant"*
 ## LinkedIn Post Copy
 
 ```
-I built a full-stack NDIS support worker platform inspired by mable.com in [X] weeks.
+I started this project in 2024, took a break, and shipped it properly in 8 weeks.
 
-Here's what it does:
+It's a full-stack NDIS support platform — clients find and book verified support workers, workers manage their schedule and document visits.
 
-→ AI vetting agent checks credentials before workers go live
-→ Location-aware matching — workers decline if they're too far
-→ Encrypted messaging with an AI that adapts to the client's tone
-→ Booking agent — describe what you need, it handles the rest
+Under the hood:
+→ Encrypted messaging with AI personas that adapt to each person's communication style
+→ AI booking agent — describe what you need, it finds the right match
+→ AI vetting — credentials checked before workers go live
 → AI-generated visit reports — draft, edit, and track from one page
-→ Full appointment lifecycle — invite, approve, track, rebook
+→ Location-aware matching — workers push back if they're too far
 
 Swipe to see it →
 
-Tech: Rails API · React · Claude AI · PostgreSQL · Render · suppova.com
+Link in comments
+
+Tech: Rails API · React · Claude AI · PostgreSQL
+Deployed: Render (API) · Vercel (frontend) · Resend (email) · suppova.com
 
 #buildinpublic #rails #react #ndis #ai #softwaredevelopment
 ```
 
-*(Drop the live link in first comment — LinkedIn suppresses reach on posts with external URLs in the body)*
+*(Drop the live link in first comment — LinkedIn suppresses reach on posts with external URLs in the body, add both Github URLs too)*
