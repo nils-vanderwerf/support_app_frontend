@@ -199,6 +199,7 @@ const BookingForm = ({ clientId, supportWorkerId, onClose, onSuccess, appointmen
         </Box>
       </DialogTitle>
 
+      {error && <Alert severity="error" sx={{ mx: 3, mt: 1 }}>{error}</Alert>}
       <DialogContent>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           <TextField
@@ -375,7 +376,6 @@ const BookingForm = ({ clientId, supportWorkerId, onClose, onSuccess, appointmen
             Send Message
           </Button>
         )}
-        {error && <Alert severity="error" sx={{ mr: 'auto' }}>{error}</Alert>}
         <Button onClick={handleSubmit} autoFocus sx={{ ml: 'auto' }}>
           {isPending
             ? recurring ? `Send ${repeatCount} Invitations` : 'Send Invitation'
