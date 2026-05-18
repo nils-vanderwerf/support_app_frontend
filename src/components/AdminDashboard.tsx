@@ -268,36 +268,73 @@ const AdminDashboard = () => {
               <Typography color="text.secondary">No pending applications.</Typography>
             </Paper>
           ) : (
-            applications.map(app => (
-              <Paper key={app.id} sx={{ p: 3, borderRadius: 3, mb: 2 }}>
-                <Box display="flex" alignItems="flex-start" gap={2}>
-                  <Avatar sx={{ bgcolor: '#7B2FBE', width: 48, height: 48 }}>
-                    {app.first_name[0]}{app.last_name[0]}
-                  </Avatar>
-                  <Box flex={1}>
-                    <Box display="flex" alignItems="center" gap={1} mb={0.5} flexWrap="wrap">
-                      <Typography fontWeight={700}>{app.first_name} {app.last_name}</Typography>
-                      <Chip label="Pending" size="small" sx={{ bgcolor: '#f3e8ff', color: '#7B2FBE' }} />
-                      {app.agent_recommendation && (
-                        <Chip
-                          label={`Agent: ${app.agent_recommendation}`}
-                          size="small"
-                          sx={app.agent_recommendation === 'approved'
-                            ? { bgcolor: '#e8f5e9', color: '#2e7d32' }
-                            : { bgcolor: '#fff3e0', color: '#e65100' }}
-                        />
-                      )}
-                      {expiryWarningChip('Police Check', app.police_check_expiry)}
-                      {expiryWarningChip('WWCC', app.wwcc_expiry)}
+            applications.map(app => {
+              const rec = app.agent_recommendation ?? '';
+              const recApproved = /^approved/i.test(rec);
+              const recConditional = /^conditionally/i.test(rec);
+              const recStyle = recApproved
+                ? { bg: '#e8f5e9', color: '#2e7d32', border: '#c8e6c9' }
+                : recConditional
+                  ? { bg: '#fff8e1', color: '#f57f17', border: '#ffe082' }
+                  : { bg: '#fff3e0', color: '#e65100', border: '#ffcc80' };
+
+              return (
+                <Paper key={app.id} sx={{ borderRadius: 3, mb: 2, overflow: 'hidden' }}>
+                  {/* Header row */}
+                  <Box display="flex" alignItems="center" gap={2} px={3} pt={2.5} pb={1.5}>
+                    <Avatar sx={{ bgcolor: '#7B2FBE', width: 44, height: 44, flexShrink: 0 }}>
+                      {app.first_name[0]}{app.last_name[0]}
+                    </Avatar>
+                    <Box flex={1} minWidth={0}>
+                      <Box display="flex" alignItems="center" gap={1} flexWrap="wrap">
+                        <Typography fontWeight={700}>{app.first_name} {app.last_name}</Typography>
+                        <Chip label="Pending" size="small" sx={{ bgcolor: '#f3e8ff', color: '#7B2FBE' }} />
+                        {expiryWarningChip('Police Check', app.police_check_expiry)}
+                        {expiryWarningChip('WWCC', app.wwcc_expiry)}
+                      </Box>
+                      <Typography variant="body2" color="text.secondary" mt={0.25}>
+                        {app.user?.email} · {app.location}
+                      </Typography>
                     </Box>
-                    <Typography variant="body2" color="text.secondary">{app.user?.email} · {app.location}</Typography>
-                    {app.bio && <Typography variant="body2" mt={0.5}>{app.bio}</Typography>}
+                    <Box display="flex" flexDirection="column" gap={1} flexShrink={0}>
+                      <Button
+                        variant="contained" size="small" startIcon={<CheckCircle />}
+                        onClick={() => openApprove(app.id)}
+                        sx={{ bgcolor: '#7B2FBE', '&:hover': { bgcolor: '#6a27a3' }, minWidth: 110 }}
+                      >
+                        Approve
+                      </Button>
+                      <Button
+                        variant="outlined" size="small" startIcon={<Cancel />}
+                        onClick={() => openReject(app.id)}
+                        color="error"
+                        sx={{ minWidth: 110 }}
+                      >
+                        Reject
+                      </Button>
+                    </Box>
+                  </Box>
 
-                    <Divider sx={{ my: 1.5 }} />
+                  {/* Agent recommendation */}
+                  {rec && (
+                    <Box sx={{ mx: 3, mb: 1.5, px: 1.5, py: 1, borderRadius: 1.5, bgcolor: recStyle.bg, border: `1px solid ${recStyle.border}` }}>
+                      <Typography variant="body2" sx={{ color: recStyle.color, fontWeight: 500 }}>
+                        <strong>Agent:</strong> {rec}
+                      </Typography>
+                    </Box>
+                  )}
 
-                    <Box display="flex" gap={4} flexWrap="wrap">
+                  <Divider />
+
+                  {/* Bio + credentials */}
+                  <Box px={3} pt={1.5} pb={2.5}>
+                    {app.bio && (
+                      <Typography variant="body2" color="text.secondary" mb={1.5}>{app.bio}</Typography>
+                    )}
+
+                    <Box display="flex" gap={4} flexWrap="wrap" mb={1}>
                       <Box>
-                        <Typography variant="caption" color="text.secondary" fontWeight={600}>POLICE CHECK</Typography>
+                        <Typography variant="caption" color="text.secondary" fontWeight={700}>POLICE CHECK</Typography>
                         <Typography variant="body2">{app.police_check_number ?? <em>Not provided</em>}</Typography>
                         {app.police_check_expiry && (
                           <Typography variant="caption" color="text.secondary">
@@ -306,7 +343,7 @@ const AdminDashboard = () => {
                         )}
                       </Box>
                       <Box>
-                        <Typography variant="caption" color="text.secondary" fontWeight={600}>WWCC</Typography>
+                        <Typography variant="caption" color="text.secondary" fontWeight={700}>WWCC</Typography>
                         <Typography variant="body2">{app.wwcc_number ?? <em>Not provided</em>}</Typography>
                         {app.wwcc_expiry && (
                           <Typography variant="caption" color="text.secondary">
@@ -317,39 +354,22 @@ const AdminDashboard = () => {
                     </Box>
 
                     {app.check_notes && (
-                      <Typography variant="caption" color="text.secondary" display="block" mt={1}>
+                      <Typography variant="caption" color="text.secondary" display="block" mb={1}>
                         Notes: {app.check_notes}
                       </Typography>
                     )}
 
                     {app.specializations?.length > 0 && (
-                      <Box display="flex" gap={0.5} flexWrap="wrap" mt={1}>
+                      <Box display="flex" gap={0.5} flexWrap="wrap">
                         {app.specializations.map(s => (
                           <Chip key={s.id} label={s.name} size="small" variant="outlined" />
                         ))}
                       </Box>
                     )}
                   </Box>
-
-                  <Box display="flex" flexDirection="column" gap={1} flexShrink={0}>
-                    <Button
-                      variant="contained" size="small" startIcon={<CheckCircle />}
-                      onClick={() => openApprove(app.id)}
-                      sx={{ bgcolor: '#7B2FBE', '&:hover': { bgcolor: '#6a27a3' } }}
-                    >
-                      Approve
-                    </Button>
-                    <Button
-                      variant="outlined" size="small" startIcon={<Cancel />}
-                      onClick={() => openReject(app.id)}
-                      color="error"
-                    >
-                      Reject
-                    </Button>
-                  </Box>
-                </Box>
-              </Paper>
-            ))
+                </Paper>
+              );
+            })
           )}
         </>
       )}
