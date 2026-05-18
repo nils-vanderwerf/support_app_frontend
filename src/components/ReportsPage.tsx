@@ -63,7 +63,7 @@ const Row = ({ report, onEdit }: { report: Report; onEdit: (r: Report) => void }
       <TableRow>
         <TableCell colSpan={5} sx={{ py: 0, bgcolor: '#faf8ff' }}>
           <Collapse in={open} timeout="auto" unmountOnExit>
-            <Box sx={{ py: 2, px: 1, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+            <Box sx={{ pt: 2, pb: 3, px: 1, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
               {appt?.client && (
                 <Box sx={{ display: 'flex', gap: 3, pb: 1, borderBottom: '1px solid #ede7f6' }}>
                   <Box>
