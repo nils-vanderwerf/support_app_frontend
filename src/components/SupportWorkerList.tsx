@@ -344,7 +344,7 @@ const SupportWorkerList = () => {
                 <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>Specializations</TableCell>
                 <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>Experience</TableCell>
                 <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>Qualifications</TableCell>
-                <TableCell sx={{ display: { xs: 'none', lg: 'table-cell' } }}>Phone</TableCell>
+                <TableCell sx={{ display: { xs: 'none', lg: 'table-cell' }, minWidth: 130 }}>Phone</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -384,7 +384,7 @@ const SupportWorkerList = () => {
                     <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
                       {worker.qualification != null ? `${worker.qualification}` : '-'} {worker.field_of_study != null ? `in ${worker.field_of_study}` : ''}
                     </TableCell>
-                    <TableCell sx={{ display: { xs: 'none', lg: 'table-cell' } }}>{worker.phone}</TableCell>
+                    <TableCell sx={{ display: { xs: 'none', lg: 'table-cell' }, minWidth: 130, whiteSpace: 'nowrap' }}>{worker.phone}</TableCell>
                   </TableRow>
                 ))
               )}
