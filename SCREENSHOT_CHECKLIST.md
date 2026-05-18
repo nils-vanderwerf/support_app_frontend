@@ -274,8 +274,10 @@ Under the hood:
 → Encrypted messaging with AI personas that adapt to each person's communication style
 → AI booking agent — describe what you need, it finds the right match
 → AI vetting — credentials checked before workers go live
-→ AI-generated visit reports — draft, edit, and track from one page
-→ Location-aware matching — workers push back if they're too far
+→ AI-generated visit reports - draft, edit, and track from one page
+→ Location-aware matching - workers push back if they're too far
+
+The conversations in the demo are AI-to-AI — each person in a chat is a Claude persona built from real profile data. No real users needed to populate it.
 
 It's still a work in progress — no document uploads, no payment or rate handling, no review system yet. Happy to hear feedback from anyone who knows the space.
 
