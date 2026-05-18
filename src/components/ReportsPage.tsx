@@ -161,43 +161,45 @@ const ReportsPage = () => {
   return (
     <Container>
       <Box mt={5}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
           <Box>
             <Typography variant="h4" fontWeight={700}>Visit Reports</Typography>
             <Typography variant="body2" color="text.secondary" mt={0.5}>
               {reports.length} report{reports.length !== 1 ? 's' : ''} submitted
             </Typography>
           </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Button
+            variant="contained"
+            startIcon={<AddCircleOutline />}
+            onClick={openPicker}
+            sx={{ bgcolor: '#7B2FBE', '&:hover': { bgcolor: '#6a27a3' }, borderRadius: 2, mt: 0.5 }}
+          >
+            New Report
+          </Button>
+        </Box>
+
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+          <TextField
+            select
+            label="Filter by client"
+            value={clientFilter}
+            onChange={e => setClientFilter(e.target.value)}
+            sx={{ minWidth: 220 }}
+            size="small"
+          >
+            <MenuItem value="">All clients</MenuItem>
+            {clients.map(name => (
+              <MenuItem key={name} value={name}>{name}</MenuItem>
+            ))}
+          </TextField>
+          {clientFilter && (
             <Chip
-              label={filtered.length}
+              label={`${filtered.length} result${filtered.length !== 1 ? 's' : ''}`}
               size="small"
               sx={{ bgcolor: '#ede7f6', color: '#7B2FBE', fontWeight: 700 }}
             />
-            <Button
-              variant="contained"
-              startIcon={<AddCircleOutline />}
-              onClick={openPicker}
-              sx={{ bgcolor: '#7B2FBE', '&:hover': { bgcolor: '#6a27a3' }, borderRadius: 2 }}
-            >
-              New Report
-            </Button>
-          </Box>
+          )}
         </Box>
-
-        <TextField
-          select
-          label="Filter by client"
-          value={clientFilter}
-          onChange={e => setClientFilter(e.target.value)}
-          sx={{ mb: 3, minWidth: 220 }}
-          size="small"
-        >
-          <MenuItem value="">All clients</MenuItem>
-          {clients.map(name => (
-            <MenuItem key={name} value={name}>{name}</MenuItem>
-          ))}
-        </TextField>
 
         {filtered.length === 0 ? (
           <Typography fontStyle="italic" color="text.secondary">
