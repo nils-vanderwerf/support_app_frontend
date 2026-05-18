@@ -23,7 +23,7 @@ interface Application {
   wwcc_expiry: string | null;
   check_notes: string | null;
   agent_recommendation: string | null;
-  specializations: { id: number; name: string }[];
+  specialisations: { id: number; name: string }[];
   user: { email: string };
 }
 
@@ -33,7 +33,7 @@ interface Worker {
   last_name: string;
   location: string;
   bio: string;
-  specializations: { id: number; name: string }[];
+  specialisations: { id: number; name: string }[];
   user: { email: string };
 }
 
@@ -265,9 +265,9 @@ const AdminDashboard = () => {
                       </Typography>
                     )}
 
-                    {app.specializations?.length > 0 && (
+                    {app.specialisations?.length > 0 && (
                       <Box display="flex" gap={0.5} flexWrap="wrap">
-                        {app.specializations.map(s => (
+                        {app.specialisations.map(s => (
                           <Chip key={s.id} label={s.name} size="small" variant="outlined" />
                         ))}
                       </Box>
@@ -360,7 +360,7 @@ const AdminDashboard = () => {
                     <TableCell sx={{ fontWeight: 600 }}>Name</TableCell>
                     <TableCell sx={{ fontWeight: 600 }}>Email</TableCell>
                     <TableCell sx={{ fontWeight: 600 }}>Location</TableCell>
-                    <TableCell sx={{ fontWeight: 600 }}>Specializations</TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>Specialisations</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -378,8 +378,8 @@ const AdminDashboard = () => {
                       <TableCell>{w.location || '—'}</TableCell>
                       <TableCell>
                         <Box display="flex" gap={0.5} flexWrap="wrap">
-                          {w.specializations?.length > 0
-                            ? w.specializations.map(s => <Chip key={s.id} label={s.name} size="small" variant="outlined" />)
+                          {w.specialisations?.length > 0
+                            ? w.specialisations.map(s => <Chip key={s.id} label={s.name} size="small" variant="outlined" />)
                             : <Typography variant="caption" color="text.secondary">None</Typography>
                           }
                         </Box>

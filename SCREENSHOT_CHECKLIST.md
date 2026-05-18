@@ -56,7 +56,7 @@ Text only slide — create in Figma.
 **URL:** `/support-workers/:id` → click **Olivia Williams**
 
 - [ ] **Police Check ✓** and **WWCC ✓** green chips visible
-- [ ] Specializations: Elderly Care, Disability Support, Healthcare Support
+- [ ] Specialisations: Elderly Care, Disability Support, Healthcare Support
 - [ ] Bio paragraph, 7 years experience
 - [ ] Message + Book Appointment buttons
 

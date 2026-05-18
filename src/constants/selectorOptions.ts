@@ -23,7 +23,7 @@ export const QUALIFICATIONS = [
   "Other",
 ];
 
-export const SPECIALIZATIONS = [
+export const SPECIALISATIONS = [
   'Personal Care', 'Meal Preparation', 'Medication Management',
   'Mobility Assistance', 'Community Access', 'Domestic Assistance',
   'Respite Care', 'Behaviour Support', 'Transport', 'Social Support',

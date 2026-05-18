@@ -7,7 +7,7 @@ import {
 } from '@mui/material';
 import { Search } from '@mui/icons-material';
 import axiosInstance from '../api/axiosConfig';
-import { SupportWorker as SupportWorkerType, Specialization } from '../context/AuthContext';
+import { SupportWorker as SupportWorkerType, Specialisation } from '../context/AuthContext';
 import { useAuth } from '../context/AuthContext';
 import BookingAgent from './BookingAgent';
 import { formatAvailability } from './AvailabilitySelector';
@@ -112,9 +112,9 @@ const SupportWorkerList = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchPos, workers]);
 
-  const allSpecs = useMemo<Specialization[]>(() => {
+  const allSpecs = useMemo<Specialisation[]>(() => {
     const map = new Map<number, string>();
-    workers.forEach(w => w.specializations?.forEach(s => map.set(s.id, s.name)));
+    workers.forEach(w => w.specialisations?.forEach(s => map.set(s.id, s.name)));
     return Array.from(map.entries()).map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name));
   }, [workers]);
 
@@ -123,7 +123,7 @@ const SupportWorkerList = () => {
       if (nameFilter && !`${w.first_name} ${w.last_name}`.toLowerCase().includes(nameFilter.toLowerCase())) return false;
 
       if (selectedSpecs.length > 0) {
-        const ids = w.specializations?.map(s => s.id) ?? [];
+        const ids = w.specialisations?.map(s => s.id) ?? [];
         if (!selectedSpecs.every(id => ids.includes(id))) return false;
       }
 
@@ -216,10 +216,10 @@ const SupportWorkerList = () => {
               </Box>
             )}
 
-            {/* Specializations */}
+            {/* Specialisations */}
             {allSpecs.length > 0 && (
               <Box>
-                <Typography variant="caption" color="text.secondary" mb={0.5} display="block">Specializations</Typography>
+                <Typography variant="caption" color="text.secondary" mb={0.5} display="block">Specialisations</Typography>
                 <Box display="flex" flexWrap="wrap" gap={0.75}>
                   {allSpecs.map(s => (
                     <Chip
@@ -265,8 +265,10 @@ const SupportWorkerList = () => {
                 <TableCell>Name</TableCell>
                 <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>Location</TableCell>
                 <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>Available Days</TableCell>
-                <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>Specializations</TableCell>
-                <TableCell sx={{ display: { xs: 'none', lg: 'table-cell' } }}>Phone</TableCell>
+                <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>Specialisations</TableCell>
+                <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>Experience</TableCell>
+                <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>Qualifications</TableCell>
+                <TableCell sx={{ display: { xs: 'none', lg: 'table-cell' }, minWidth: 130 }}>Phone</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -295,7 +297,7 @@ const SupportWorkerList = () => {
                     <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>{formatAvailability(worker.availability) || '—'}</TableCell>
                     <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
                       <Box display="flex" flexWrap="wrap" gap={0.5}>
-                        {worker.specializations?.map(s => (
+                        {worker.specialisations?.map(s => (
                           <Chip key={s.id} label={s.name} size="small" sx={{ bgcolor: '#f3e8ff', color: '#7B2FBE', fontSize: 11 }} />
                         )) || '—'}
                       </Box>

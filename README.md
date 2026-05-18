@@ -1,6 +1,6 @@
 # Suppova — Frontend
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A full-stack portfolio project built by someone with cerebral palsy who is on the NDIS — and wanted a platform that actually works for people navigating disability support.
 
 **Live app:** [https://suppova.com](https://suppova.com)
 
@@ -18,7 +18,7 @@ You may also see any lint errors in the console.
 2. Enter your name, email, and password, then select **Client**
 3. Fill in your profile details (age, location, health conditions, emergency contact)
 4. Once logged in, you land on your **Home dashboard** — upcoming appointments, health summary, and quick actions
-5. Browse **Support Workers** — filter by name, specialization, availability, or location radius
+5. Browse **Support Workers** — filter by name, specialisation, availability, or location radius
 6. Click a worker's card to view their full profile, then **Book Appointment** or **Message** them
 7. Use **Book with AI** to describe what you need in natural language — the AI finds a suitable worker and proposes appointment times on your behalf
 8. Manage your bookings from the **Appointments** page — view status, cancel, or rebook
@@ -26,7 +26,14 @@ You may also see any lint errors in the console.
 Launches the test runner in the interactive watch mode.\
 See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
 
-### `npm run build`
+1. Sign up and select **Support Worker**
+2. Fill in your profile (bio, experience, availability, specialisations)
+3. You'll be taken through the **AI Vetting** interview — the AI collects your police check number, Working With Children Check, and qualifications
+4. Once submitted, an admin reviews your application
+5. On approval, you land on your **Home dashboard** — today's schedule, weekly hours, upcoming appointments
+6. Browse **Clients**, view their profiles, and initiate conversations
+7. Respond to appointment invitations from your **Invitations** page — approve or decline bookings
+8. Chat with clients via **Messages** — the AI can simulate client responses so you can test the flow end to end
 
 ### Demo accounts
 
@@ -108,18 +115,9 @@ The following seeded accounts are available to try the app without signing up:
 See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
 
 ### Support worker profiles & list
-- Profile page with editable fields, availability selector, and specialization chips
-- Worker list formats availability from raw JSON into human-readable text (e.g. "Mon, Tue, Thu · Morning (06:00-12:00)")
-- `AvailabilitySelector` component with preset time windows and day toggles; `formatAvailability` exported for reuse
-- **Location filter** — geocodes the search address via Google Places API (New) using `AutocompleteSuggestion.fetchAutocompleteSuggestions` + `toPlace().fetchFields`, then filters workers by Haversine distance with an adjustable radius slider
-- **Availability day filter** — `parseAvail` parses both JSON (`{"days":["Mon","Tue"...]}`) and free-form strings ("Weekdays", "Mon/Wed/Fri") so legacy data still filters correctly
-- `LocationAutocomplete` component with session token management and an `onCoordinates` callback to avoid a redundant geocoding round-trip after the user selects a suggestion
-
-### Visit reports
-- Support workers can create a visit report for any completed appointment
-- **AI draft generation** — one click populates Activities, Observations, and Follow-up Actions from appointment context
-- Expandable report rows with full detail panel; reports are editable after submission
-- Appointments that already have a report are disabled in the picker to prevent duplicates
+- Profile page with editable fields, multi-select availability selector, and specialisation chips
+- **Location filter** — geocodes the search address via Google Places API and filters workers by Haversine distance with an adjustable radius slider
+- **Availability day filter** — parses both JSON and free-form availability strings so legacy data still filters correctly
 
 ### Admin dashboard
 - Stats bar: approved workers, pending review, total clients, appointments this week

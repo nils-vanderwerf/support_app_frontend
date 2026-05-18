@@ -78,11 +78,11 @@ const SupportWorker = ({ worker, handleClose, onSuccess}: SupportWorkerProps) =>
             <Typography variant="body1"><strong>Availability:</strong> {worker.availability}</Typography>
             <Typography variant="body1"><strong>Phone:</strong> {worker.phone}</Typography>
             <Typography variant="body1"><strong>Email:</strong> {worker.email}</Typography>
-            {worker.specializations && worker.specializations.length > 0 && (
+            {worker.specialisations && worker.specialisations.length > 0 && (
               <Box mt={1}>
-                <Typography variant="body1"><strong>Specializations:</strong></Typography>
+                <Typography variant="body1"><strong>Specialisations:</strong></Typography>
                 <Box display="flex" flexWrap="wrap" gap={0.5} mt={0.5}>
-                  {worker.specializations.map((s) => (
+                  {worker.specialisations.map((s) => (
                     <Chip key={s.id} label={s.name} size="small" sx={{ bgcolor: '#7B2FBE', color: 'white' }} />
                   ))}
                 </Box>

@@ -4,7 +4,9 @@ import { Box, Button, TextField, Typography, Alert, Card, Select, MenuItem, Form
 import ChipSelector from './ChipSelector';
 import AvailabilitySelector from './AvailabilitySelector';
 import LocationAutocomplete from './LocationAutocomplete';
-import { MEDICATIONS, ALLERGIES, SPECIALIZATIONS } from '../constants/selectorOptions';
+import DateOfBirthPicker from './DateOfBirthPicker';
+import InstitutionAutocomplete from './InstitutionAutocomplete';
+import { MEDICATIONS, ALLERGIES, SPECIALISATIONS, QUALIFICATIONS } from '../constants/selectorOptions';
 import { PersonPin, Work } from '@mui/icons-material';
 import axiosInstance from '../api/axiosConfig';
 import { useAuth } from '../context/AuthContext';
@@ -24,7 +26,7 @@ const SignUp = () => {
   });
   const [selectedMedications, setSelectedMedications] = useState<string[]>([]);
   const [selectedAllergies, setSelectedAllergies] = useState<string[]>([]);
-  const [selectedSpecializations, setSelectedSpecializations] = useState<string[]>([]);
+  const [selectedSpecialisations, setSelectedSpecialisations] = useState<string[]>([]);
 
   const [errors, setErrors] = useState<string[]>([]);
   const [success, setSuccess] = useState(false);
@@ -53,7 +55,7 @@ const SignUp = () => {
     event.preventDefault();
     const profilePayload = role === 'client'
       ? { date_of_birth: profileData.date_of_birth, gender: profileData.gender, phone: profileData.phone, location: profileData.location, bio: profileData.bio, health_conditions: profileData.health_conditions, medication: selectedMedications.join(', '), allergies: selectedAllergies.join(', '), emergency_contact_first_name: profileData.emergency_contact_first_name, emergency_contact_last_name: profileData.emergency_contact_last_name, emergency_contact_phone: profileData.emergency_contact_phone }
-      : { date_of_birth: profileData.date_of_birth, gender: profileData.gender, phone: profileData.phone, location: profileData.location, bio: profileData.bio, experience: profileData.experience, availability: profileData.availability, qualification: profileData.qualification || null, field_of_study: profileData.field_of_study || null, institution: profileData.institution || null, specializations: selectedSpecializations, emergency_contact_first_name: profileData.emergency_contact_first_name, emergency_contact_last_name: profileData.emergency_contact_last_name, emergency_contact_phone: profileData.emergency_contact_phone };
+      : { date_of_birth: profileData.date_of_birth, gender: profileData.gender, phone: profileData.phone, location: profileData.location, bio: profileData.bio, experience: profileData.experience, availability: profileData.availability, qualification: profileData.qualification || null, field_of_study: profileData.field_of_study || null, institution: profileData.institution || null, specialisations: selectedSpecialisations, emergency_contact_first_name: profileData.emergency_contact_first_name, emergency_contact_last_name: profileData.emergency_contact_last_name, emergency_contact_phone: profileData.emergency_contact_phone };
     try {
       await axiosInstance.post('/users', {
         user: { ...userFormData },
@@ -226,7 +228,7 @@ const SignUp = () => {
                 <TextField label="Bio" multiline rows={3} value={profileData.bio} onChange={(e) => setProfileData({ ...profileData, bio: e.target.value })} fullWidth />
                 <TextField label="Experience" multiline rows={3} value={profileData.experience} onChange={(e) => setProfileData({ ...profileData, experience: e.target.value })} fullWidth />
                 <AvailabilitySelector value={profileData.availability} onChange={(v) => setProfileData({ ...profileData, availability: v })} />
-                <ChipSelector label="Specializations" options={SPECIALIZATIONS} value={selectedSpecializations} onChange={setSelectedSpecializations} />
+                <ChipSelector label="Specialisations" options={SPECIALISATIONS} value={selectedSpecialisations} onChange={setSelectedSpecialisations} />
                 <Divider />
                 <Typography variant="caption" color="text.secondary" sx={{ mt: -1 }}>
                   Qualification (optional)
