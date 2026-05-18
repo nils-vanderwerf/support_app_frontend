@@ -28,36 +28,39 @@ npm start
 
 ## 1 · Auth
 
-- [ ] Visit `/` while logged out — redirects to `/login`
-- [ ] Submit wrong credentials — "Invalid email or password" alert appears
-- [ ] Login as **client** → lands on home dashboard
-- [ ] Login as **support worker** → lands on home dashboard
-- [ ] Login as **admin** → redirected straight to `/admin`
-- [ ] Refresh page — still logged in (token persists in localStorage)
-- [ ] Log out — token cleared, redirected to `/login`
-- [ ] Login redirects to originally requested page if there was one
+- [ Y ] Visit `/` while logged out — redirects to `/login`
+- [ Y ] Submit wrong credentials — "Invalid email or password" alert appears
+- [ Y ] Login as **client** → lands on home dashboard
+- [ Y ] Login as **support worker** → lands on home dashboard
+- [ Y ] Login as **admin** → redirected straight to `/admin`
+- [ Y ] Refresh page — still logged in (token persists in localStorage)
+- [ Y ] Log out — token cleared, redirected to `/login`
+- [ N ] Login redirects to originally requested page if there was one *(not yet implemented)*
 
 ---
 
 ## 2 · Sign Up
 
-- [ ] Click Sign Up → Step 1: enter name, email, password → Next
-- [ ] Step 2: choose role (Client / Support Worker)
-- [ ] Step 3 (client): fill in age, gender, phone, location, about, health conditions, medications, allergies, emergency contact → Sign Up
-- [ ] Step 3 (support worker): fill in age, gender, phone, location, about, experience, availability, specializations, emergency contact → Sign Up
-- [ ] Successful signup logs in automatically
-- [ ] New support worker redirected to `/vetting`
-- [ ] New client redirected to home dashboard
-- [ ] Duplicate email shows validation error
+- [ Y ] Click Sign Up → Step 1: enter name, email, password → Next
+- [  Y] Step 2: choose role (Client / Support Worker)
+- [ Y ] Step 3 (client): fill in age, gender, phone, location, about, health conditions, medications, allergies, emergency contact → Sign Up
+- [ Y ] Step 3 (support worker): fill in age, gender, phone, location, about, experience, availability, specializations, emergency contact → Sign Up
+- [ Y ] Successful signup logs in automatically
+- [ Y ] New support worker redirected to `/vetting`
+- [ Y ] New client redirected to home dashboard
+- [ Y ] Duplicate email shows validation error
 
 ---
 
 ## 3 · Forgot Password
 
-- [ ] Click "Forgot password?" on login page → `/forgot-password`
-- [ ] Enter email → submit — success message shown
-- [ ] Follow reset link → `/reset-password/:token`
-- [ ] Enter new password → redirect to login with success notice
+- [ Y ] Click "Forgot password?" on login page → `/forgot-password`
+- [ ] Enter email → submit — "Check your inbox" success message shown
+- [ ] Email arrives from `onboarding@resend.dev` (or `noreply@suppova.com` once domain verified)
+- [ ] Reset link in email goes to `/reset-password/<token>` (path param, not query string)
+- [ ] Follow reset link → `/reset-password/:token` page loads
+- [ ] Enter new password → redirect to `/login` with "Password updated" notice
+- [ ] Old password no longer works; new password logs in successfully
 
 ---
 
@@ -295,8 +298,9 @@ Test at mobile viewport (< 600px)
 - [ ] https://suppova.com loads (tab title = "Suppova")
 - [ ] Login works on live app (token-based auth, no cookie dependency)
 - [ ] Google Maps autocomplete works in location fields
-- [ ] Backend API at https://kindred-backend-8eu9.onrender.com responds (may take 50 s cold start)
+- [ ] Backend API at https://api.suppova.com responds (may take 50 s cold start on free tier)
 - [ ] CORS — no `Access-Control-Allow-Origin` errors in console after login
+- [ ] Forgot password email arrives (sent via Resend from `onboarding@resend.dev` or `noreply@suppova.com`)
 
 ---
 
