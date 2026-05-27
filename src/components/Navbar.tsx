@@ -55,8 +55,7 @@ const Navbar = () => {
   };
 
   const isAdmin = auth.user?.role === 'admin';
-  const isPendingWorker = auth.supportWorker?.status === 'pending';
-  const showNav = auth.user && !isAdmin && !isPendingWorker;
+  const showNav = auth.user && !isAdmin;
 
   const navLinks = showNav ? [
     ...(auth.supportWorker ? [{ label: 'Clients', to: '/clients' }] : []),
@@ -147,7 +146,7 @@ const Navbar = () => {
         <>
           <Divider />
           <List disablePadding>
-            {profilePath && !isPendingWorker && (
+            {profilePath && (
               <ListItem disablePadding>
                 <ListItemButton onClick={() => { setDrawerOpen(false); navigate(profilePath); }}>
                   <ListItemText primary="My Profile" />
@@ -218,7 +217,7 @@ const Navbar = () => {
             >
               Welcome, {auth.user.first_name ?? auth.user.email}
             </Typography>
-            {profilePath && !isPendingWorker && (
+            {profilePath && (
               <Tooltip title="My Profile">
                 <IconButton onClick={() => navigate(profilePath)} sx={{ mr: 1 }}>
                   <Avatar sx={{ width: 32, height: 32, bgcolor: 'white', color: '#7B2FBE', fontSize: 14, fontWeight: 700 }}>
@@ -232,7 +231,7 @@ const Navbar = () => {
         )}
 
         {/* Mobile: show avatar if logged in */}
-        {isMobile && auth.user && profilePath && !isPendingWorker && (
+        {isMobile && auth.user && profilePath && (
           <IconButton onClick={() => { setDrawerOpen(false); navigate(profilePath); }}>
             <Avatar sx={{ width: 30, height: 30, bgcolor: 'white', color: '#7B2FBE', fontSize: 13, fontWeight: 700 }}>
               {auth.user.first_name?.charAt(0)}{auth.user.last_name?.charAt(0)}
