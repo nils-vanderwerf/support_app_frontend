@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { flushSync } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { Box, Button, TextField, Typography, Alert, Card, Select, MenuItem, FormControl, InputLabel, Divider } from '@mui/material';
 import ChipSelector from './ChipSelector';
@@ -11,6 +12,20 @@ import { PersonPin, Work } from '@mui/icons-material';
 import axiosInstance, { setAuthToken } from '../api/axiosConfig';
 import { useAuth } from '../context/AuthContext';
 
+const WWCC_PLACEHOLDERS: Record<string, string> = {
+  nsw: 'WWC1234567A', act: 'WWC1234567A',
+  vic: 'WWW1234567', qld: '1234567',
+  wa: 'WAAB123456', sa: 'ABC12345',
+  tas: 'ABC12345', nt: 'ABC12345',
+};
+
+const WWCC_STATE_OPTIONS = [
+  { value: 'nsw', label: 'NSW' }, { value: 'act', label: 'ACT' },
+  { value: 'vic', label: 'VIC' }, { value: 'qld', label: 'QLD' },
+  { value: 'wa', label: 'WA' },   { value: 'sa', label: 'SA' },
+  { value: 'tas', label: 'TAS' }, { value: 'nt', label: 'NT' },
+];
+
 const SignUp = () => {
   const [userFormData, setUserFormData] = useState({
     email: '', password: '', first_name: '', last_name: '', middle_name: ''
@@ -21,9 +36,12 @@ const SignUp = () => {
     gender: '', phone: '', location: '', bio: '',
     experience: '' as string | number, availability: '', health_conditions: '',
     qualification: '', field_of_study: '', institution: '',
+    police_check_number: '', police_check_expiry: '',
+    wwcc_number: '', wwcc_expiry: '',
     emergency_contact_first_name: '', emergency_contact_last_name: '',
     emergency_contact_phone: ''
   });
+  const [wwccState, setWwccState] = useState('');
   const [selectedMedications, setSelectedMedications] = useState<string[]>([]);
   const [selectedAllergies, setSelectedAllergies] = useState<string[]>([]);
   const [selectedSpecialisations, setSelectedSpecialisations] = useState<string[]>([]);
@@ -55,7 +73,7 @@ const SignUp = () => {
     event.preventDefault();
     const profilePayload = role === 'client'
       ? { date_of_birth: profileData.date_of_birth, gender: profileData.gender, phone: profileData.phone, location: profileData.location, bio: profileData.bio, health_conditions: profileData.health_conditions, medication: selectedMedications.join(', '), allergies: selectedAllergies.join(', '), emergency_contact_first_name: profileData.emergency_contact_first_name, emergency_contact_last_name: profileData.emergency_contact_last_name, emergency_contact_phone: profileData.emergency_contact_phone }
-      : { date_of_birth: profileData.date_of_birth, gender: profileData.gender, phone: profileData.phone, location: profileData.location, bio: profileData.bio, experience: profileData.experience, availability: profileData.availability, qualification: profileData.qualification || null, field_of_study: profileData.field_of_study || null, institution: profileData.institution || null, specialisations: selectedSpecialisations, emergency_contact_first_name: profileData.emergency_contact_first_name, emergency_contact_last_name: profileData.emergency_contact_last_name, emergency_contact_phone: profileData.emergency_contact_phone };
+      : { date_of_birth: profileData.date_of_birth, gender: profileData.gender, phone: profileData.phone, location: profileData.location, bio: profileData.bio, experience: profileData.experience, availability: profileData.availability, qualification: profileData.qualification || null, field_of_study: profileData.field_of_study || null, institution: profileData.institution || null, specialisations: selectedSpecialisations, police_check_number: profileData.police_check_number || null, police_check_expiry: profileData.police_check_expiry || null, wwcc_state: wwccState || null, wwcc_number: profileData.wwcc_number || null, wwcc_expiry: profileData.wwcc_expiry || null, emergency_contact_first_name: profileData.emergency_contact_first_name, emergency_contact_last_name: profileData.emergency_contact_last_name, emergency_contact_phone: profileData.emergency_contact_phone };
     try {
       await axiosInstance.post('/users', {
         user: { ...userFormData },
@@ -82,9 +100,11 @@ const SignUp = () => {
       }, { withCredentials: true });
 
       setAuthToken(loginResponse.data.token);
-      auth.setUser(loginResponse.data.user);
-      auth.setClient(loginResponse.data.client);
-      auth.setSupportWorker(loginResponse.data.support_worker);
+      flushSync(() => {
+        auth.setUser(loginResponse.data.user);
+        auth.setClient(loginResponse.data.client);
+        auth.setSupportWorker(loginResponse.data.support_worker);
+      });
       const sw = loginResponse.data.support_worker;
       if (sw && sw.status === 'pending') {
         navigate('/vetting');
@@ -257,6 +277,62 @@ const SignUp = () => {
                   value={profileData.institution}
                   onChange={v => setProfileData({ ...profileData, institution: v })}
                 />
+                <Divider />
+                <Typography variant="subtitle2" fontWeight={600}>Compliance Checks</Typography>
+                <Typography variant="caption" color="text.secondary" sx={{ mt: -2 }}>
+                  Police Check (ACIC) — 10-character alphanumeric code, e.g. ABC1234567
+                </Typography>
+                <Box display="flex" gap={2} flexWrap="wrap">
+                  <TextField
+                    label="Police Check Reference Number"
+                    value={profileData.police_check_number}
+                    onChange={e => setProfileData({ ...profileData, police_check_number: e.target.value })}
+                    inputProps={{ maxLength: 10, style: { textTransform: 'uppercase' } }}
+                    sx={{ flex: '1 1 200px' }}
+                  />
+                  <TextField
+                    label="Police Check Expiry"
+                    type="date"
+                    value={profileData.police_check_expiry}
+                    onChange={e => setProfileData({ ...profileData, police_check_expiry: e.target.value })}
+                    InputLabelProps={{ shrink: true }}
+                    sx={{ flex: '1 1 180px' }}
+                  />
+                </Box>
+                <Typography variant="caption" color="text.secondary" sx={{ mt: -1 }}>
+                  Working With Children Check (WWCC)
+                </Typography>
+                <Box display="flex" gap={2} flexWrap="wrap">
+                  <TextField
+                    select
+                    label="WWCC State"
+                    value={wwccState}
+                    onChange={e => { setWwccState(e.target.value); setProfileData({ ...profileData, wwcc_number: '' }); }}
+                    sx={{ flex: '0 1 130px', minWidth: 110 }}
+                  >
+                    {WWCC_STATE_OPTIONS.map(s => (
+                      <MenuItem key={s.value} value={s.value}>{s.label}</MenuItem>
+                    ))}
+                  </TextField>
+                  <TextField
+                    label="WWCC Number"
+                    value={profileData.wwcc_number}
+                    onChange={e => setProfileData({ ...profileData, wwcc_number: e.target.value })}
+                    disabled={!wwccState}
+                    helperText={wwccState ? `e.g. ${WWCC_PLACEHOLDERS[wwccState]}` : 'Select a state first'}
+                    inputProps={{ style: { textTransform: 'uppercase' } }}
+                    sx={{ flex: '2 1 200px' }}
+                  />
+                  <TextField
+                    label="WWCC Expiry"
+                    type="date"
+                    value={profileData.wwcc_expiry}
+                    onChange={e => setProfileData({ ...profileData, wwcc_expiry: e.target.value })}
+                    InputLabelProps={{ shrink: true }}
+                    sx={{ flex: '1 1 180px' }}
+                  />
+                </Box>
+                <Divider />
                 <TextField label="Emergency Contact First Name" value={profileData.emergency_contact_first_name} onChange={(e) => setProfileData({ ...profileData, emergency_contact_first_name: e.target.value })} fullWidth />
                 <TextField label="Emergency Contact Last Name" value={profileData.emergency_contact_last_name} onChange={(e) => setProfileData({ ...profileData, emergency_contact_last_name: e.target.value })} fullWidth />
                 <TextField label="Emergency Contact Phone" value={profileData.emergency_contact_phone} onChange={(e) => setProfileData({ ...profileData, emergency_contact_phone: e.target.value })} fullWidth />

@@ -21,6 +21,37 @@ jest.mock('../context/AuthContext', () => ({
   }),
 }));
 
+jest.mock('./LocationAutocomplete', () => ({
+  __esModule: true,
+  default: ({ onChange, label = 'Location' }: any) => (
+    <input aria-label={label} onChange={e => onChange(e.target.value)} />
+  ),
+}));
+
+jest.mock('./InstitutionAutocomplete', () => ({
+  __esModule: true,
+  default: ({ onChange }: any) => (
+    <input aria-label="Institution" onChange={e => onChange(e.target.value)} />
+  ),
+}));
+
+jest.mock('./DateOfBirthPicker', () => ({
+  __esModule: true,
+  default: ({ onChange }: any) => (
+    <input aria-label="Date of Birth" type="date" onChange={e => onChange(e.target.value)} />
+  ),
+}));
+
+jest.mock('./AvailabilitySelector', () => ({
+  __esModule: true,
+  default: () => <div>Available Days</div>,
+}));
+
+jest.mock('./ChipSelector', () => ({
+  __esModule: true,
+  default: ({ label }: any) => <input aria-label={label} />,
+}));
+
 describe('SignUp', () => {
   beforeEach(() => {
     mockedAxios.get.mockResolvedValue({ data: { csrf_token: 'test-token' } });
@@ -101,9 +132,46 @@ describe('SignUp', () => {
       await waitFor(() => expect(screen.getByText(/Available Days/i)).toBeInTheDocument());
     });
 
-    it('shows support worker-specific fields', () => {
+    it('shows support worker-specific fields including compliance checks', () => {
       expect(screen.getByText(/Available Days/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/Experience/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/Years of experience/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/Police Check Reference Number/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/Police Check Expiry/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/WWCC State/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/WWCC Number/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/WWCC Expiry/i)).toBeInTheDocument();
+    });
+
+    it('shows state-specific WWCC hint after selecting a state', async () => {
+      await userEvent.click(screen.getByLabelText(/WWCC State/i));
+      await userEvent.click(screen.getByText('NSW'));
+      expect(screen.getByText(/WWC1234567A/)).toBeInTheDocument();
+    });
+
+    it('includes compliance check fields in the signup payload', async () => {
+      mockedAxios.post
+        .mockResolvedValueOnce({ data: {} })
+        .mockResolvedValueOnce({ data: { user: { id: 1 }, client: null, support_worker: { id: 1 } } });
+
+      await userEvent.type(screen.getByLabelText(/Police Check Reference Number/i), 'ABC1234567');
+      await userEvent.click(screen.getByLabelText(/WWCC State/i));
+      await userEvent.click(screen.getByText('NSW'));
+      await userEvent.type(screen.getByLabelText(/WWCC Number/i), 'WWC1234567A');
+
+      userEvent.click(screen.getByRole('button', { name: /Sign Up/i }));
+      await waitFor(() => {
+        expect(mockedAxios.post).toHaveBeenCalledWith(
+          '/users',
+          expect.objectContaining({
+            support_worker: expect.objectContaining({
+              police_check_number: 'ABC1234567',
+              wwcc_state: 'nsw',
+              wwcc_number: 'WWC1234567A',
+            }),
+          }),
+          expect.any(Object),
+        );
+      });
     });
 
     it('submits successfully and navigates home', async () => {

@@ -1,18 +1,49 @@
-import { useState, useRef, useEffect } from 'react';
-import { renderMarkdown } from '../utils/renderMarkdown';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Box, Typography, Paper, TextField, IconButton, CircularProgress,
-  Alert, Button,
+  Box, Typography, Paper, TextField, Button, CircularProgress,
+  Alert, MenuItem,
 } from '@mui/material';
-import { Send, CheckCircle, AdminPanelSettings, HourglassTop } from '@mui/icons-material';
+import { AdminPanelSettings, CheckCircle, HourglassTop } from '@mui/icons-material';
 import axiosInstance from '../api/axiosConfig';
 import { useAuth } from '../context/AuthContext';
 
-interface Message {
-  role: 'user' | 'assistant';
-  content: string;
-}
+// Mirrors PoliceCheckValidator: ACIC 10-char alphanumeric
+const POLICE_CHECK_PATTERN = /^[A-Z0-9]{10}$/;
+
+// Mirrors WwccValidator state patterns
+const WWCC_PATTERNS: Record<string, RegExp> = {
+  nsw: /^WWC\d{7}[A-Z]$/,
+  act: /^WWC\d{7}[A-Z]$/,
+  vic: /^WWW\d{7}$/,
+  qld: /^\d{7,10}$/,
+  wa:  /^WA[A-Z0-9]{6,10}$/,
+  sa:  /^[A-Z0-9]{7,12}$/,
+  tas: /^[A-Z0-9]{7,12}$/,
+  nt:  /^[A-Z0-9]{7,12}$/,
+};
+
+const WWCC_PLACEHOLDERS: Record<string, string> = {
+  nsw: 'WWC1234567A',
+  act: 'WWC1234567A',
+  vic: 'WWW1234567',
+  qld: '1234567',
+  wa:  'WAAB123456',
+  sa:  'ABC12345',
+  tas: 'ABC12345',
+  nt:  'ABC12345',
+};
+
+const STATE_OPTIONS = [
+  { value: 'nsw', label: 'NSW' },
+  { value: 'act', label: 'ACT' },
+  { value: 'vic', label: 'VIC' },
+  { value: 'qld', label: 'QLD' },
+  { value: 'wa',  label: 'WA' },
+  { value: 'sa',  label: 'SA' },
+  { value: 'tas', label: 'TAS' },
+  { value: 'nt',  label: 'NT' },
+];
 
 const countdownText = (reapplyAt: Date): string => {
   const msLeft = reapplyAt.getTime() - Date.now();
@@ -27,21 +58,30 @@ const countdownText = (reapplyAt: Date): string => {
 };
 
 const VettingAgent = () => {
-  const { supportWorker } = useAuth();
+  const { supportWorker, setSupportWorker } = useAuth();
   const navigate = useNavigate();
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      role: 'assistant',
-      content: `Hi ${supportWorker?.first_name ?? 'there'}! Welcome to the vetting process. Before you can be listed on the platform, I need to collect two compliance check numbers — your Police Check and your Working With Children Check (WWCC).\n\nLet's start: what is your Police Check reference number?`,
-    },
-  ]);
-  const [input, setInput] = useState('');
-  const [loading, setLoading] = useState(false);
+  const today = new Date().toISOString().split('T')[0];
+
+  const [checkingStatus, setCheckingStatus] = useState(true);
+  const [waitingPeriod, setWaitingPeriod] = useState<{ reapplyAt: Date } | null>(null);
+  const [submitting, setSubmitting] = useState(false);
   const [complete, setComplete] = useState(false);
   const [recommendation, setRecommendation] = useState<string | null>(null);
-  const [waitingPeriod, setWaitingPeriod] = useState<{ reapplyAt: Date } | null>(null);
-  const [checkingStatus, setCheckingStatus] = useState(true);
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const [serverError, setServerError] = useState<string | null>(null);
+
+  const [policeNumber, setPoliceNumber] = useState('');
+  const [policeExpiry, setPoliceExpiry] = useState('');
+  const [wwccState, setWwccState] = useState('');
+  const [wwccNumber, setWwccNumber] = useState('');
+  const [wwccExpiry, setWwccExpiry] = useState('');
+
+  const [touched, setTouched] = useState({
+    policeNumber: false,
+    policeExpiry: false,
+    wwccState: false,
+    wwccNumber: false,
+    wwccExpiry: false,
+  });
 
   useEffect(() => {
     axiosInstance.get('/vetting/status').then(res => {
@@ -51,35 +91,76 @@ const VettingAgent = () => {
     }).catch(() => {}).finally(() => setCheckingStatus(false));
   }, []);
 
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, loading]);
+  const touch = (field: keyof typeof touched) =>
+    setTouched(t => ({ ...t, [field]: true }));
 
-  const sendMessage = async () => {
-    const text = input.trim();
-    if (!text || loading) return;
-    const next: Message[] = [...messages, { role: 'user', content: text }];
-    setMessages(next);
-    setInput('');
-    setLoading(true);
+  const policeNumberError = (): string | null => {
+    if (!policeNumber) return 'Required';
+    if (!POLICE_CHECK_PATTERN.test(policeNumber.toUpperCase()))
+      return 'Must be exactly 10 alphanumeric characters (A–Z, 0–9)';
+    return null;
+  };
+
+  const policeExpiryError = (): string | null => {
+    if (!policeExpiry) return 'Required';
+    if (policeExpiry < today) return 'Must be a future date';
+    return null;
+  };
+
+  const wwccStateError = (): string | null => (!wwccState ? 'Required' : null);
+
+  const wwccNumberError = (): string | null => {
+    if (!wwccNumber) return 'Required';
+    if (!wwccState) return null;
+    const pattern = WWCC_PATTERNS[wwccState];
+    if (pattern && !pattern.test(wwccNumber.toUpperCase()))
+      return `Invalid format for ${wwccState.toUpperCase()} — expected e.g. ${WWCC_PLACEHOLDERS[wwccState]}`;
+    return null;
+  };
+
+  const wwccExpiryError = (): string | null => {
+    if (!wwccExpiry) return 'Required';
+    if (wwccExpiry < today) return 'Must be a future date';
+    return null;
+  };
+
+  const isValid =
+    !policeNumberError() && !policeExpiryError() &&
+    !wwccStateError() && !wwccNumberError() && !wwccExpiryError();
+
+  const handleSubmit = async () => {
+    setTouched({ policeNumber: true, policeExpiry: true, wwccState: true, wwccNumber: true, wwccExpiry: true });
+    if (!isValid) return;
+    setSubmitting(true);
+    setServerError(null);
     try {
-      const { data } = await axiosInstance.post('/vetting/chat', {
-        message: text,
-        history: messages,
+      const { data } = await axiosInstance.post('/vetting/submit', {
+        police_check_number: policeNumber.toUpperCase(),
+        police_check_expiry: policeExpiry,
+        wwcc_state: wwccState,
+        wwcc_number: wwccNumber.toUpperCase(),
+        wwcc_expiry: wwccExpiry,
       });
-      setMessages([...next, { role: 'assistant', content: data.reply }]);
-      if (data.complete) {
-        setComplete(true);
-        setRecommendation(data.recommendation);
+      // Refresh auth state — backend auto-approves after vetting
+      const userRes = await axiosInstance.get('/user');
+      setSupportWorker(userRes.data.support_worker);
+      if (userRes.data.support_worker?.status === 'approved') {
+        navigate('/');
+        return;
       }
+      // Fallback: manual review still required
+      setComplete(true);
+      setRecommendation(data.recommendation);
     } catch (err: any) {
       if (err.response?.status === 403 && err.response?.data?.error === 'waiting_period') {
         setWaitingPeriod({ reapplyAt: new Date(err.response.data.reapply_at) });
+      } else if (err.response?.status === 422) {
+        setServerError(err.response.data?.error || 'Validation failed. Please check your details.');
       } else {
-        setMessages([...next, { role: 'assistant', content: 'Sorry, something went wrong. Please try again.' }]);
+        setServerError('Something went wrong. Please try again.');
       }
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
@@ -142,58 +223,14 @@ const VettingAgent = () => {
     );
   }
 
-  return (
-    <Box maxWidth={680} mx="auto" mt={5} px={2} display="flex" flexDirection="column" height="calc(100vh - 140px)">
-      <Paper sx={{ p: 2.5, borderRadius: 3, mb: 2, display: 'flex', alignItems: 'center', gap: 2, bgcolor: '#f3e8ff' }}>
-        <AdminPanelSettings sx={{ color: '#7B2FBE', fontSize: 32 }} />
-        <Box>
-          <Typography variant="h6" fontWeight={700} color="#7B2FBE">Compliance Vetting</Typography>
-          <Typography variant="body2" color="text.secondary">
-            Complete your police check and WWCC verification to be listed on the platform.
-          </Typography>
-        </Box>
-      </Paper>
-
-      {complete && (
-        <Alert
-          severity={recommendation === 'approved' ? 'success' : 'info'}
-          icon={<CheckCircle />}
-          sx={{ mb: 2, borderRadius: 2 }}
-        >
-          {recommendation === 'approved'
-            ? 'Your details have been submitted and look great! An admin will review and approve your profile shortly.'
-            : 'Your details have been submitted for manual review. An admin will be in touch.'}
-        </Alert>
-      )}
-
-      <Paper sx={{ flex: 1, overflowY: 'auto', p: 2, borderRadius: 3, mb: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
-        {messages.map((msg, i) => (
-          <Box key={i} display="flex" justifyContent={msg.role === 'user' ? 'flex-end' : 'flex-start'}>
-            <Box sx={{
-              maxWidth: '75%',
-              p: 1.5,
-              borderRadius: msg.role === 'user' ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
-              bgcolor: msg.role === 'user' ? '#7B2FBE' : '#f3e8ff',
-              color: msg.role === 'user' ? 'white' : 'text.primary',
-            }}>
-              <Typography variant="body2">{renderMarkdown(msg.content)}</Typography>
-            </Box>
-          </Box>
-        ))}
-        {loading && (
-          <Box display="flex" justifyContent="flex-start" pl={0.5}>
-            <Box sx={{ bgcolor: '#f3e8ff', borderRadius: '16px 16px 16px 4px', px: 1.5, py: 1 }}>
-              <CircularProgress size={14} sx={{ color: '#7B2FBE' }} />
-            </Box>
-          </Box>
-        )}
-        <div ref={bottomRef} />
-      </Paper>
-
-      {complete ? (
-        <Paper sx={{ p: 2, borderRadius: 3, textAlign: 'center' }}>
-          <Typography variant="body2" color="text.secondary" mb={1.5}>
-            You're all done! We'll notify you once your profile is approved.
+  if (complete) {
+    return (
+      <Box maxWidth={520} mx="auto" mt={8} px={2}>
+        <Paper sx={{ p: 4, borderRadius: 3, textAlign: 'center' }}>
+          <CheckCircle sx={{ fontSize: 56, color: '#7B2FBE', mb: 2 }} />
+          <Typography variant="h6" fontWeight={700} mb={2}>Details Submitted</Typography>
+          <Typography color="text.secondary" mb={3}>
+            Your details have been submitted for manual review. An admin will be in touch before your profile is activated.
           </Typography>
           <Button
             variant="outlined"
@@ -202,27 +239,127 @@ const VettingAgent = () => {
           >
             Message Suppova
           </Button>
-          <Button
-            variant="text"
-            onClick={() => navigate('/')}
-            sx={{ color: 'text.secondary' }}
-          >
+          <Button variant="text" onClick={() => navigate('/')} sx={{ color: 'text.secondary' }}>
             Go to Dashboard
           </Button>
         </Paper>
-      ) : (
-        <Paper sx={{ p: 1.5, borderRadius: 3, display: 'flex', gap: 1, alignItems: 'flex-end' }}>
-          <TextField
-            fullWidth size="small" placeholder="Type your response…"
-            value={input} onChange={e => setInput(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
-            multiline maxRows={3} disabled={loading}
-          />
-          <IconButton onClick={sendMessage} disabled={!input.trim() || loading} sx={{ color: '#7B2FBE', mb: 0.25 }}>
-            <Send />
-          </IconButton>
-        </Paper>
+      </Box>
+    );
+  }
+
+  return (
+    <Box maxWidth={600} mx="auto" mt={5} px={2}>
+      <Paper sx={{ p: 2.5, borderRadius: 3, mb: 3, display: 'flex', alignItems: 'center', gap: 2, bgcolor: '#f3e8ff' }}>
+        <AdminPanelSettings sx={{ color: '#7B2FBE', fontSize: 32 }} />
+        <Box>
+          <Typography variant="h6" fontWeight={700} color="#7B2FBE">Compliance Vetting</Typography>
+          <Typography variant="body2" color="text.secondary">
+            Hi {supportWorker?.first_name ?? 'there'} — enter your Police Check and WWCC details below to be listed on the platform.
+          </Typography>
+        </Box>
+      </Paper>
+
+      {serverError && (
+        <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>{serverError}</Alert>
       )}
+
+      <Paper sx={{ p: 3, borderRadius: 3, mb: 3 }}>
+        <Typography variant="subtitle1" fontWeight={700} mb={2}>
+          Police Check (ACIC)
+        </Typography>
+        <Box display="flex" gap={2} flexWrap="wrap">
+          <TextField
+            label="Reference Number"
+            value={policeNumber}
+            onChange={e => setPoliceNumber(e.target.value)}
+            onBlur={() => touch('policeNumber')}
+            error={touched.policeNumber && !!policeNumberError()}
+            helperText={
+              touched.policeNumber && policeNumberError()
+                ? policeNumberError()!
+                : '10-character alphanumeric code (e.g. ABC1234567)'
+            }
+            inputProps={{ maxLength: 10, style: { textTransform: 'uppercase' } }}
+            sx={{ flex: '1 1 200px' }}
+          />
+          <TextField
+            label="Expiry Date"
+            type="date"
+            value={policeExpiry}
+            onChange={e => setPoliceExpiry(e.target.value)}
+            onBlur={() => touch('policeExpiry')}
+            error={touched.policeExpiry && !!policeExpiryError()}
+            helperText={touched.policeExpiry ? (policeExpiryError() ?? undefined) : undefined}
+            InputLabelProps={{ shrink: true }}
+            inputProps={{ min: today }}
+            sx={{ flex: '1 1 180px' }}
+          />
+        </Box>
+      </Paper>
+
+      <Paper sx={{ p: 3, borderRadius: 3, mb: 3 }}>
+        <Typography variant="subtitle1" fontWeight={700} mb={2}>
+          Working With Children Check (WWCC)
+        </Typography>
+        <Box display="flex" gap={2} flexWrap="wrap">
+          <TextField
+            select
+            label="State / Territory"
+            value={wwccState}
+            onChange={e => { setWwccState(e.target.value); setWwccNumber(''); }}
+            onBlur={() => touch('wwccState')}
+            error={touched.wwccState && !!wwccStateError()}
+            helperText={touched.wwccState ? (wwccStateError() ?? undefined) : undefined}
+            sx={{ flex: '0 1 130px', minWidth: 110 }}
+          >
+            {STATE_OPTIONS.map(s => (
+              <MenuItem key={s.value} value={s.value}>{s.label}</MenuItem>
+            ))}
+          </TextField>
+          <TextField
+            label="WWCC Number"
+            value={wwccNumber}
+            onChange={e => setWwccNumber(e.target.value)}
+            onBlur={() => touch('wwccNumber')}
+            error={touched.wwccNumber && !!wwccNumberError()}
+            helperText={
+              touched.wwccNumber && wwccNumberError()
+                ? wwccNumberError()!
+                : wwccState
+                  ? `e.g. ${WWCC_PLACEHOLDERS[wwccState]}`
+                  : 'Select a state first'
+            }
+            disabled={!wwccState}
+            inputProps={{ style: { textTransform: 'uppercase' } }}
+            sx={{ flex: '2 1 200px' }}
+          />
+          <TextField
+            label="Expiry Date"
+            type="date"
+            value={wwccExpiry}
+            onChange={e => setWwccExpiry(e.target.value)}
+            onBlur={() => touch('wwccExpiry')}
+            error={touched.wwccExpiry && !!wwccExpiryError()}
+            helperText={touched.wwccExpiry ? (wwccExpiryError() ?? undefined) : undefined}
+            InputLabelProps={{ shrink: true }}
+            inputProps={{ min: today }}
+            sx={{ flex: '1 1 180px' }}
+          />
+        </Box>
+      </Paper>
+
+      <Box display="flex" justifyContent="flex-end">
+        <Button
+          variant="contained"
+          onClick={handleSubmit}
+          disabled={submitting}
+          sx={{ bgcolor: '#7B2FBE', '&:hover': { bgcolor: '#6a27a3' }, px: 4 }}
+        >
+          {submitting
+            ? <CircularProgress size={20} sx={{ color: 'white' }} />
+            : 'Submit for Review'}
+        </Button>
+      </Box>
     </Box>
   );
 };

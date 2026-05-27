@@ -1,11 +1,12 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import VettingAgent from './VettingAgent';
 import { useAuth } from '../context/AuthContext';
 import axiosInstance from '../api/axiosConfig';
 
+const mockNavigate = jest.fn();
 jest.mock('react-router-dom', () => ({
-  useNavigate: () => jest.fn(),
+  useNavigate: () => mockNavigate,
 }));
 
 jest.mock('../context/AuthContext', () => ({
@@ -13,14 +14,23 @@ jest.mock('../context/AuthContext', () => ({
 }));
 
 jest.mock('../api/axiosConfig', () => ({
+  get: jest.fn(),
   post: jest.fn(),
 }));
 
 const mockUseAuth = useAuth as jest.Mock;
+const mockAxiosGet = axiosInstance.get as jest.Mock;
 const mockAxiosPost = axiosInstance.post as jest.Mock;
 
-beforeAll(() => {
-  window.HTMLElement.prototype.scrollIntoView = jest.fn();
+const mockSetSupportWorker = jest.fn();
+
+beforeEach(() => {
+  mockUseAuth.mockReturnValue({
+    supportWorker: { first_name: 'Alex', status: 'pending' },
+    setSupportWorker: mockSetSupportWorker,
+  });
+  // First call: /vetting/status — no waiting period
+  mockAxiosGet.mockResolvedValue({ data: {} });
 });
 
 afterEach(() => {
@@ -28,66 +38,140 @@ afterEach(() => {
 });
 
 describe('VettingAgent', () => {
-  beforeEach(() => {
-    mockUseAuth.mockReturnValue({
-      supportWorker: { first_name: 'Alex', status: 'pending' },
+  it('renders the compliance vetting header', async () => {
+    render(<VettingAgent />);
+    await waitFor(() => {
+      expect(screen.getByText('Compliance Vetting')).toBeInTheDocument();
     });
   });
 
-  it('renders the compliance vetting header', () => {
+  it('renders Police Check and WWCC form sections', async () => {
     render(<VettingAgent />);
-    expect(screen.getByText('Compliance Vetting')).toBeInTheDocument();
-  });
-
-  it('opens with a greeting that asks for the police check number', () => {
-    render(<VettingAgent />);
-    expect(screen.getByText(/Police Check reference number/i)).toBeInTheDocument();
-  });
-
-  it('sends user message and displays reply', async () => {
-    mockAxiosPost.mockResolvedValueOnce({
-      data: { reply: 'Thanks! Now your WWCC number.', complete: false },
+    await waitFor(() => {
+      expect(screen.getByText('Police Check (ACIC)')).toBeInTheDocument();
+      expect(screen.getByText('Working With Children Check (WWCC)')).toBeInTheDocument();
     });
-    render(<VettingAgent />);
+  });
 
-    const input = screen.getByPlaceholderText(/Type your response/i);
-    await userEvent.type(input, 'ABC123456');
-    await userEvent.keyboard('{Enter}');
+  it('greets the support worker by first name', async () => {
+    render(<VettingAgent />);
+    await waitFor(() => {
+      expect(screen.getByText(/Hi Alex/)).toBeInTheDocument();
+    });
+  });
+
+  it('shows a format error for an invalid police check number on blur', async () => {
+    render(<VettingAgent />);
+    await waitFor(() => screen.getByLabelText(/Reference Number/i));
+    const input = screen.getByLabelText(/Reference Number/i);
+    await userEvent.type(input, 'SHORT');
+    fireEvent.blur(input);
+    await waitFor(() => {
+      expect(screen.getByText(/Must be exactly 10 alphanumeric/i)).toBeInTheDocument();
+    });
+  });
+
+  it('accepts a valid 10-character police check number without error', async () => {
+    render(<VettingAgent />);
+    await waitFor(() => screen.getByLabelText(/Reference Number/i));
+    const input = screen.getByLabelText(/Reference Number/i);
+    await userEvent.type(input, 'ABC1234567');
+    fireEvent.blur(input);
+    await waitFor(() => {
+      expect(screen.queryByText(/Must be exactly/i)).not.toBeInTheDocument();
+    });
+  });
+
+  it('shows state-specific format hint after selecting NSW', async () => {
+    render(<VettingAgent />);
+    await waitFor(() => screen.getByLabelText(/State \/ Territory/i));
+    await userEvent.click(screen.getByLabelText(/State \/ Territory/i));
+    await userEvent.click(screen.getByText('NSW'));
+    expect(screen.getByText(/WWC1234567A/)).toBeInTheDocument();
+  });
+
+  it('shows a format error for an invalid NSW WWCC number', async () => {
+    render(<VettingAgent />);
+    await waitFor(() => screen.getByLabelText(/State \/ Territory/i));
+    await userEvent.click(screen.getByLabelText(/State \/ Territory/i));
+    await userEvent.click(screen.getByText('NSW'));
+    const wwccInput = screen.getByLabelText(/WWCC Number/i);
+    await userEvent.type(wwccInput, 'BADFORMAT');
+    fireEvent.blur(wwccInput);
+    await waitFor(() => {
+      expect(screen.getByText(/Invalid format for NSW/i)).toBeInTheDocument();
+    });
+  });
+
+  it('accepts a valid QLD WWCC number (numeric only)', async () => {
+    render(<VettingAgent />);
+    await waitFor(() => screen.getByLabelText(/State \/ Territory/i));
+    await userEvent.click(screen.getByLabelText(/State \/ Territory/i));
+    await userEvent.click(screen.getByText('QLD'));
+    const wwccInput = screen.getByLabelText(/WWCC Number/i);
+    await userEvent.type(wwccInput, '1234567');
+    fireEvent.blur(wwccInput);
+    await waitFor(() => {
+      expect(screen.queryByText(/Invalid format/i)).not.toBeInTheDocument();
+    });
+  });
+
+  it('shows Required errors when submitting an empty form', async () => {
+    render(<VettingAgent />);
+    await waitFor(() => screen.getByRole('button', { name: /Submit for Review/i }));
+    await userEvent.click(screen.getByRole('button', { name: /Submit for Review/i }));
+    const requiredErrors = await screen.findAllByText('Required');
+    expect(requiredErrors.length).toBeGreaterThan(0);
+  });
+
+  it('refreshes auth state and navigates on auto-approval', async () => {
+    mockAxiosPost.mockResolvedValueOnce({ data: { recommendation: 'approved' } });
+    // Second get: /user refresh after submission
+    mockAxiosGet
+      .mockResolvedValueOnce({ data: {} }) // /vetting/status
+      .mockResolvedValueOnce({ data: { support_worker: { status: 'approved' } } }); // /user refresh
+
+    render(<VettingAgent />);
+    await waitFor(() => screen.getByLabelText(/Reference Number/i));
+
+    await userEvent.type(screen.getByLabelText(/Reference Number/i), 'ABC1234567');
+    const expiryInputs = screen.getAllByLabelText(/Expiry Date/i);
+    fireEvent.change(expiryInputs[0], { target: { value: '2099-12-31' } });
+
+    await userEvent.click(screen.getByLabelText(/State \/ Territory/i));
+    await userEvent.click(screen.getByText('NSW'));
+    await userEvent.type(screen.getByLabelText(/WWCC Number/i), 'WWC1234567A');
+    fireEvent.change(expiryInputs[1], { target: { value: '2099-12-31' } });
+
+    await userEvent.click(screen.getByRole('button', { name: /Submit for Review/i }));
 
     await waitFor(() => {
-      expect(screen.getByText('ABC123456')).toBeInTheDocument();
-      expect(screen.getByText('Thanks! Now your WWCC number.')).toBeInTheDocument();
+      expect(mockSetSupportWorker).toHaveBeenCalledWith({ status: 'approved' });
+      expect(mockNavigate).toHaveBeenCalledWith('/');
     });
   });
 
-  it('shows completion state and hides input when vetting is complete', async () => {
-    mockAxiosPost.mockResolvedValueOnce({
-      data: { reply: 'All done!', complete: true, recommendation: 'approved' },
-    });
-    render(<VettingAgent />);
+  it('shows manual review fallback when status stays pending', async () => {
+    mockAxiosPost.mockResolvedValueOnce({ data: { recommendation: 'needs_review' } });
+    mockAxiosGet
+      .mockResolvedValueOnce({ data: {} }) // /vetting/status
+      .mockResolvedValueOnce({ data: { support_worker: { status: 'pending' } } }); // /user refresh
 
-    const input = screen.getByPlaceholderText(/Type your response/i);
-    await userEvent.type(input, 'WWC7654321');
-    await userEvent.keyboard('{Enter}');
+    render(<VettingAgent />);
+    await waitFor(() => screen.getByLabelText(/Reference Number/i));
+
+    await userEvent.type(screen.getByLabelText(/Reference Number/i), 'ABC1234567');
+    const expiryInputs = screen.getAllByLabelText(/Expiry Date/i);
+    fireEvent.change(expiryInputs[0], { target: { value: '2099-12-31' } });
+    await userEvent.click(screen.getByLabelText(/State \/ Territory/i));
+    await userEvent.click(screen.getByText('NSW'));
+    await userEvent.type(screen.getByLabelText(/WWCC Number/i), 'WWC1234567A');
+    fireEvent.change(expiryInputs[1], { target: { value: '2099-12-31' } });
+
+    await userEvent.click(screen.getByRole('button', { name: /Submit for Review/i }));
 
     await waitFor(() => {
-      expect(screen.getByText(/details have been submitted and look great/i)).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /go to dashboard/i })).toBeInTheDocument();
-    });
-    expect(screen.queryByPlaceholderText(/Type your response/i)).not.toBeInTheDocument();
-  });
-
-  it('shows needs_review message when recommendation is needs_review', async () => {
-    mockAxiosPost.mockResolvedValueOnce({
-      data: { reply: 'Submitted.', complete: true, recommendation: 'needs_review' },
-    });
-    render(<VettingAgent />);
-
-    await userEvent.type(screen.getByPlaceholderText(/Type your response/i), 'abc');
-    await userEvent.keyboard('{Enter}');
-
-    await waitFor(() => {
-      expect(screen.getByText(/submitted for manual review/i)).toBeInTheDocument();
+      expect(screen.getByText(/manual review/i)).toBeInTheDocument();
     });
   });
 });
