@@ -26,8 +26,6 @@ const Login = () => {
       });
       if (response.data.user?.is_admin) {
         navigate('/admin');
-      } else if (response.data.support_worker?.status === 'pending') {
-        navigate('/vetting');
       } else {
         navigate('/');
       }

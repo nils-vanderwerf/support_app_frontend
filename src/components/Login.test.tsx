@@ -61,17 +61,6 @@ describe('Login', () => {
     await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith('/admin'));
   });
 
-  it('navigates to /vetting for pending support workers', async () => {
-    mockedAxios.post.mockResolvedValueOnce({
-      data: { user: { is_admin: false }, client: null, support_worker: { status: 'pending' } },
-    });
-    renderLogin();
-    await userEvent.type(screen.getByLabelText(/email/i), 'worker@example.com');
-    await userEvent.type(screen.getByLabelText(/password/i), 'secret');
-    await userEvent.click(screen.getByRole('button', { name: /login/i }));
-    await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith('/vetting'));
-  });
-
   it('navigates to / for regular authenticated users', async () => {
     mockedAxios.post.mockResolvedValueOnce({
       data: { user: { is_admin: false }, client: { id: 1 }, support_worker: null },

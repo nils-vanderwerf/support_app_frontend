@@ -20,7 +20,6 @@ const ReportsPage = React.lazy(() => import('./components/ReportsPage'));
 const SupportWorkerProfilePage = React.lazy(() => import('./components/SupportWorkerProfilePage'));
 const ClientProfilePage = React.lazy(() => import('./components/ClientProfilePage'));
 const SignUp = React.lazy(() => import('./components/SignUp'));
-const VettingAgent = React.lazy(() => import('./components/VettingAgent'));
 const AdminDashboard = React.lazy(() => import('./components/AdminDashboard'));
 const AdminMessagesPage = React.lazy(() => import('./components/AdminMessagesPage'));
 const SupportWorkerAdminThread = React.lazy(() => import('./components/SupportWorkerAdminThread'));
@@ -47,14 +46,6 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
   if (loading) return null;
   if (user?.role !== 'admin') return <Navigate to="/" replace />;
-  return <>{children}</>;
-};
-
-const VettingRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user, supportWorker, loading } = useAuth();
-  if (loading) return null;
-  if (!user) return <Navigate to="/login" replace />;
-  if (supportWorker?.status === 'approved') return <Navigate to="/" replace />;
   return <>{children}</>;
 };
 
@@ -86,7 +77,6 @@ const App = () => {
                 <Route path='/messages' element={<SecureRoute><ConversationList /></SecureRoute>} />
                 <Route path='/messages/admin' element={<RequireSupportWorker><SupportWorkerAdminThread /></RequireSupportWorker>} />
                 <Route path='/messages/:id' element={<SecureRoute><ConversationView /></SecureRoute>} />
-                <Route path="/vetting" element={<VettingRoute><VettingAgent /></VettingRoute>} />
                 <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
                 <Route path="/admin/messages" element={<AdminRoute><AdminMessagesPage /></AdminRoute>} />
                 <Route path="/admin/messages/:workerId" element={<AdminRoute><AdminMessagesPage /></AdminRoute>} />
