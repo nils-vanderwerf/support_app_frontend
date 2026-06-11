@@ -357,21 +357,30 @@ const ConversationView = () => {
       )}
 
       {/* Input */}
-      <Paper sx={{ p: 1.5, borderRadius: 3, display: 'flex', gap: 1, alignItems: 'flex-end' }}>
-        <Button size="small" variant="outlined" startIcon={fetchingSuggestion ? <CircularProgress size={14} sx={{ color: '#7B2FBE' }} /> : <CalendarMonth />} onClick={openInviteForm}
-          disabled={fetchingSuggestion}
-          sx={{ borderColor: '#7B2FBE', color: '#7B2FBE', flexShrink: 0, mb: 0.25 }}>
-          Send Invitation
-        </Button>
-        <TextField
-          fullWidth size="small" placeholder="Type a message…"
-          value={input} onChange={e => setInput(e.target.value)}
-          onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
-          multiline maxRows={3} disabled={sending || aiTyping}
-        />
-        <IconButton onClick={sendMessage} disabled={!input.trim() || sending || aiTyping} sx={{ color: '#7B2FBE', mb: 0.25 }}>
-          <Send />
-        </IconButton>
+      <Paper sx={{ p: 1.5, borderRadius: 3 }}>
+        <Box sx={{ display: 'flex', flexWrap: { xs: 'wrap', sm: 'nowrap' }, gap: 1, alignItems: 'flex-end' }}>
+          <Box sx={{ display: 'flex', flex: 1, gap: 1, alignItems: 'flex-end', order: { xs: 1, sm: 2 }, minWidth: 0 }}>
+            <TextField
+              fullWidth size="small" placeholder="Type a message…"
+              value={input} onChange={e => setInput(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
+              multiline maxRows={3} disabled={sending || aiTyping}
+            />
+            <IconButton onClick={sendMessage} disabled={!input.trim() || sending || aiTyping} sx={{ color: '#7B2FBE', mb: 0.25 }}>
+              <Send />
+            </IconButton>
+          </Box>
+          <Button size="small" variant="outlined"
+            startIcon={fetchingSuggestion ? <CircularProgress size={14} sx={{ color: '#7B2FBE' }} /> : <CalendarMonth />}
+            onClick={openInviteForm} disabled={fetchingSuggestion}
+            sx={{
+              borderColor: '#7B2FBE', color: '#7B2FBE', flexShrink: 0, mb: 0.25,
+              order: { xs: 2, sm: 1 },
+              width: { xs: '100%', sm: 'auto' },
+            }}>
+            Send Invitation
+          </Button>
+        </Box>
       </Paper>
 
       {clashDialog && (
