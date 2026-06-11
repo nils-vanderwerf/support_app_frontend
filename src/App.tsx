@@ -2,6 +2,7 @@ import React, { Suspense } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { Box, CssBaseline, CircularProgress } from '@mui/material';
 import SecureRoute from './components/SecureRoute';
+import AdminRoute from './components/AdminRoute';
 import Navbar from './components/Navbar';
 import Login from './components/Login';
 import ForgotPassword from './components/ForgotPassword';
@@ -40,13 +41,6 @@ const SupportWorkerRoute = () => {
   const { supportWorker } = useAuth();
   if (supportWorker) return <Navigate to="/" replace />;
   return <SupportWorkerList />;
-};
-
-const AdminRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user, loading } = useAuth();
-  if (loading) return null;
-  if (user?.role !== 'admin') return <Navigate to="/" replace />;
-  return <>{children}</>;
 };
 
 const RequireSupportWorker = ({ children }: { children: React.ReactNode }) => {
