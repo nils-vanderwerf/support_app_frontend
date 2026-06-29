@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Drawer, Box, Typography, TextField, Button, CircularProgress,
   Alert, Divider, IconButton,
@@ -97,6 +97,14 @@ const VisitReportDrawer = ({ appointment, open, onClose, existingReport }: Props
       setSaving(false);
     }
   };
+
+  useEffect(() => {
+    if (saved) {
+      const t = setTimeout(handleClose, 1500);
+      return () => clearTimeout(t);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [saved]);
 
   const handleClose = () => {
     setFields(existingReport

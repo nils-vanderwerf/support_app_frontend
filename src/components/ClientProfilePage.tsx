@@ -4,13 +4,15 @@ import {
   Box, Typography, Avatar, Chip, Button, Paper, Grid, Divider,
   CircularProgress, TextField, MenuItem,
 } from '@mui/material';
-import { LocationOn, Phone, Email, Favorite, Warning, ArrowBack, CalendarMonth, Edit, Save, Cancel, Chat, Cake } from '@mui/icons-material';
+import { LocationOn, Phone, Email, Favorite, Warning, ArrowBack, CalendarMonth, Edit, Save, Cancel, Chat, Cake, Assessment } from '@mui/icons-material';
 import axiosInstance from '../api/axiosConfig';
 import { Client } from '../context/AuthContext';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import BookingForm from './BookingForm';
 import DateOfBirthPicker from './DateOfBirthPicker';
+import ClientProgressReportDrawer from './ClientProgressReportDrawer';
+import ClientVisitReports from './ClientVisitReports';
 
 const GENDERS = ['Male', 'Female', 'Non-binary', 'Prefer not to say'];
 
@@ -25,6 +27,7 @@ const ClientProfilePage = () => {
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState<Partial<Client>>({});
   const [showBookingForm, setShowBookingForm] = useState(false);
+  const [showProgressReport, setShowProgressReport] = useState(false);
 
   const isOwnProfile = authClient?.id === Number(id);
 
@@ -106,6 +109,11 @@ const ClientProfilePage = () => {
                   >
                     Message
                   </Button>
+                  {client.has_approved_appointment && (
+                    <Button variant="outlined" startIcon={<Assessment />} onClick={() => setShowProgressReport(true)} sx={{ borderColor: '#7B2FBE', color: '#7B2FBE' }}>
+                      Progress Report
+                    </Button>
+                  )}
                   <Button variant="contained" startIcon={<CalendarMonth />} onClick={() => setShowBookingForm(true)} sx={{ bgcolor: '#7B2FBE', '&:hover': { bgcolor: '#6a0dad' } }}>
                     Book Appointment
                   </Button>
@@ -229,9 +237,20 @@ const ClientProfilePage = () => {
         </Grid>
       </Grid>
 
+      {(isOwnProfile || (supportWorker && client.has_approved_appointment)) && (
+        <ClientVisitReports clientId={client.id} isOwnProfile={isOwnProfile} />
+      )}
+
       {showBookingForm && supportWorker && (
         <BookingForm clientId={client.id} supportWorkerId={supportWorker.id} onSuccess={() => { showToast('Appointment booked'); setShowBookingForm(false); }} onClose={() => setShowBookingForm(false)} />
       )}
+
+      <ClientProgressReportDrawer
+        clientId={client.id}
+        clientName={`${client.first_name} ${client.last_name}`}
+        open={showProgressReport}
+        onClose={() => setShowProgressReport(false)}
+      />
     </Box>
   );
 };

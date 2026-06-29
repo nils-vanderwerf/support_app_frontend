@@ -40,7 +40,7 @@ const statusChip = (status: string) => {
 };
 
 const AppointmentTable = ({
-  rows, isClient, onEdit, onDelete, onRebook, showActions,
+  rows, isClient, onEdit, onDelete, onRebook, showActions, onNameClick,
 }: {
   rows: Appointment[];
   isClient: boolean;
@@ -48,6 +48,7 @@ const AppointmentTable = ({
   onDelete: (a: Appointment) => void;
   onRebook: (a: Appointment) => void;
   showActions: boolean;
+  onNameClick: (a: Appointment) => void;
 }) => (
   <TableContainer component={Paper} sx={{ overflowX: 'auto', mb: 2 }}>
     <Table sx={{ minWidth: 600 }}>
@@ -69,6 +70,7 @@ const AppointmentTable = ({
               {new Date(a.date).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}
             </TableCell>
             <TableCell
+              onClick={() => onNameClick(a)}
               sx={{ cursor: 'pointer', color: '#7B2FBE', fontWeight: 600, '&:hover': { textDecoration: 'underline' }, whiteSpace: 'nowrap' }}
             >
               {isClient
@@ -149,6 +151,14 @@ const AppointmentList = () => {
     setEditDialogueVisible(true);
   };
 
+  const handleNameClick = (appointment: Appointment) => {
+    if (isClient) {
+      navigate(`/support-workers/${appointment.support_worker.id}`);
+    } else {
+      navigate(`/clients/${appointment.client.id}`);
+    }
+  };
+
   const sectionLabel = (title: string, count: number) => (
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1.5, mt: 3 }}>
       <Typography variant="h6" fontWeight={700}>{title}</Typography>
@@ -183,6 +193,7 @@ const AppointmentList = () => {
               onEdit={handleEdit}
               onDelete={(a) => { setAppointmentToDelete(a); setDeleteDialogueVisible(true); }}
               onRebook={setRebookAppointment}
+              onNameClick={handleNameClick}
               showActions
             />
           </>
@@ -197,6 +208,7 @@ const AppointmentList = () => {
               onEdit={handleEdit}
               onDelete={(a) => { setAppointmentToDelete(a); setDeleteDialogueVisible(true); }}
               onRebook={setRebookAppointment}
+              onNameClick={handleNameClick}
               showActions
             />
           </>

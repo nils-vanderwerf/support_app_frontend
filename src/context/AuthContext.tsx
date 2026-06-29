@@ -29,6 +29,7 @@ export interface Client {
   emergency_contact_last_name: string;
   emergency_contact_phone: string;
   email: string;
+  has_approved_appointment?: boolean;
 }
 
 export interface Specialisation {
