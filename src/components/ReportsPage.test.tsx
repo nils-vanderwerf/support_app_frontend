@@ -235,4 +235,109 @@ describe('ReportsPage', () => {
       expect(within(table).getByText('Raj Patel')).toBeInTheDocument();
     });
   });
+
+  describe('page tabs', () => {
+    it('renders both Visit Reports and Progress Reports tabs', async () => {
+      mockedAxios.get.mockResolvedValue({ data: [] });
+      renderPage();
+      expect(screen.getByRole('tab', { name: /Visit Reports/i })).toBeInTheDocument();
+      expect(screen.getByRole('tab', { name: /Progress Reports/i })).toBeInTheDocument();
+    });
+
+    it('shows Visit Reports tab content by default', async () => {
+      mockedAxios.get.mockResolvedValue({ data: [] });
+      renderPage();
+      await waitFor(() => expect(screen.getByText(/No reports submitted yet/i)).toBeInTheDocument());
+    });
+  });
+
+  describe('Progress Reports tab', () => {
+    const makeProgressReport = (overrides: Record<string, any> = {}) => ({
+      id: 1,
+      summary: '## Overall Progress\nClient is improving steadily.',
+      report_count: 3,
+      created_at: '2026-06-01T10:00:00Z',
+      client: { id: 1, first_name: 'Elena', last_name: 'Martinez' },
+      ...overrides,
+    });
+
+    const openProgressTab = async () => {
+      await userEvent.click(screen.getByRole('tab', { name: /Progress Reports/i }));
+    };
+
+    it('shows empty state when no progress reports are saved', async () => {
+      mockedAxios.get
+        .mockResolvedValueOnce({ data: [] }) // visit_reports (tab 0 initial load)
+        .mockResolvedValueOnce({ data: [] }); // progress_reports (tab 1 on switch)
+      renderPage();
+      await waitFor(() => screen.getByText(/No reports submitted yet/i));
+      await openProgressTab();
+      await waitFor(() => {
+        expect(screen.getByText(/No progress reports saved yet/i)).toBeInTheDocument();
+      });
+    });
+
+    it('renders a progress report row with client name and visit count', async () => {
+      mockedAxios.get
+        .mockResolvedValueOnce({ data: [] })
+        .mockResolvedValueOnce({ data: [makeProgressReport()] });
+      renderPage();
+      await waitFor(() => screen.getByText(/No reports submitted yet/i));
+      await openProgressTab();
+      await waitFor(() => {
+        expect(screen.getByText('Elena Martinez')).toBeInTheDocument();
+        expect(screen.getByText('3 visits')).toBeInTheDocument();
+      });
+    });
+
+    it('expands a progress report row to show the full summary', async () => {
+      mockedAxios.get
+        .mockResolvedValueOnce({ data: [] })
+        .mockResolvedValueOnce({ data: [makeProgressReport()] });
+      renderPage();
+      await waitFor(() => screen.getByText(/No reports submitted yet/i));
+      await openProgressTab();
+      await waitFor(() => screen.getByText('Elena Martinez'));
+      await userEvent.click(screen.getByRole('button', { name: '' }));
+      expect(screen.getByText(/Client is improving steadily/i)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Delete report/i })).toBeInTheDocument();
+    });
+
+    it('calls DELETE and reloads on delete', async () => {
+      mockedAxios.get
+        .mockResolvedValueOnce({ data: [] })
+        .mockResolvedValueOnce({ data: [makeProgressReport()] })
+        .mockResolvedValueOnce({ data: [] }); // reload after delete
+      mockedAxios.delete.mockResolvedValueOnce({});
+      renderPage();
+      await waitFor(() => screen.getByText(/No reports submitted yet/i));
+      await openProgressTab();
+      await waitFor(() => screen.getByText('Elena Martinez'));
+      await userEvent.click(screen.getByRole('button', { name: '' }));
+      await userEvent.click(screen.getByRole('button', { name: /Delete report/i }));
+      expect(mockedAxios.delete).toHaveBeenCalledWith('/progress_reports/1');
+    });
+
+    it('filters progress report rows by client', async () => {
+      const two = [
+        makeProgressReport({ id: 1 }),
+        makeProgressReport({
+          id: 2,
+          client: { id: 2, first_name: 'Raj', last_name: 'Patel' },
+        }),
+      ];
+      mockedAxios.get
+        .mockResolvedValueOnce({ data: [] })
+        .mockResolvedValueOnce({ data: two });
+      renderPage();
+      await waitFor(() => screen.getByText(/No reports submitted yet/i));
+      await openProgressTab();
+      await waitFor(() => screen.getByText('Raj Patel'));
+      await userEvent.click(screen.getByRole('combobox'));
+      await userEvent.click(screen.getByRole('option', { name: /Elena Martinez/ }));
+      const table = screen.getByRole('table');
+      expect(within(table).getByText('Elena Martinez')).toBeInTheDocument();
+      expect(within(table).queryByText('Raj Patel')).not.toBeInTheDocument();
+    });
+  });
 });

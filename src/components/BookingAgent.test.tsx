@@ -86,4 +86,32 @@ describe('BookingAgent', () => {
     await userEvent.click(screen.getByTestId('CloseIcon').closest('button')!);
     expect(mockOnClose).toHaveBeenCalled();
   });
+
+  it('renders tool step chips when the agent uses tools', async () => {
+    mockedAxios.post.mockResolvedValueOnce({
+      data: {
+        message: 'I found some workers for you!',
+        conversation_id: null,
+        tool_calls: [{ name: 'get_support_workers', input: { keyword: 'elderly' } }],
+      },
+    });
+    renderComponent();
+    await userEvent.type(screen.getByPlaceholderText(/Describe what you need/i), 'elderly care');
+    await userEvent.click(getSendButton());
+    await waitFor(() => {
+      expect(screen.getByText(/Searched support workers · "elderly"/i)).toBeInTheDocument();
+    });
+    expect(screen.getByText('I found some workers for you!')).toBeInTheDocument();
+  });
+
+  it('does not render tool steps when tool_calls is empty', async () => {
+    mockedAxios.post.mockResolvedValueOnce({
+      data: { message: 'No tools needed.', conversation_id: null, tool_calls: [] },
+    });
+    renderComponent();
+    await userEvent.type(screen.getByPlaceholderText(/Describe what you need/i), 'help');
+    await userEvent.click(getSendButton());
+    await waitFor(() => expect(screen.getByText('No tools needed.')).toBeInTheDocument());
+    expect(screen.queryByText(/Searched/i)).not.toBeInTheDocument();
+  });
 });

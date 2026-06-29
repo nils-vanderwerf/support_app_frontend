@@ -16,3 +16,6 @@
 - AI agent UIs are right-side Drawers that maintain a `Message[]` array (`{ role, content }`) and POST the full history to the backend on each turn — see `BookingAgent.tsx` for the canonical pattern.
 - AI responses are rendered with `renderMarkdown` (`src/utils/renderMarkdown.tsx`), not as plain text.
 - Conversation messages are E2E encrypted — never log or display raw `content` outside the decrypted render path.
+- `BookingAgent.tsx` separates `apiMessages` (sent to the Anthropic API — chat turns only) from `displayMessages` (shown in the UI — includes `{ type: 'tool_steps', toolCalls }` entries). Never push tool step display objects into `apiMessages` or the API call will fail.
+- Tool calls returned in the backend response are rendered as purple pill chips via the `ToolSteps` component. `describeToolCall()` maps tool names to a label and icon.
+- Progress reports (generated on a client profile page) are saveable/discardable directly in `ClientProgressReportDrawer.tsx` before leaving the drawer. Saved reports are persisted to `POST /progress_reports` and visible on the Reports page under the "Progress Reports" tab.

@@ -113,6 +113,7 @@ The following seeded accounts are available to try the app without signing up:
 - The AI searches available workers, proposes appointment times, and sends invitations
 - Supports single bookings and recurring appointments ("3 sessions over the next month")
 - Supports bulk actions ("decline the rest for me")
+- Tool calls (worker searches, conversation opens) are rendered as purple pill chips in the chat UI so the user can see what the agent is doing
 
 ### Support worker vetting
 - `VettingAgent` — step-by-step AI conversation that collects police check number, WWCC number, and expiry dates
@@ -129,6 +130,14 @@ The following seeded accounts are available to try the app without signing up:
 - **AI draft generation** — one click populates Activities, Observations, and Follow-up Actions from appointment context
 - Expandable report rows with full detail panel; reports are editable after submission
 - Appointments that already have a report are disabled in the picker to prevent duplicates
+- Visit report history is shown on the client profile page, filterable by time period and support worker; clients see reports from all their workers
+
+### Progress reports
+- Support workers can generate an AI summary of a client's full visit history from the client profile page (requires an approved appointment)
+- Generated reports can be saved or discarded directly in the drawer before closing
+- Saved reports appear on the Reports page under the **Progress Reports** tab, expandable with the full markdown summary
+- Supports client filtering and one-click delete
+- Client names in saved reports link through to the client profile page
 
 ### Admin dashboard
 - Stats bar: approved workers, pending review, total clients, appointments this week

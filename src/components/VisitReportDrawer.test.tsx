@@ -84,6 +84,16 @@ it('shows success message after saving the report', async () => {
   );
 });
 
+it('auto-closes after 1.5s when save succeeds', async () => {
+  const onClose = jest.fn();
+  mockedAxios.post.mockResolvedValueOnce({ data: {} });
+  render(<VisitReportDrawer appointment={appointment} open onClose={onClose} />);
+  await userEvent.type(screen.getByLabelText('Activities'), 'Assisted with exercises');
+  await userEvent.click(screen.getByRole('button', { name: /Save Report/i }));
+  await waitFor(() => expect(screen.getByText(/Report saved successfully/i)).toBeInTheDocument());
+  await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1), { timeout: 3000 });
+});
+
 it('shows error alert when save fails', async () => {
   mockedAxios.post.mockRejectedValueOnce(new Error('Network error'));
   renderDrawer();
