@@ -2,9 +2,11 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Box, Typography, Avatar, Chip, Button, Paper, Grid, Divider,
-  CircularProgress, TextField, MenuItem,
+  CircularProgress, TextField, MenuItem, Tab, Tabs,
 } from '@mui/material';
-import { LocationOn, Phone, Email, Work, Schedule, ArrowBack, Edit, Save, Cancel, Chat, VerifiedUser, ChildCare, Cake } from '@mui/icons-material';
+import { LocationOn, Phone, Email, Work, Schedule, ArrowBack, Edit, Save, Cancel, Chat, VerifiedUser, ChildCare, Cake, Star } from '@mui/icons-material';
+import WorkerReviews from './WorkerReviews';
+import StarRating from './StarRating';
 import axiosInstance from '../api/axiosConfig';
 import { SupportWorker } from '../context/AuthContext';
 import { useAuth } from '../context/AuthContext';
@@ -29,6 +31,9 @@ const SupportWorkerProfilePage = () => {
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState<Partial<SupportWorker>>({});
   const [showBookingForm, setShowBookingForm] = useState(false);
+  const [tab, setTab] = useState(0);
+  const [avgRating, setAvgRating] = useState<number | null>(null);
+  const [reviewCount, setReviewCount] = useState(0);
 
   const isOwnProfile = supportWorker?.id === Number(id);
 
@@ -217,6 +222,19 @@ const SupportWorkerProfilePage = () => {
             )}
           </Paper>
 
+          {reviewCount > 0 && (
+            <Paper sx={{ p: 3, borderRadius: 3, mt: 3 }}>
+              <Typography variant="h6" fontWeight={600} mb={1.5}>Rating</Typography>
+              <Box display="flex" alignItems="center" gap={1.5}>
+                <StarRating value={Math.round(avgRating ?? 0)} readOnly size="medium" />
+                <Box>
+                  <Typography variant="body1" fontWeight={700} lineHeight={1.2}>{avgRating}/5</Typography>
+                  <Typography variant="caption" color="text.secondary">{reviewCount} review{reviewCount !== 1 ? 's' : ''}</Typography>
+                </Box>
+              </Box>
+            </Paper>
+          )}
+
           {worker.specialisations && worker.specialisations.length > 0 && (
             <Paper sx={{ p: 3, borderRadius: 3, mt: 3 }}>
               <Typography variant="h6" fontWeight={600} mb={2}>Specialisations</Typography>
@@ -264,40 +282,60 @@ const SupportWorkerProfilePage = () => {
         </Grid>
 
         <Grid item xs={12} md={8}>
-          <Paper sx={{ p: 3, borderRadius: 3, mb: 3 }}>
-            <Typography variant="h6" fontWeight={600} mb={1}>About</Typography>
-            <Divider sx={{ mb: 2 }} />
-            {editing
-              ? <TextField multiline rows={4} fullWidth value={form.bio ?? ''} onChange={e => setForm({ ...form, bio: e.target.value })} placeholder="Write something about yourself…" />
-              : <Typography variant="body1" color="text.secondary">{worker.bio || '—'}</Typography>
-            }
-          </Paper>
+          <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
+            <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ '& .MuiTab-root': { textTransform: 'none', fontWeight: 600 }, '& .Mui-selected': { color: '#7B2FBE' }, '& .MuiTabs-indicator': { bgcolor: '#7B2FBE' } }}>
+              <Tab label="About" />
+              <Tab label={reviewCount > 0 ? `Reviews (${reviewCount})` : 'Reviews'} icon={reviewCount > 0 ? <Star sx={{ fontSize: 16, color: '#f59e0b' }} /> : undefined} iconPosition="end" />
+            </Tabs>
+          </Box>
 
-          <Paper sx={{ p: 3, borderRadius: 3 }}>
-            <Box display="flex" alignItems="center" gap={1} mb={1}>
-              <Work sx={{ color: '#7B2FBE' }} />
-              <Typography variant="h6" fontWeight={600}>Experience</Typography>
-            </Box>
-            <Divider sx={{ mb: 2 }} />
-            {editing
-              ? (
-                <TextField
-                  size="small"
-                  label="Years of experience"
-                  type="number"
-                  value={form.experience ?? ''}
-                  onChange={e => setForm({ ...form, experience: Math.max(0, parseInt(e.target.value) || 0) })}
-                  inputProps={{ min: 0, max: 50 }}
-                  sx={{ width: 180 }}
-                />
-              )
-              : (
-                <Typography variant="body1" color="text.secondary">
-                  {worker.experience != null ? `${worker.experience} year${worker.experience === 1 ? '' : 's'}` : '—'}
-                </Typography>
-              )
-            }
-          </Paper>
+          {tab === 0 && (
+            <>
+              <Paper sx={{ p: 3, borderRadius: 3, mb: 3 }}>
+                <Typography variant="h6" fontWeight={600} mb={1}>About</Typography>
+                <Divider sx={{ mb: 2 }} />
+                {editing
+                  ? <TextField multiline rows={4} fullWidth value={form.bio ?? ''} onChange={e => setForm({ ...form, bio: e.target.value })} placeholder="Write something about yourself…" />
+                  : <Typography variant="body1" color="text.secondary">{worker.bio || '—'}</Typography>
+                }
+              </Paper>
+
+              <Paper sx={{ p: 3, borderRadius: 3 }}>
+                <Box display="flex" alignItems="center" gap={1} mb={1}>
+                  <Work sx={{ color: '#7B2FBE' }} />
+                  <Typography variant="h6" fontWeight={600}>Experience</Typography>
+                </Box>
+                <Divider sx={{ mb: 2 }} />
+                {editing
+                  ? (
+                    <TextField
+                      size="small"
+                      label="Years of experience"
+                      type="number"
+                      value={form.experience ?? ''}
+                      onChange={e => setForm({ ...form, experience: Math.max(0, parseInt(e.target.value) || 0) })}
+                      inputProps={{ min: 0, max: 50 }}
+                      sx={{ width: 180 }}
+                    />
+                  )
+                  : (
+                    <Typography variant="body1" color="text.secondary">
+                      {worker.experience != null ? `${worker.experience} year${worker.experience === 1 ? '' : 's'}` : '—'}
+                    </Typography>
+                  )
+                }
+              </Paper>
+            </>
+          )}
+
+          {tab === 1 && (
+            <Paper sx={{ p: 3, borderRadius: 3 }}>
+              <WorkerReviews
+                supportWorkerId={worker.id}
+                onRatingChange={(avg, count) => { setAvgRating(avg); setReviewCount(count); }}
+              />
+            </Paper>
+          )}
         </Grid>
       </Grid>
 

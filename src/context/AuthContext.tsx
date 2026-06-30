@@ -63,6 +63,8 @@ export interface SupportWorker {
   qualification?: string | null;
   field_of_study?: string | null;
   institution?: string | null;
+  average_rating?: number | null;
+  review_count?: number;
 }
 
 interface AuthProviderProps {
