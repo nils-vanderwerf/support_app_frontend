@@ -62,6 +62,21 @@ const Login = () => {
             </Link>
           </Typography>
         </Box>
+
+        <Box sx={{ mt: 4, pt: 4, borderTop: '1px solid', borderColor: 'divider', textAlign: 'center' }}>
+          <Typography variant="body2" color="text.secondary" mb={2}>
+            Don't have an account yet?
+          </Typography>
+          <Button
+            component={Link}
+            to="/signup"
+            variant="outlined"
+            fullWidth
+            sx={{ borderColor: '#7B2FBE', color: '#7B2FBE', py: 1.5, '&:hover': { borderColor: '#6a0dad', bgcolor: '#f9f4ff' } }}
+          >
+            Create an account
+          </Button>
+        </Box>
       </Box>
     </Box>
   );
