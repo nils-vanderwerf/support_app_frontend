@@ -22,13 +22,16 @@ const ClientProgressReportDrawer = ({ clientId, clientName, open, onClose }: Pro
   const [savedId, setSavedId] = useState<number | null>(null);
   const [error, setError] = useState('');
 
+  const hasDraft = summary.length > 0 && (reportCount ?? 0) > 0;
+
   const handleGenerate = async () => {
     setLoading(true);
     setError('');
     setSavedId(null);
+    setSummary('');
     try {
       const { data } = await axiosInstance.post('/client_progress_reports', { client_id: clientId });
-      setSummary(data.summary);
+      setSummary(data.summary ?? '');
       setReportCount(data.report_count);
     } catch {
       setError('Could not generate report. Try again.');
@@ -88,15 +91,15 @@ const ClientProgressReportDrawer = ({ clientId, clientName, open, onClose }: Pro
         <Box display="flex" gap={1} flexWrap="wrap">
           <Button
             variant="outlined"
-            startIcon={loading ? <CircularProgress size={16} /> : summary ? <Refresh /> : <AutoAwesome />}
+            startIcon={loading ? <CircularProgress size={16} /> : hasDraft ? <Refresh /> : <AutoAwesome />}
             onClick={handleGenerate}
             disabled={loading || saving}
             sx={{ borderColor: '#7B2FBE', color: '#7B2FBE' }}
           >
-            {loading ? 'Generating…' : summary ? 'Regenerate' : 'Generate Progress Report'}
+            {loading ? 'Generating…' : hasDraft ? 'Regenerate' : 'Generate Progress Report'}
           </Button>
 
-          {summary && !savedId && (
+          {hasDraft && !savedId && (
             <>
               <Button
                 variant="contained"
@@ -120,13 +123,20 @@ const ClientProgressReportDrawer = ({ clientId, clientName, open, onClose }: Pro
           )}
         </Box>
 
-        {reportCount !== null && !loading && (
-          <Typography variant="caption" color="text.secondary">
-            Based on {reportCount} visit report{reportCount !== 1 ? 's' : ''}
+        {reportCount === 0 && !loading && (
+          <Typography variant="body2" color="text.secondary">
+            No visit reports have been recorded for {clientName} yet. Reports will appear here once visits are logged.
           </Typography>
         )}
 
-        {summary && (
+        {hasDraft && reportCount !== null && !loading && (
+          <Typography variant="caption" color="text.secondary">
+            Based on {reportCount} visit report{reportCount !== 1 ? 's' : ''}
+            {reportCount === 1 && ' — consider gathering more visits for a fuller picture'}
+          </Typography>
+        )}
+
+        {hasDraft && (
           <Typography variant="body2" component="div" sx={{ lineHeight: 1.7 }}>
             {renderMarkdown(summary)}
           </Typography>
