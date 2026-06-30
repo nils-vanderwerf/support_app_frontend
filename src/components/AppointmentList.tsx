@@ -154,7 +154,7 @@ const AppointmentList = () => {
         .then(r => setReportedIds(new Set(r.data.map((rep: { appointment: { id: number } }) => rep.appointment.id))))
         .catch(() => {});
     }
-  }, []);
+  }, [isClient]);
 
   const now = new Date();
   const upcoming = appointments
