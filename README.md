@@ -20,17 +20,19 @@ The backend Rails API lives in a separate repository: [support_app_backend](http
 6. Click a worker's card to view their full profile, then **Book Appointment** or **Message** them
 7. Use **Book with AI** to describe what you need in natural language — the AI finds a suitable worker and proposes appointment times on your behalf
 8. Manage your bookings from the **Appointments** page — view status, cancel, or rebook
+9. After a completed appointment, leave a star rating and review on the worker's profile page
 
 ### As a support worker
 
 1. Sign up and select **Support Worker**
 2. Fill in your profile (bio, experience, availability, specialisations)
-3. You'll be taken through the **AI Vetting** interview — the AI collects your police check number, Working With Children Check, and qualifications
+3. Submit your police check number, Working With Children Check, and qualifications
 4. Once submitted, an admin reviews your application
-5. On approval, you land on your **Home dashboard** — today's schedule, weekly hours, upcoming appointments
+5. On approval, you land on your **Home dashboard** — today's schedule, weekly hours, total clients, average star rating, and a preview of your most recent reviews
 6. Browse **Clients**, view their profiles, and initiate conversations
 7. Respond to appointment invitations from your **Invitations** page — approve or decline bookings
-8. Chat with clients via **Messages** — the AI can simulate client responses so you can test the flow end to end
+8. Write visit reports for completed appointments directly from the **Appointments** page or your dashboard — the AI can pre-fill a draft for you
+9. Chat with clients via **Messages** — the AI can simulate client replies; review notifications also appear here as in-thread system messages
 
 ### Demo accounts
 
@@ -60,10 +62,10 @@ The following seeded accounts are available to try the app without signing up:
 - Role-aware and status-aware UI — pending workers are redirected to vetting; approved workers see their full dashboard
 - **AI conversation simulation** — every message thread is populated by a Claude persona built from real profile data; no real users needed to test the end-to-end flow
 - **AI Booking Assistant** — conversational agent that finds and connects users in natural language
-- **AI Vetting Agent** — guided interview that collects and validates support worker credentials
 - **AI Visit Reports** — generates a structured draft from appointment context; workers edit and submit from the same page
 - **Admin Dashboard** — stats bar, pending applications with AI vetting recommendations, appointment management, and approved workers list
 - **Forgot password** — email-based reset flow via Resend
+- **Star ratings & reviews** — clients rate support workers after completed appointments; workers are notified by email and in-app message
 
 ## Tech stack
 
@@ -92,8 +94,8 @@ The following seeded accounts are available to try the app without signing up:
 - Forgot password — email reset link sent via Resend, token validated on the backend
 
 ### Home dashboard
-- Client view: upcoming appointments, days since last visit, total appointments, health info summary, edit/delete actions
-- Support worker view: today's appointments, hours this week, total clients, upcoming and recent appointments with rebook shortcut
+- Client view: upcoming appointments, days since last visit, total appointments, health info summary, reviews given; edit/delete actions on appointments
+- Support worker view: today's appointments, hours this week, total clients, average star rating, upcoming and recent appointments with rebook shortcut, recent reviews sidebar
 
 ### Appointment system
 - `BookingForm` submits dates with the local timezone offset so the backend stores and formats times correctly
@@ -104,7 +106,7 @@ The following seeded accounts are available to try the app without signing up:
 - Conversation threads with chat-bubble UI, encrypted end-to-end using AES-256-GCM
 - Messages are encrypted in the browser before leaving the client; the server stores only ciphertext
 - Per-conversation keys derived via HKDF-SHA256 — cached in memory so repeated sends are fast
-- System messages (appointment confirmations/declines) rendered inline with a distinct style
+- System messages (appointment confirmations, declines, and review notifications) rendered inline with a distinct style
 - Unread message badges in the navbar
 - AI conversation simulation — each participant in a thread is played by a Claude persona built from their real profile data (name, bio, location, specialisations, health conditions); workers can trigger a simulated client reply and vice versa, including proactive appointment invitation actions
 
@@ -115,11 +117,6 @@ The following seeded accounts are available to try the app without signing up:
 - Supports bulk actions ("decline the rest for me")
 - Tool calls (worker searches, conversation opens) are rendered as purple pill chips in the chat UI so the user can see what the agent is doing
 
-### Support worker vetting
-- `VettingAgent` — step-by-step AI conversation that collects police check number, WWCC number, and expiry dates
-- Validates reference numbers (minimum 6 characters, must contain a digit)
-- On completion, worker status moves to `pending` and admin is notified
-
 ### Support worker profiles & list
 - Profile page with editable fields, multi-select availability selector, and specialisation chips
 - **Location filter** — geocodes the search address via Google Places API and filters workers by Haversine distance with an adjustable radius slider
@@ -129,7 +126,7 @@ The following seeded accounts are available to try the app without signing up:
 - Support workers can create a visit report for any completed appointment
 - **AI draft generation** — one click populates Activities, Observations, and Follow-up Actions from appointment context
 - Expandable report rows with full detail panel; reports are editable after submission
-- Appointments that already have a report are disabled in the picker to prevent duplicates
+- Accessible directly from the **Appointments** page — the button turns green ("Edit Report") when a report already exists, making it clear at a glance and preventing accidental duplicates
 - Visit report history is shown on the client profile page, filterable by time period and support worker; clients see reports from all their workers
 
 ### Progress reports
@@ -138,6 +135,16 @@ The following seeded accounts are available to try the app without signing up:
 - Saved reports appear on the Reports page under the **Progress Reports** tab, expandable with the full markdown summary
 - Supports client filtering and one-click delete
 - Client names in saved reports link through to the client profile page
+
+### Reviews
+- Clients can leave a star rating (1–5) and optional comment for a support worker after a completed, approved appointment
+- Interactive star picker with hover animation; one review per appointment enforced at the database level
+- Reviews are visible on the support worker's profile page under a dedicated **Reviews** tab, with the average rating and review count shown in the sidebar regardless of which tab is active
+- Clients can edit or delete their own reviews inline without leaving the page
+- The appointment dropdown shows all past appointments; already-reviewed ones are disabled with an "Already reviewed" label
+- Support workers are notified of new reviews via email and a system message in their existing conversation thread with the client, which surfaces as an unread message in the navbar badge
+- Average rating, review count, and a preview of the three most recent reviews appear on the support worker's **Home dashboard**
+- Clients see a "Reviews You've Given" summary on their own dashboard with links through to each worker's profile
 
 ### Admin dashboard
 - Stats bar: approved workers, pending review, total clients, appointments this week
