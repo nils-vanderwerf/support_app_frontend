@@ -35,16 +35,41 @@ interface ReportFields {
 
 const EMPTY: ReportFields = { activities: '', observations: '', follow_up_actions: '' };
 
+const fieldsFromReport = (r: ExistingReport): ReportFields => ({
+  activities: r.activities,
+  observations: r.observations,
+  follow_up_actions: r.follow_up_actions,
+});
+
 const VisitReportDrawer = ({ appointment, open, onClose, existingReport }: Props) => {
-  const [fields, setFields] = useState<ReportFields>(
-    existingReport
-      ? { activities: existingReport.activities, observations: existingReport.observations, follow_up_actions: existingReport.follow_up_actions }
-      : EMPTY
-  );
+  const [fields, setFields] = useState<ReportFields>(existingReport ? fieldsFromReport(existingReport) : EMPTY);
+  const [fetchedReport, setFetchedReport] = useState<ExistingReport | null>(null);
+  const [fetching, setFetching] = useState(false);
   const [drafting, setDrafting] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
+
+  const activeReport = existingReport ?? fetchedReport ?? undefined;
+  const isEditing = !!activeReport;
+
+  // When opened without a pre-provided existingReport, check if a report already exists
+  useEffect(() => {
+    if (!open || existingReport) return;
+    setFetchedReport(null);
+    setFields(EMPTY);
+    setFetching(true);
+    axiosInstance.get(`/visit_reports/${appointment.id}`)
+      .then(r => {
+        if (r.data) {
+          setFetchedReport(r.data);
+          setFields(fieldsFromReport(r.data));
+        }
+      })
+      .catch(() => {})
+      .finally(() => setFetching(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, appointment.id]);
 
   const field = (key: keyof ReportFields, label: string) => (
     <TextField
@@ -80,8 +105,8 @@ const VisitReportDrawer = ({ appointment, open, onClose, existingReport }: Props
     setSaving(true);
     setError('');
     try {
-      if (existingReport) {
-        await axiosInstance.put(`/visit_reports/${existingReport.id}`, fields);
+      if (activeReport) {
+        await axiosInstance.put(`/visit_reports/${activeReport.id}`, fields);
       } else {
         await axiosInstance.post('/visit_reports', {
           appointment_id: appointment.id,
@@ -107,9 +132,8 @@ const VisitReportDrawer = ({ appointment, open, onClose, existingReport }: Props
   }, [saved]);
 
   const handleClose = () => {
-    setFields(existingReport
-      ? { activities: existingReport.activities, observations: existingReport.observations, follow_up_actions: existingReport.follow_up_actions }
-      : EMPTY);
+    setFetchedReport(null);
+    setFields(existingReport ? fieldsFromReport(existingReport) : EMPTY);
     setSaved(false);
     setError('');
     onClose();
@@ -124,7 +148,7 @@ const VisitReportDrawer = ({ appointment, open, onClose, existingReport }: Props
     <Drawer anchor="right" open={open} onClose={handleClose} PaperProps={{ sx: { width: { xs: '100%', sm: 480 }, p: 3 } }}>
       <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
         <Box>
-          <Typography variant="h6" fontWeight={700}>{existingReport ? 'Edit Report' : 'Visit Report'}</Typography>
+          <Typography variant="h6" fontWeight={700}>{isEditing ? 'Edit Report' : 'Visit Report'}</Typography>
           <Typography variant="caption" color="text.secondary">{clientName} · {apptDate}</Typography>
         </Box>
         <IconButton onClick={handleClose}><Close /></IconButton>
@@ -134,6 +158,10 @@ const VisitReportDrawer = ({ appointment, open, onClose, existingReport }: Props
 
       {saved ? (
         <Alert severity="success">Report saved successfully.</Alert>
+      ) : fetching ? (
+        <Box display="flex" justifyContent="center" pt={4}>
+          <CircularProgress size={28} sx={{ color: '#7B2FBE' }} />
+        </Box>
       ) : (
         <Box display="flex" flexDirection="column" gap={2.5}>
           {error && <Alert severity="error">{error}</Alert>}
@@ -145,7 +173,7 @@ const VisitReportDrawer = ({ appointment, open, onClose, existingReport }: Props
             disabled={drafting}
             sx={{ borderColor: '#7B2FBE', color: '#7B2FBE', alignSelf: 'flex-start' }}
           >
-            {drafting ? 'Generating draft…' : 'Generate draft with AI'}
+            {drafting ? 'Generating draft…' : isEditing ? 'Regenerate draft with AI' : 'Generate draft with AI'}
           </Button>
 
           {field('activities', 'Activities')}
@@ -159,7 +187,7 @@ const VisitReportDrawer = ({ appointment, open, onClose, existingReport }: Props
             disabled={saving || (!fields.activities && !fields.observations && !fields.follow_up_actions)}
             sx={{ bgcolor: '#7B2FBE', '&:hover': { bgcolor: '#6a27a3' }, mt: 1 }}
           >
-            {saving ? 'Saving…' : 'Save Report'}
+            {saving ? 'Saving…' : isEditing ? 'Update Report' : 'Save Report'}
           </Button>
         </Box>
       )}

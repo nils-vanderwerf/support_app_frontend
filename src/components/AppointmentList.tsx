@@ -7,10 +7,12 @@ import {
   Paper, Typography, Container, Box, Chip,
   Button, Snackbar, Dialog, DialogTitle, DialogActions, DialogContent,
 } from '@mui/material';
+import { CheckCircle } from '@mui/icons-material';
 import axiosInstance from '../api/axiosConfig';
 import { SupportWorker, Client } from '../context/AuthContext';
 import BookingForm from './BookingForm';
 import BookingAgent from './BookingAgent';
+import VisitReportDrawer from './VisitReportDrawer';
 
 export interface Appointment {
   id: number;
@@ -40,13 +42,15 @@ const statusChip = (status: string) => {
 };
 
 const AppointmentTable = ({
-  rows, isClient, onEdit, onDelete, onRebook, showActions, onNameClick,
+  rows, isClient, onEdit, onDelete, onRebook, onVisitReport, reportedIds, showActions, onNameClick,
 }: {
   rows: Appointment[];
   isClient: boolean;
   onEdit: (a: Appointment) => void;
   onDelete: (a: Appointment) => void;
   onRebook: (a: Appointment) => void;
+  onVisitReport: (a: Appointment) => void;
+  reportedIds: Set<number>;
   showActions: boolean;
   onNameClick: (a: Appointment) => void;
 }) => (
@@ -90,7 +94,24 @@ const AppointmentTable = ({
                     <Button size="small" variant="outlined" onClick={() => onDelete(a)} color="error">Delete</Button>
                   </Box>
                 ) : (
-                  <Button size="small" variant="outlined" onClick={() => onRebook(a)} sx={{ borderColor: '#7B2FBE', color: '#7B2FBE' }}>Rebook</Button>
+                  <Box display="flex" gap={1}>
+                    <Button size="small" variant="outlined" onClick={() => onRebook(a)} sx={{ borderColor: '#7B2FBE', color: '#7B2FBE' }}>Rebook</Button>
+                    {!isClient && (
+                      reportedIds.has(a.id) ? (
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          startIcon={<CheckCircle fontSize="small" />}
+                          onClick={() => onVisitReport(a)}
+                          sx={{ borderColor: '#2e7d32', color: '#2e7d32' }}
+                        >
+                          Edit Report
+                        </Button>
+                      ) : (
+                        <Button size="small" variant="outlined" onClick={() => onVisitReport(a)} sx={{ borderColor: '#7B2FBE', color: '#7B2FBE' }}>Visit Report</Button>
+                      )
+                    )}
+                  </Box>
                 )}
               </TableCell>
             )}
@@ -109,6 +130,8 @@ const AppointmentList = () => {
   const [appointmentToEdit, setAppointmentToEdit] = useState<Appointment | undefined>(undefined);
   const [editDialogueVisible, setEditDialogueVisible] = useState(false);
   const [rebookAppointment, setRebookAppointment] = useState<Appointment | null>(null);
+  const [visitReportAppt, setVisitReportAppt] = useState<Appointment | null>(null);
+  const [reportedIds, setReportedIds] = useState<Set<number>>(new Set());
   const [agentOpen, setAgentOpen] = useState(false);
 
   const { client } = useAuth();
@@ -124,7 +147,14 @@ const AppointmentList = () => {
     }
   };
 
-  useEffect(() => { fetchAppointments(); }, []);
+  useEffect(() => {
+    fetchAppointments();
+    if (!isClient) {
+      axiosInstance.get('/visit_reports')
+        .then(r => setReportedIds(new Set(r.data.map((rep: { appointment: { id: number } }) => rep.appointment.id))))
+        .catch(() => {});
+    }
+  }, []);
 
   const now = new Date();
   const upcoming = appointments
@@ -193,6 +223,8 @@ const AppointmentList = () => {
               onEdit={handleEdit}
               onDelete={(a) => { setAppointmentToDelete(a); setDeleteDialogueVisible(true); }}
               onRebook={setRebookAppointment}
+              onVisitReport={setVisitReportAppt}
+              reportedIds={reportedIds}
               onNameClick={handleNameClick}
               showActions
             />
@@ -208,6 +240,8 @@ const AppointmentList = () => {
               onEdit={handleEdit}
               onDelete={(a) => { setAppointmentToDelete(a); setDeleteDialogueVisible(true); }}
               onRebook={setRebookAppointment}
+              onVisitReport={setVisitReportAppt}
+              reportedIds={reportedIds}
               onNameClick={handleNameClick}
               showActions
             />
@@ -238,6 +272,23 @@ const AppointmentList = () => {
           supportWorkerId={rebookAppointment.support_worker.id}
           onClose={() => setRebookAppointment(null)}
           onSuccess={() => { setVisibleMessage('Appointment booked'); fetchAppointments(); }}
+        />
+      )}
+      {visitReportAppt && (
+        <VisitReportDrawer
+          appointment={{
+            id: visitReportAppt.id,
+            date: visitReportAppt.date,
+            client_id: visitReportAppt.client.id,
+            client: { first_name: visitReportAppt.client.first_name, last_name: visitReportAppt.client.last_name },
+          }}
+          open={true}
+          onClose={() => {
+            setVisitReportAppt(null);
+            axiosInstance.get('/visit_reports')
+              .then(r => setReportedIds(new Set(r.data.map((rep: { appointment: { id: number } }) => rep.appointment.id))))
+              .catch(() => {});
+          }}
         />
       )}
       {deleteDialogueVisible && (
