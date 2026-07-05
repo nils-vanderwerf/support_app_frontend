@@ -106,7 +106,7 @@ const ConversationView = () => {
   const triggerAiResponse = async (followUpsLeft = 2, isTopLevel = true) => {
     if (isTopLevel) setAiTyping(true);
     try {
-      const aiRes = await axiosInstance.post(`/conversations/${id}/ai_respond`, { timezone: tz });
+      const aiRes = await axiosInstance.post(`/conversations/${id}/ai_respond`);
       if (aiRes.data.message) setMessages(prev => [...prev, aiRes.data.message]);
       if (aiRes.data.declined_all) {
         setPendingAppointments([]);
@@ -149,10 +149,8 @@ const ConversationView = () => {
     }
   };
 
-  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-
   const doApprove = async (apptId: number) => {
-    await axiosInstance.patch(`/appointments/${apptId}/approve`, { timezone: tz });
+    await axiosInstance.patch(`/appointments/${apptId}/approve`);
     setPendingAppointments(prev => prev.filter(a => a.id !== apptId));
     showToast('Appointment confirmed');
     fetchConversation();
@@ -161,7 +159,6 @@ const ConversationView = () => {
   const doApproveAll = async (appts: PendingAppointment[]) => {
     await axiosInstance.patch('/appointments/bulk_approve', {
       appointment_ids: appts.map(a => a.id),
-      timezone: tz,
     });
     setPendingAppointments([]);
     showToast(`${appts.length} appointment${appts.length !== 1 ? 's' : ''} confirmed`);
@@ -193,11 +190,10 @@ const ConversationView = () => {
     const trimmed = note.trim();
     const declineIds = appts.map(a => a.id);
     if (appts.length === 1) {
-      await axiosInstance.patch(`/appointments/${declineIds[0]}/decline`, { timezone: tz, skip_message: !!trimmed });
+      await axiosInstance.patch(`/appointments/${declineIds[0]}/decline`, { skip_message: !!trimmed });
     } else {
       await axiosInstance.patch('/appointments/bulk_decline', {
         appointment_ids: declineIds,
-        timezone: tz,
         skip_message: !!trimmed,
       });
     }
@@ -231,7 +227,7 @@ const ConversationView = () => {
   const openInviteForm = async () => {
     setFetchingSuggestion(true);
     try {
-      const res = await axiosInstance.get(`/conversations/${id}/suggest_booking`, { params: { timezone: tz } });
+      const res = await axiosInstance.get(`/conversations/${id}/suggest_booking`);
       setInviteSuggested(res.data);
     } catch {
       setInviteSuggested({});
