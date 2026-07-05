@@ -167,8 +167,13 @@ const BookingForm = ({ clientId, supportWorkerId, onClose, onSuccess, appointmen
         onClose();
         onSuccess(datetime);
       }
-    } catch (error) {
-      console.error('Error posting data: ', error);
+    } catch (err: any) {
+      console.error('Error posting data: ', err);
+      const data = err?.response?.data;
+      const message = Array.isArray(data?.errors)
+        ? data.errors.join(', ')
+        : data?.errors || data?.error || 'Something went wrong sending this — please try again.';
+      setError(message);
     }
   };
 
