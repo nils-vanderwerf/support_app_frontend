@@ -106,7 +106,7 @@ const ConversationView = () => {
   const triggerAiResponse = async (followUpsLeft = 2, isTopLevel = true) => {
     if (isTopLevel) setAiTyping(true);
     try {
-      const aiRes = await axiosInstance.post(`/conversations/${id}/ai_respond`);
+      const aiRes = await axiosInstance.post(`/conversations/${id}/ai_respond`, { timezone: tz });
       if (aiRes.data.message) setMessages(prev => [...prev, aiRes.data.message]);
       if (aiRes.data.declined_all) {
         setPendingAppointments([]);
