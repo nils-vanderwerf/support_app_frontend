@@ -78,6 +78,8 @@ const ConversationView = () => {
     clashes: Array<{ appt: PendingAppointment; clash: ExistingAppt }>;
     onConfirm: () => void;
   } | null>(null);
+  const [declineDialog, setDeclineDialog] = useState<PendingAppointment[] | null>(null);
+  const [declineNote, setDeclineNote] = useState('');
   const bottomRef = useRef<HTMLDivElement>(null);
 
   const fetchConversation = async () => {
@@ -177,11 +179,44 @@ const ConversationView = () => {
     }
   };
 
-  const handleDecline = async (apptId: number) => {
-    await axiosInstance.patch(`/appointments/${apptId}/decline`, { timezone: tz });
-    setPendingAppointments(prev => prev.filter(a => a.id !== apptId));
-    showToast('Appointment declined', 'info');
+  const handleDecline = (apptId: number) => {
+    const appt = pendingAppointments.find(a => a.id === apptId);
+    if (!appt) return;
+    setDeclineDialog([appt]);
+  };
+
+  const handleDeclineAll = (appts: PendingAppointment[]) => {
+    setDeclineDialog(appts);
+  };
+
+  const doDecline = async (appts: PendingAppointment[], note: string) => {
+    const trimmed = note.trim();
+    const declineIds = appts.map(a => a.id);
+    if (appts.length === 1) {
+      await axiosInstance.patch(`/appointments/${declineIds[0]}/decline`, { timezone: tz, skip_message: !!trimmed });
+    } else {
+      await axiosInstance.patch('/appointments/bulk_decline', {
+        appointment_ids: declineIds,
+        timezone: tz,
+        skip_message: !!trimmed,
+      });
+    }
+    if (trimmed) {
+      const encrypted = await encryptMessage(trimmed, parseInt(id!));
+      await axiosInstance.post(`/conversations/${id}/messages`, { content: encrypted });
+    }
+    setPendingAppointments(prev => prev.filter(a => !declineIds.includes(a.id)));
+    showToast(appts.length > 1 ? `${appts.length} appointments declined` : 'Appointment declined', 'info');
     fetchConversation();
+  };
+
+  const confirmDecline = async () => {
+    if (!declineDialog) return;
+    const appts = declineDialog;
+    const note = declineNote;
+    setDeclineDialog(null);
+    setDeclineNote('');
+    await doDecline(appts, note);
   };
 
   const handleApproveAll = (appts: PendingAppointment[]) => {
@@ -196,7 +231,7 @@ const ConversationView = () => {
   const openInviteForm = async () => {
     setFetchingSuggestion(true);
     try {
-      const res = await axiosInstance.get(`/conversations/${id}/suggest_booking`);
+      const res = await axiosInstance.get(`/conversations/${id}/suggest_booking`, { params: { timezone: tz } });
       setInviteSuggested(res.data);
     } catch {
       setInviteSuggested({});
@@ -243,7 +278,16 @@ const ConversationView = () => {
         return (
           <>
             {respondable.length > 1 && (
-              <Box display="flex" justifyContent="flex-end" mb={1}>
+              <Box display="flex" justifyContent="flex-end" gap={1} mb={1}>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  startIcon={<Close />}
+                  onClick={() => handleDeclineAll(respondable)}
+                  color="error"
+                >
+                  Decline All ({respondable.length})
+                </Button>
                 <Button
                   variant="contained"
                   size="small"
@@ -425,6 +469,34 @@ const ConversationView = () => {
               onClick={() => { clashDialog.onConfirm(); setClashDialog(null); }}
             >
               Approve Anyway
+            </Button>
+          </DialogActions>
+        </Dialog>
+      )}
+
+      {declineDialog && (
+        <Dialog open onClose={() => { setDeclineDialog(null); setDeclineNote(''); }} maxWidth="sm" fullWidth>
+          <DialogTitle>
+            {declineDialog.length > 1 ? `Decline ${declineDialog.length} invitations` : 'Decline invitation'}
+          </DialogTitle>
+          <DialogContent>
+            <Typography variant="body2" color="text.secondary" mb={2}>
+              Optionally add a note to let {otherPerson.first_name} know why — it'll be sent as a message.
+            </Typography>
+            <TextField
+              fullWidth
+              multiline
+              minRows={3}
+              placeholder="Add a note (optional)…"
+              value={declineNote}
+              onChange={e => setDeclineNote(e.target.value)}
+              autoFocus
+            />
+          </DialogContent>
+          <DialogActions sx={{ px: 3, pb: 2 }}>
+            <Button onClick={() => { setDeclineDialog(null); setDeclineNote(''); }}>Cancel</Button>
+            <Button variant="contained" color="error" onClick={confirmDecline}>
+              {declineDialog.length > 1 ? `Decline All` : 'Decline'}
             </Button>
           </DialogActions>
         </Dialog>
