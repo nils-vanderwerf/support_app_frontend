@@ -228,9 +228,15 @@ const ConversationView = () => {
     setFetchingSuggestion(true);
     try {
       const res = await axiosInstance.get(`/conversations/${id}/suggest_booking`);
-      setInviteSuggested(res.data);
+      if (res.data?.error) {
+        setInviteSuggested({});
+        showToast(`${res.data.error} Please fill in the details manually.`, 'info');
+      } else {
+        setInviteSuggested(res.data);
+      }
     } catch {
       setInviteSuggested({});
+      showToast('Could not load suggested details from the conversation — please fill in manually.', 'info');
     } finally {
       setFetchingSuggestion(false);
       setShowInviteForm(true);
