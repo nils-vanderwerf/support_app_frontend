@@ -1,11 +1,10 @@
 import { useState } from 'react';
 import {
   Drawer, Box, Typography, Button, CircularProgress,
-  Alert, Divider, IconButton,
+  Alert, Divider, IconButton, TextField,
 } from '@mui/material';
 import { Close, AutoAwesome, Refresh, Save, Delete } from '@mui/icons-material';
 import axiosInstance from '../api/axiosConfig';
-import { renderMarkdown } from '../utils/renderMarkdown';
 
 interface Props {
   clientId: number;
@@ -13,6 +12,8 @@ interface Props {
   open: boolean;
   onClose: () => void;
 }
+
+const MIN_SUMMARY_LENGTH = 10;
 
 const ClientProgressReportDrawer = ({ clientId, clientName, open, onClose }: Props) => {
   const [summary, setSummary] = useState('');
@@ -22,31 +23,43 @@ const ClientProgressReportDrawer = ({ clientId, clientName, open, onClose }: Pro
   const [savedId, setSavedId] = useState<number | null>(null);
   const [error, setError] = useState('');
 
-  const hasDraft = summary.length > 0 && (reportCount ?? 0) > 0;
+  // Whether there's enough visit data to write a report on — independent of
+  // whether the AI draft actually succeeded, so a worker can still write one by hand.
+  const canCompose = reportCount !== null && reportCount > 0;
+  const summaryTooShort = summary.trim().length > 0 && summary.trim().length < MIN_SUMMARY_LENGTH;
 
   const handleGenerate = async () => {
     setLoading(true);
     setError('');
     setSavedId(null);
-    setSummary('');
     try {
       const { data } = await axiosInstance.post('/client_progress_reports', { client_id: clientId });
       setSummary(data.summary ?? '');
       setReportCount(data.report_count);
-    } catch {
-      setError('Could not generate report. Try again.');
+    } catch (err: any) {
+      if (err.response?.status === 503 && err.response?.data?.error === 'ai_unavailable') {
+        setReportCount(err.response.data.report_count ?? null);
+        setError('AI is currently unavailable — you can write the summary yourself below.');
+      } else {
+        setError('Could not generate report. Try again.');
+      }
     } finally {
       setLoading(false);
     }
   };
 
   const handleSave = async () => {
+    const trimmed = summary.trim();
+    if (trimmed.length < MIN_SUMMARY_LENGTH) {
+      setError(`Summary must be at least ${MIN_SUMMARY_LENGTH} characters.`);
+      return;
+    }
     setSaving(true);
     setError('');
     try {
       const { data } = await axiosInstance.post('/progress_reports', {
         client_id: clientId,
-        summary,
+        summary: trimmed,
         report_count: reportCount ?? 0,
       });
       setSavedId(data.id);
@@ -91,21 +104,21 @@ const ClientProgressReportDrawer = ({ clientId, clientName, open, onClose }: Pro
         <Box display="flex" gap={1} flexWrap="wrap">
           <Button
             variant="outlined"
-            startIcon={loading ? <CircularProgress size={16} /> : hasDraft ? <Refresh /> : <AutoAwesome />}
+            startIcon={loading ? <CircularProgress size={16} /> : reportCount !== null ? <Refresh /> : <AutoAwesome />}
             onClick={handleGenerate}
             disabled={loading || saving}
             sx={{ borderColor: '#7B2FBE', color: '#7B2FBE' }}
           >
-            {loading ? 'Generating…' : hasDraft ? 'Regenerate' : 'Generate Progress Report'}
+            {loading ? 'Generating…' : reportCount !== null ? 'Regenerate' : 'Generate Progress Report'}
           </Button>
 
-          {hasDraft && !savedId && (
+          {canCompose && !savedId && (
             <>
               <Button
                 variant="contained"
                 startIcon={saving ? <CircularProgress size={16} sx={{ color: 'white' }} /> : <Save />}
                 onClick={handleSave}
-                disabled={saving || loading}
+                disabled={saving || loading || summary.trim().length < MIN_SUMMARY_LENGTH}
                 sx={{ bgcolor: '#7B2FBE', '&:hover': { bgcolor: '#6a27a3' } }}
               >
                 {saving ? 'Saving…' : 'Save Report'}
@@ -129,17 +142,25 @@ const ClientProgressReportDrawer = ({ clientId, clientName, open, onClose }: Pro
           </Typography>
         )}
 
-        {hasDraft && reportCount !== null && !loading && (
+        {canCompose && !loading && (
           <Typography variant="caption" color="text.secondary">
             Based on {reportCount} visit report{reportCount !== 1 ? 's' : ''}
             {reportCount === 1 && ' — consider gathering more visits for a fuller picture'}
           </Typography>
         )}
 
-        {hasDraft && (
-          <Typography variant="body2" component="div" sx={{ lineHeight: 1.7 }}>
-            {renderMarkdown(summary)}
-          </Typography>
+        {canCompose && (
+          <TextField
+            multiline
+            minRows={8}
+            fullWidth
+            value={summary}
+            onChange={(e) => setSummary(e.target.value)}
+            disabled={saving || loading || !!savedId}
+            placeholder="Write the progress summary here…"
+            error={summaryTooShort}
+            helperText={summaryTooShort ? `At least ${MIN_SUMMARY_LENGTH} characters needed` : ' '}
+          />
         )}
       </Box>
     </Drawer>
