@@ -13,6 +13,7 @@ import BookingForm from './BookingForm';
 import DateOfBirthPicker from './DateOfBirthPicker';
 import ClientProgressReportDrawer from './ClientProgressReportDrawer';
 import ClientVisitReports from './ClientVisitReports';
+import ClientProgressReports from './ClientProgressReports';
 
 const GENDERS = ['Male', 'Female', 'Non-binary', 'Prefer not to say'];
 
@@ -238,7 +239,10 @@ const ClientProfilePage = () => {
       </Grid>
 
       {(isOwnProfile || (supportWorker && client.has_approved_appointment)) && (
-        <ClientVisitReports clientId={client.id} isOwnProfile={isOwnProfile} />
+        <>
+          <ClientVisitReports clientId={client.id} isOwnProfile={isOwnProfile} />
+          <ClientProgressReports clientId={client.id} isOwnProfile={isOwnProfile} />
+        </>
       )}
 
       {showBookingForm && supportWorker && (

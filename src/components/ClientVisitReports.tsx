@@ -6,6 +6,7 @@ import {
 } from '@mui/material';
 import { KeyboardArrowDown, KeyboardArrowUp, AssignmentOutlined } from '@mui/icons-material';
 import axiosInstance from '../api/axiosConfig';
+import { useAuth } from '../context/AuthContext';
 
 interface VisitReportEntry {
   id: number;
@@ -75,9 +76,11 @@ interface Props {
 }
 
 const ClientVisitReports = ({ clientId, isOwnProfile }: Props) => {
+  const { supportWorker } = useAuth();
   const [reports, setReports] = useState<VisitReportEntry[]>([]);
   const [dateRange, setDateRange] = useState('all');
   const [workerFilter, setWorkerFilter] = useState('');
+  const [onlyMine, setOnlyMine] = useState(false);
 
   useEffect(() => {
     axiosInstance.get(`/clients/${clientId}/visit_reports`)
@@ -95,10 +98,15 @@ const ClientVisitReports = ({ clientId, isOwnProfile }: Props) => {
     )
   ).sort();
 
-  const showWorkerColumn = isOwnProfile;
-  const showWorkerFilter = isOwnProfile && workers.length > 1;
+  // Multiple contributing workers can show up here now that reports are shared
+  // between anyone with an approved appointment (to support handover) — surface
+  // who wrote what regardless of whether the viewer is the client or a worker.
+  const showWorkerColumn = workers.length > 1;
+  const showWorkerFilter = workers.length > 1;
+  const showOnlyMineFilter = !isOwnProfile && !!supportWorker && workers.length > 1;
 
   const filtered = reports.filter(r => {
+    if (showOnlyMineFilter && onlyMine && r.support_worker?.id !== supportWorker!.id) return false;
     if (workerFilter && r.support_worker) {
       if (`${r.support_worker.first_name} ${r.support_worker.last_name}` !== workerFilter) return false;
     }
@@ -147,6 +155,16 @@ const ClientVisitReports = ({ clientId, isOwnProfile }: Props) => {
               <MenuItem key={name} value={name}>{name}</MenuItem>
             ))}
           </TextField>
+        )}
+        {showOnlyMineFilter && (
+          <Chip
+            label="Only mine"
+            onClick={() => setOnlyMine(o => !o)}
+            variant={onlyMine ? 'filled' : 'outlined'}
+            sx={onlyMine
+              ? { bgcolor: '#7B2FBE', color: 'white', fontWeight: 600 }
+              : { borderColor: '#7B2FBE', color: '#7B2FBE' }}
+          />
         )}
       </Box>
 
