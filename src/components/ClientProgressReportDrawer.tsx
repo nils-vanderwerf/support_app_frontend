@@ -23,9 +23,6 @@ const ClientProgressReportDrawer = ({ clientId, clientName, open, onClose }: Pro
   const [savedId, setSavedId] = useState<number | null>(null);
   const [error, setError] = useState('');
 
-  // Whether there's enough visit data to write a report on — independent of
-  // whether the AI draft actually succeeded, so a worker can still write one by hand.
-  const canCompose = reportCount !== null && reportCount > 0;
   const summaryTooShort = summary.trim().length > 0 && summary.trim().length < MIN_SUMMARY_LENGTH;
 
   const handleGenerate = async () => {
@@ -112,7 +109,7 @@ const ClientProgressReportDrawer = ({ clientId, clientName, open, onClose }: Pro
             {loading ? 'Generating…' : reportCount !== null ? 'Regenerate' : 'Generate Progress Report'}
           </Button>
 
-          {canCompose && !savedId && (
+          {!savedId && (
             <>
               <Button
                 variant="contained"
@@ -127,7 +124,7 @@ const ClientProgressReportDrawer = ({ clientId, clientName, open, onClose }: Pro
                 variant="outlined"
                 startIcon={<Delete />}
                 onClick={handleDiscard}
-                disabled={saving || loading}
+                disabled={saving || loading || (!summary && reportCount === null)}
                 color="error"
               >
                 Discard
@@ -138,30 +135,28 @@ const ClientProgressReportDrawer = ({ clientId, clientName, open, onClose }: Pro
 
         {reportCount === 0 && !loading && (
           <Typography variant="body2" color="text.secondary">
-            No visit reports have been recorded for {clientName} yet. Reports will appear here once visits are logged.
+            No visit reports have been recorded for {clientName} yet — you can still write a summary manually below.
           </Typography>
         )}
 
-        {canCompose && !loading && (
+        {!!reportCount && !loading && (
           <Typography variant="caption" color="text.secondary">
             Based on {reportCount} visit report{reportCount !== 1 ? 's' : ''}
             {reportCount === 1 && ' — consider gathering more visits for a fuller picture'}
           </Typography>
         )}
 
-        {canCompose && (
-          <TextField
-            multiline
-            minRows={8}
-            fullWidth
-            value={summary}
-            onChange={(e) => setSummary(e.target.value)}
-            disabled={saving || loading || !!savedId}
-            placeholder="Write the progress summary here…"
-            error={summaryTooShort}
-            helperText={summaryTooShort ? `At least ${MIN_SUMMARY_LENGTH} characters needed` : ' '}
-          />
-        )}
+        <TextField
+          multiline
+          minRows={8}
+          fullWidth
+          value={summary}
+          onChange={(e) => setSummary(e.target.value)}
+          disabled={saving || loading || !!savedId}
+          placeholder="Write the progress summary here, or generate a draft with AI above…"
+          error={summaryTooShort}
+          helperText={summaryTooShort ? `At least ${MIN_SUMMARY_LENGTH} characters needed` : ' '}
+        />
       </Box>
     </Drawer>
   );
