@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { Link as RouterLink } from 'react-router-dom';
 import { renderMarkdown } from '../utils/renderMarkdown';
 import {
-  Drawer, Box, Typography, TextField, IconButton, CircularProgress, Paper,
+  Drawer, Box, Typography, TextField, IconButton, CircularProgress, Paper, Link,
 } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import CloseIcon from '@mui/icons-material/Close';
@@ -24,7 +25,8 @@ interface ToolCall {
 
 type DisplayMessage =
   | { type: 'chat'; role: 'user' | 'assistant'; content: string }
-  | { type: 'tool_steps'; toolCalls: ToolCall[] };
+  | { type: 'tool_steps'; toolCalls: ToolCall[] }
+  | { type: 'error_link'; message: string; to: string; linkLabel: string };
 
 interface BookingAgentProps {
   open: boolean;
@@ -129,8 +131,17 @@ const BookingAgent = ({ open, onClose, onBooked, isClient = true }: BookingAgent
       if (data.conversation_id) {
         onBooked(data.conversation_id);
       }
-    } catch {
-      setDisplayMessages(prev => [...prev, { type: 'chat', role: 'assistant', content: 'Sorry, something went wrong. Please try again.' }]);
+    } catch (err: any) {
+      if (err.response?.status === 503 && err.response?.data?.error === 'ai_unavailable') {
+        setDisplayMessages(prev => [...prev, {
+          type: 'error_link',
+          message: "Having trouble reaching the booking assistant right now — please try again shortly.",
+          to: isClient ? '/support-workers' : '/clients',
+          linkLabel: isClient ? 'Browse support workers directly' : 'Browse clients directly',
+        }]);
+      } else {
+        setDisplayMessages(prev => [...prev, { type: 'chat', role: 'assistant', content: 'Sorry, something went wrong. Please try again.' }]);
+      }
     } finally {
       setLoading(false);
     }
@@ -162,6 +173,18 @@ const BookingAgent = ({ open, onClose, onBooked, isClient = true }: BookingAgent
           {displayMessages.map((msg, i) => {
             if (msg.type === 'tool_steps') {
               return <ToolSteps key={i} toolCalls={msg.toolCalls} />;
+            }
+            if (msg.type === 'error_link') {
+              return (
+                <Box key={i} sx={{ display: 'flex', justifyContent: 'flex-start' }}>
+                  <Paper elevation={0} sx={{ p: 1.5, maxWidth: '82%', bgcolor: '#f3e8ff', borderRadius: '16px 16px 16px 4px' }}>
+                    <Typography variant="body2" sx={{ mb: 1 }}>{msg.message}</Typography>
+                    <Link component={RouterLink} to={msg.to} onClick={onClose} sx={{ color: '#7B2FBE', fontWeight: 600 }}>
+                      {msg.linkLabel}
+                    </Link>
+                  </Paper>
+                </Box>
+              );
             }
             return (
               <Box key={i} sx={{ display: 'flex', justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start' }}>
