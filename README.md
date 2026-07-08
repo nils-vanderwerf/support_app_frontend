@@ -103,7 +103,7 @@ The following seeded accounts are available to try the app without signing up:
 - Admin appointment table with status filter (All / Pending / Approved / Declined)
 
 ### Messaging
-- Conversation threads with chat-bubble UI, encrypted end-to-end using AES-256-GCM
+- Conversation threads with chat-bubble UI, encrypted at rest using AES-256-GCM (see "How this app talks to its backend and Google" below for what that does and doesn't protect against)
 - Messages are encrypted in the browser before leaving the client; the server stores only ciphertext
 - Per-conversation keys derived via HKDF-SHA256 — cached in memory so repeated sends are fast
 - System messages (appointment confirmations, declines, and review notifications) rendered inline with a distinct style
@@ -153,6 +153,16 @@ The following seeded accounts are available to try the app without signing up:
 - Appointments tab with status filter
 - Approved workers tab with avatar, email, location, and specialisations
 - Messages page — admin can view and reply to support worker threads (linked from the navbar)
+
+## How this app talks to its backend and Google
+
+For the full backend-side security/architecture write-up (how sensitive fields are gated server-side, graceful AI degradation, encryption details), see the [backend README](https://github.com/nils-vanderwerf/support_app_backend#how-the-pieces-talk-to-each-other). The frontend-specific pieces:
+
+- **Auth:** a signed token (not a session cookie) is stored in `localStorage` and attached as `Authorization: Bearer <token>` by an Axios interceptor (`src/api/axiosConfig.js`) on every request. **Trade-off:** no cookies means no CSRF exposure, but a token in `localStorage` can be read by any script running on the page — an XSS bug would be a stolen-session bug. That's judged an acceptable trade for an app with no third-party embedded scripts.
+- **Google Places** is called directly from the browser (`LocationAutocomplete.tsx`, `geoDistance.ts`) using a Maps API key that ships in the frontend bundle — safe because it's locked to this domain via HTTP referrer restriction in Google Cloud Console, not because it's secret. The backend is never involved in geocoding or autocomplete. Distance filtering on the browse/list pages is a real Haversine calculation on geocoded coordinates — contrast this with the AI booking assistant, which instead asks Claude to *estimate* distance from place names using its own geographic knowledge, since the backend tool-use loop has no access to browser-side geocoding. That's a deliberate inconsistency (precise client-side math for the list pages, fuzzy LLM reasoning for chat), not a bug.
+- **Claude (Anthropic)** is never called from the browser — the API key only ever lives in the backend's environment. Every AI feature the frontend triggers (booking assistant, visit/progress report drafts, AI conversation replies) is a POST to this app's own Rails API, which then talks to Anthropic server-side.
+- **Message encryption** (`src/utils/encryption.ts`) really does encrypt in the browser before sending and decrypt in the browser on render — but the AES key is derived via HKDF from a hardcoded context string plus the conversation id, not from any per-user secret. That means the backend can (and does, for the AI conversation-simulation features) derive the identical key itself. So this protects a database dump or leaked backup from showing plaintext messages, but it is not confidentiality against the server — an important distinction from what "end-to-end encrypted" usually implies.
+- **Graceful AI degradation:** when the backend returns `503 { error: 'ai_unavailable' }`, the UI never just shows a dead end. The progress report drawer's summary field is a normal editable text box from the moment it opens (not something that only appears after a successful generate), so a failed AI call just means it's empty instead of pre-filled. The AI booking chat has no manual equivalent, so instead it shows a clearer message plus a direct link to browse the client/support-worker list, chosen based on the logged-in user's role.
 
 ## Running locally
 
