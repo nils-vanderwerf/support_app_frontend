@@ -3,7 +3,7 @@ import {
   Drawer, Box, Typography, TextField, Button, CircularProgress,
   Alert, Divider, IconButton,
 } from '@mui/material';
-import { Close, AutoAwesome, Save } from '@mui/icons-material';
+import { Close, AutoAwesome, Save, Notes } from '@mui/icons-material';
 import axiosInstance from '../api/axiosConfig';
 
 interface Appointment {
@@ -50,8 +50,23 @@ const VisitReportDrawer = ({ appointment, open, onClose, existingReport }: Props
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
 
+  const [sessionNotes, setSessionNotes] = useState('');
+  const [notesSaving, setNotesSaving] = useState(false);
+  const [notesSaved, setNotesSaved] = useState(false);
+
   const activeReport = existingReport ?? fetchedReport ?? undefined;
   const isEditing = !!activeReport;
+
+  // Load existing session notes on open
+  useEffect(() => {
+    if (!open) return;
+    setSessionNotes('');
+    setNotesSaved(false);
+    axiosInstance.get(`/appointments/${appointment.id}/note`)
+      .then(r => { if (r.data?.content) setSessionNotes(r.data.content); })
+      .catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, appointment.id]);
 
   // When opened without a pre-provided existingReport, check if a report already exists
   useEffect(() => {
@@ -82,10 +97,28 @@ const VisitReportDrawer = ({ appointment, open, onClose, existingReport }: Props
     />
   );
 
+  const handleSaveNotes = async () => {
+    if (!sessionNotes.trim()) return;
+    setNotesSaving(true);
+    try {
+      await axiosInstance.post(`/appointments/${appointment.id}/note`, { content: sessionNotes });
+      setNotesSaved(true);
+    } catch {
+      // non-blocking
+    } finally {
+      setNotesSaving(false);
+    }
+  };
+
   const handleDraft = async () => {
     setDrafting(true);
     setError('');
     try {
+      // Persist notes first so the draft endpoint can use them
+      if (sessionNotes.trim()) {
+        await axiosInstance.post(`/appointments/${appointment.id}/note`, { content: sessionNotes });
+        setNotesSaved(true);
+      }
       const { data } = await axiosInstance.post('/visit_reports/draft', {
         appointment_id: appointment.id,
       });
@@ -134,6 +167,8 @@ const VisitReportDrawer = ({ appointment, open, onClose, existingReport }: Props
   const handleClose = () => {
     setFetchedReport(null);
     setFields(existingReport ? fieldsFromReport(existingReport) : EMPTY);
+    setSessionNotes('');
+    setNotesSaved(false);
     setSaved(false);
     setError('');
     onClose();
@@ -165,6 +200,36 @@ const VisitReportDrawer = ({ appointment, open, onClose, existingReport }: Props
       ) : (
         <Box display="flex" flexDirection="column" gap={2.5}>
           {error && <Alert severity="error">{error}</Alert>}
+
+          {/* Session notes — raw in-session notes the AI draft will extract from */}
+          <Box>
+            <Box display="flex" alignItems="center" gap={0.5} mb={0.5}>
+              <Notes sx={{ fontSize: 16, color: 'text.secondary' }} />
+              <Typography variant="subtitle2" color="text.secondary">Session notes</Typography>
+            </Box>
+            <TextField
+              multiline
+              minRows={4}
+              fullWidth
+              placeholder="Write your raw session notes here — what happened, how the client was, what you did. The AI draft will extract structured content from these notes."
+              value={sessionNotes}
+              onChange={e => { setSessionNotes(e.target.value); setNotesSaved(false); }}
+            />
+            <Box display="flex" justifyContent="flex-end" mt={0.5}>
+              <Button
+                size="small"
+                variant="text"
+                startIcon={notesSaving ? <CircularProgress size={12} /> : undefined}
+                onClick={handleSaveNotes}
+                disabled={notesSaving || !sessionNotes.trim()}
+                sx={{ color: notesSaved ? 'success.main' : '#7B2FBE', fontSize: '0.75rem' }}
+              >
+                {notesSaving ? 'Saving…' : notesSaved ? 'Notes saved' : 'Save notes'}
+              </Button>
+            </Box>
+          </Box>
+
+          <Divider />
 
           <Button
             variant="outlined"
