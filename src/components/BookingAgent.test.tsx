@@ -1,5 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router-dom';
 import BookingAgent from './BookingAgent';
 import axiosInstance from '../api/axiosConfig';
 
@@ -14,7 +15,11 @@ const mockOnClose = jest.fn();
 const mockOnBooked = jest.fn();
 
 const renderComponent = (isClient = true) =>
-  render(<BookingAgent open onClose={mockOnClose} onBooked={mockOnBooked} isClient={isClient} />);
+  render(
+    <MemoryRouter>
+      <BookingAgent open onClose={mockOnClose} onBooked={mockOnBooked} isClient={isClient} />
+    </MemoryRouter>
+  );
 
 describe('BookingAgent', () => {
   afterEach(() => jest.clearAllMocks());
@@ -68,12 +73,21 @@ describe('BookingAgent', () => {
     await waitFor(() => expect(mockOnBooked).toHaveBeenCalledWith(42));
   });
 
-  it('shows error message when API call fails', async () => {
+  it('shows a role-based fallback link when the API call fails for any reason (e.g. a timeout with no response at all)', async () => {
     mockedAxios.post.mockRejectedValueOnce(new Error('Network error'));
-    renderComponent();
+    renderComponent(true);
     await userEvent.type(screen.getByPlaceholderText(/Describe what you need/i), 'Hello');
     await userEvent.click(getSendButton());
-    await waitFor(() => expect(screen.getByText(/something went wrong/i)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/having trouble reaching the booking assistant/i)).toBeInTheDocument());
+    expect(screen.getByRole('link', { name: /browse support workers directly/i })).toHaveAttribute('href', '/support-workers');
+  });
+
+  it('links to /clients instead when a support worker hits a failure', async () => {
+    mockedAxios.post.mockRejectedValueOnce(new Error('Network error'));
+    renderComponent(false);
+    await userEvent.type(screen.getByPlaceholderText(/Describe what you need/i), 'Hello');
+    await userEvent.click(getSendButton());
+    await waitFor(() => expect(screen.getByRole('link', { name: /browse clients directly/i })).toHaveAttribute('href', '/clients'));
   });
 
   it('disables send button when input is empty', () => {

@@ -131,17 +131,16 @@ const BookingAgent = ({ open, onClose, onBooked, isClient = true }: BookingAgent
       if (data.conversation_id) {
         onBooked(data.conversation_id);
       }
-    } catch (err: any) {
-      if (err.response?.status === 503 && err.response?.data?.error === 'ai_unavailable') {
-        setDisplayMessages(prev => [...prev, {
-          type: 'error_link',
-          message: "Having trouble reaching the booking assistant right now — please try again shortly.",
-          to: isClient ? '/support-workers' : '/clients',
-          linkLabel: isClient ? 'Browse support workers directly' : 'Browse clients directly',
-        }]);
-      } else {
-        setDisplayMessages(prev => [...prev, { type: 'chat', role: 'assistant', content: 'Sorry, something went wrong. Please try again.' }]);
-      }
+    } catch {
+      // Any failure here — a typed ai_unavailable response, a timeout during a Render
+      // cold start, or anything else — leaves the user stuck with no error detail worth
+      // parsing. Always offer the direct-browse fallback rather than a dead-end message.
+      setDisplayMessages(prev => [...prev, {
+        type: 'error_link',
+        message: "Having trouble reaching the booking assistant right now — please try again shortly.",
+        to: isClient ? '/support-workers' : '/clients',
+        linkLabel: isClient ? 'Browse support workers directly' : 'Browse clients directly',
+      }]);
     } finally {
       setLoading(false);
     }
