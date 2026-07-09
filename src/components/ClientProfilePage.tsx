@@ -4,7 +4,7 @@ import {
   Box, Typography, Avatar, Chip, Button, Paper, Grid, Divider,
   CircularProgress, TextField, MenuItem,
 } from '@mui/material';
-import { LocationOn, Phone, Email, Favorite, Warning, ArrowBack, CalendarMonth, Edit, Save, Cancel, Chat, Cake, Assessment } from '@mui/icons-material';
+import { LocationOn, Phone, Email, Favorite, Warning, ArrowBack, CalendarMonth, Edit, Save, Cancel, Chat, Cake, Assessment, VolunteerActivism } from '@mui/icons-material';
 import axiosInstance from '../api/axiosConfig';
 import { Client } from '../context/AuthContext';
 import { useAuth } from '../context/AuthContext';
@@ -194,6 +194,20 @@ const ClientProfilePage = () => {
               {editing
                 ? <TextField multiline rows={4} fullWidth value={form.bio ?? ''} onChange={e => setForm({ ...form, bio: e.target.value })} placeholder="Write something about yourself…" />
                 : <Typography variant="body1" color="text.secondary">{client.bio}</Typography>
+              }
+            </Paper>
+          )}
+
+          {(editing || client.support_needs) && (
+            <Paper sx={{ p: 3, borderRadius: 3, mb: 3 }}>
+              <Box display="flex" alignItems="center" gap={1} mb={1}>
+                <VolunteerActivism sx={{ color: '#7B2FBE' }} />
+                <Typography variant="h6" fontWeight={600}>Support Needs</Typography>
+              </Box>
+              <Divider sx={{ mb: 2 }} />
+              {editing
+                ? <TextField multiline rows={3} fullWidth value={form.support_needs ?? ''} onChange={e => setForm({ ...form, support_needs: e.target.value })} placeholder="What kind of support are you looking for? (visible to any approved worker, even before booking)" />
+                : <Typography variant="body2" color="text.secondary">{client.support_needs}</Typography>
               }
             </Paper>
           )}

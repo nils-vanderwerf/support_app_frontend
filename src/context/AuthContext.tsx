@@ -23,6 +23,7 @@ export interface Client {
   location: string;
   bio: string;
   health_conditions: string;
+  support_needs: string;
   medication: string;
   allergies: string;
   emergency_contact_first_name: string;
